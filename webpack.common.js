@@ -21,6 +21,12 @@ module.exports = {
             {
                 test: /\.js$/,
                 include: path.resolve(__dirname, DEFAULT_PATH),
+                use: {
+                    loader: "babel-loader",
+                    options: {
+                        presets: ['@babel/preset-env']
+                    }
+                }
             },
             {
                 test: /\.css$/i,
