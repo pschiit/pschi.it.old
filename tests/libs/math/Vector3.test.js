@@ -8,40 +8,57 @@ describe('initialize Vector3', () => {
     test('with x', () => {
         const x = 2;
         const result = new Vector3(x);
+
         expect(result[0]).toBe(x);
         expect(result[1]).toBe(0);
         expect(result[2]).toBe(0);
     });
+
     test('with xy', () => {
         const x = 2;
         const y = 4;
         const result = new Vector3(x, y);
+
         expect(result[0]).toBe(x);
         expect(result[1]).toBe(y);
         expect(result[2]).toBe(0);
     });
+
     test('with xyz', () => {
         const x = 2;
         const y = 4;
         const z = 6;
         const result = new Vector3(x, y, z);
+
         expect(result[0]).toBe(x);
         expect(result[1]).toBe(y);
         expect(result[2]).toBe(z);
     });
+
     test('with an array of number', () => {
         const array = [2, 4, 6];
         const result = new Vector3(array);
+
         expect(result[0]).toBe(array[0]);
         expect(result[1]).toBe(array[1]);
         expect(result[2]).toBe(array[2]);
     });
+
     test('with an array with more than 3 number', () => {
         const array = [2, 4, 6, 8];
         const result = new Vector3(array);
+
         expect(result[0]).toBe(array[0]);
         expect(result[1]).toBe(array[1]);
         expect(result[2]).toBe(array[2]);
+    });
+
+    test('clone Vector3', () => {
+        const result = new Vector3([2, 4, 6]);
+        const clone = result.clone();
+
+        expect(result).not.toBe(clone);
+        expect(result).toEqual(clone);
     });
 });
 
@@ -49,69 +66,90 @@ describe('Convert <2,4,6> to', () => {
     test('Vector2', () => {
         const result = new Vector3(2, 4, 6).toVector2();
         const expected = new Vector2(2, 4);
+
         expect(result).toEqual(expected);
     });
     test('Vector4 without w', () => {
         const result = new Vector3(2, 4, 6).toVector4();
         const expected = new Vector4(2, 4, 6);
+
         expect(result).toEqual(expected);
     });
     test('Vector4 with w = 8', () => {
         const result = new Vector3(2, 4, 6).toVector4(8);
         const expected = new Vector4(2, 4, 6, 8);
+
         expect(result).toEqual(expected);
     });
 });
 
 describe('Vector3 operations', () => {
+    describe('equals a Vector3', () => {
+        test('should return true if values are the same', () => {
+            expect(new Vector3(2, 4, 6).equals(new Vector3(2, 4, 6))).toBeTruthy();
+        });
+
+        test('should return false if values are different', () => {
+            expect(new Vector3(2, 4, 6).equals(new Vector3(6, 4, 2))).toBeFalsy();
+        });
+    });
+
     describe('<2,4,6> + <6,4,2> = <8,8,8>', () => {
-        test('with a Vector2', () => {
+        test('with a Vector3', () => {
             const result = new Vector3(2, 4, 6).add(new Vector3(6, 4, 2));
             const expected = new Vector3(8, 8, 8);
+
             expect(result).toEqual(expected);
         });
         test('with an array of number', () => {
             const result = new Vector3(2, 4, 6).add([6, 4, 2]);
             const expected = new Vector3(8, 8, 8);
+
             expect(result).toEqual(expected);
         });
     });
 
     describe('<2,4,6> - <6,4,2> = <-4,0,4>', () => {
-        test('with a Vector2', () => {
+        test('with a Vector3', () => {
             const result = new Vector3(2, 4, 6).substract(new Vector3(6, 4, 2));
             const expected = new Vector3(-4, 0, 4);
+
             expect(result).toEqual(expected);
         });
         test('with an array of number', () => {
             const result = new Vector3(2, 4, 6).substract([6, 4, 2]);
             const expected = new Vector3(-4, 0, 4);
+
             expect(result).toEqual(expected);
         });
     });
 
     describe('<2,4,6> * <6,4,2> = <12,16,12>', () => {
-        test('with a Vector2', () => {
+        test('with a Vector3', () => {
             const result = new Vector3(2, 4, 6).multiply(new Vector3(6, 4, 2));
             const expected = new Vector3(12, 16, 12);
+
             expect(result).toEqual(expected);
         });
         test('with an array of number', () => {
             const result = new Vector3(2, 4, 6).multiply([6, 4, 2]);
             const expected = new Vector3(12, 16, 12);
+
             expect(result).toEqual(expected);
         });
     });
 
     describe('<2,4,6> / <6,4,2> = <2/6,1,3>', () => {
-        test('with a Vector2', () => {
+        test('with a Vector3', () => {
             const result = new Vector3(2, 4, 6).divide(new Vector3(6, 4, 2));
             const expected = new Vector3(2 / 6, 1, 3);
+
             expect(result).toEqual(expected);
         });
         test('with an array of number', () => {
             const result = new Vector3(2, 4, 6).divide([6, 4, 2]);
             const expected = new Vector3(2 / 6, 1, 3);
+
             expect(result).toEqual(expected);
         });
     });
@@ -119,31 +157,36 @@ describe('Vector3 operations', () => {
     test('<2,4,6> * 2 = <4,8,12>', () => {
         const result = new Vector3(2, 4, 6).scale(2);
         const expected = new Vector3(4, 8, 12);
+
         expect(result).toEqual(expected);
     });
 
     describe('<2,4,6> x <6,4,2> = <-16,32,-16>', () => {
-        test('with a Vector2', () => {
+        test('with a Vector3', () => {
             const result = new Vector3(2, 4, 6).cross(new Vector3(6, 4, 2));
             const expected = new Vector3(-16, 32, -16);
+
             expect(result).toEqual(expected);
         });
         test('with an array of number', () => {
             const result = new Vector3(2, 4, 6).cross([6, 4, 2]);
             const expected = new Vector3(-16, 32, -16);
+
             expect(result).toEqual(expected);
         });
     });
 
     describe('<2,4,6> . <6,4,2> = 40', () => {
-        test('with a Vector2', () => {
+        test('with a Vector3', () => {
             const result = new Vector3(2, 4, 6).dot(new Vector3(6, 4, 2));
             const expected = 40;
+
             expect(result).toBe(expected);
         });
         test('with an array of number', () => {
             const result = new Vector3(2, 4, 6).dot([6, 4, 2]);
             const expected = 40;
+
             expect(result).toBe(expected);
         });
     });
@@ -161,11 +204,13 @@ describe('Normalize', () => {
         }
         const result = new Vector3(x, y, z).normalize();
         const expected = new Vector3(x * dot, y * dot, z * dot);
+
         expect(result).toEqual(expected);
     });
     test('<0,0,0> => <0,0,0>', () => {
         const result = new Vector3().normalize();
         const expected = new Vector3();
+
         expect(result).toEqual(expected);
     });
 });
@@ -181,6 +226,7 @@ describe('Transform <2,4,6>', () => {
             matrix[0] * x + matrix[3] * y + matrix[6] * z,
             matrix[1] * x + matrix[4] * y + matrix[7] * z,
             matrix[2] * x + matrix[5] * y + matrix[8] * z);
+
         expect(result).toEqual(expected);
     });
 
@@ -196,6 +242,7 @@ describe('Transform <2,4,6>', () => {
             (matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12]) / w,
             (matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13]) / w,
             (matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14]) / w);
+
         expect(result).toEqual(expected);
     });
 });

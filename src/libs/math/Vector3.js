@@ -2,8 +2,9 @@ import { Matrix3 } from './Matrix3';
 import { Matrix4 } from './Matrix4';
 import { Vector2 } from './Vector2';
 import { Vector4 } from './Vector4';
+import { MathArray } from './MathArray';
 
-export class Vector3 extends Float32Array {
+export class Vector3 extends MathArray {
     static xAxis = new Vector3(1, 0, 0);
     static yAxis = new Vector3(0, 1, 0);
     static zAxis = new Vector3(0, 0, 1);
@@ -16,7 +17,7 @@ export class Vector3 extends Float32Array {
     constructor(x, y, z) {
         super(3);
         if (typeof x !== 'undefined') {
-            if (Array.isArray(x)) {
+            if (!Number.isFinite(x)) {
                 this[0] = x[0];
                 this[1] = x[1];
                 this[2] = x[2];
@@ -33,6 +34,16 @@ export class Vector3 extends Float32Array {
         }
     }
 
+    /** Return whether or not a Vector3 array is equals the current Vector3
+     * @param {Vector3} vector the vector to compare
+     * @return {Boolean} true if vectors are equals
+    */
+    equals(vector) {
+        return this[0] === vector[0] &&
+            this[1] === vector[1] &&
+            this[2] === vector[2];
+    }
+    
     /** Add a vector array to the current Vector3
      * @param {Vector3} vector right operand
      * @return the current updated Vector3
