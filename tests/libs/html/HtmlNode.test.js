@@ -1,18 +1,18 @@
 import { HtmlNode } from '../../../src/libs/html/HtmlNode';
 
-test('HtmlNode.document should return a HtmlNode singleton with document as element', ()=>{
+test('HtmlNode.document should return a HtmlNode singleton with document as element', () => {
     expect(HtmlNode.document).toBe(HtmlNode.document);
     expect(HtmlNode.document.element).toBe(document.documentElement);
 });
 
-test('HtmlNode.body should return a HtmlNode singleton with document.body as element and document as parent', ()=>{
+test('HtmlNode.body should return a HtmlNode singleton with document.body as element and document as parent', () => {
     expect(HtmlNode.body).toBe(HtmlNode.body);
     expect(HtmlNode.body.element).toBe(document.body);
     expect(HtmlNode.body.parent).toBe(HtmlNode.document);
     expect(HtmlNode.body.parent.element).toBe(document.documentElement);
 });
 
-test('When created, HtmlNode should have a HTMLElement of his type as element', ()=>{
+test('When created, HtmlNode should have a HTMLElement of his type as element', () => {
     const type = 'DIV';
     const htmlNode = new HtmlNode(type);
 
@@ -75,8 +75,28 @@ test('fitParent should set HtmlNode width and height from parent clientWidth and
     const child = new HtmlNode(type);
     parent.appendChild(child);
     child.fitParent();
+
+    expect(child.width).toBe(parent.element.clientWidth);
+    expect(child.height).toBe(parent.element.clientHeight);
+});
+
+test('When setting style of a HtmlNode should add or update properties to the node.style and element.style without removing the missing one', () => {
+    const type = 'DIV';
+    const node = new HtmlNode(type);
+    let style = {
+        width: '100%',
+        height: '100%',
+        margin: '0px',
+    };
+    node.style = style;
+    node.style = {
+        width: '50%',
+    };
     
-    expect(child.width).toBe(parent.clientWidth);
-    expect(child.height).toBe(parent.clientHeight);
-    expect(child.aspectRatio).toBe(parent.aspectRatio);
+    expect(node.style.width).toEqual('50%');
+    expect(node.style.height).toEqual(style.height);
+    expect(node.style.margin).toEqual(style.margin);
+    expect(node.element.style.width).toEqual('50%');
+    expect(node.element.style.height).toEqual(style.height);
+    expect(node.element.style.margin).toEqual(style.margin);
 });

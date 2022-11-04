@@ -41,7 +41,7 @@ export class HtmlNode extends Node {
         for (const key in value) {
             if (Object.hasOwnProperty.call(value, key)) {
                 this.element.style[key] = value[key];
-                this._style[key] = value[key];
+                this._style[key] = this.element.style[key];
             }
         }
     }
