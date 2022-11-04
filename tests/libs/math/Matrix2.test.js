@@ -14,6 +14,7 @@ const operand = [
 describe('initialize Matrix2', () => {
     test('without an array', () => {
         const result = new Matrix2();
+
         expect(result[0]).toBe(0);
         expect(result[1]).toBe(0);
         expect(result[2]).toBe(0);
@@ -21,6 +22,7 @@ describe('initialize Matrix2', () => {
     });
     test('with an array of number', () => {
         const result = new Matrix2(array);
+
         expect(result[0]).toBe(array[0]);
         expect(result[1]).toBe(array[1]);
         expect(result[2]).toBe(array[2]);
@@ -29,10 +31,19 @@ describe('initialize Matrix2', () => {
 
     test('as identity Matrix2', () => {
         const result = Matrix2.identityMatrix();
-        expect(result[0]).toBe(1);
-        expect(result[1]).toBe(0);
-        expect(result[2]).toBe(0);
-        expect(result[3]).toBe(1);
+        const expected = new Matrix2([
+            1, 0,
+            0, 1,]);
+
+        expect(result).toEqual(expected);
+    });
+
+    test('clone Matrix2', () => {
+        const result = new Matrix2(array);
+        const clone = result.clone();
+
+        expect(result).not.toBe(clone);
+        expect(result).toEqual(clone);
     });
 });
 
@@ -43,6 +54,7 @@ describe('Convert Matrix2 to', () => {
             2, 4, 0,
             6, 8, 0,
             0, 0, 1]);
+
         expect(result).toEqual(expected);
     });
     test('Matrix4', () => {
@@ -52,50 +64,68 @@ describe('Convert Matrix2 to', () => {
             6, 8, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1]);
+
         expect(result).toEqual(expected);
     });
 });
 
 describe('Matrix2 operations', () => {
+    describe('equals a Matrix2', () => {
+        test('should return true if values are the same', () => {
+            expect(new Matrix2(array).equals(new Matrix2(array))).toBeTruthy();
+        });
+        
+        test('should return false if values are different', () => {
+            expect(new Matrix2(array).equals(new Matrix2(operand))).toBeFalsy();
+        });
+    });
+
     test('add a Matrix2', () => {
         const result = new Matrix2(array).add(new Matrix2(operand));
         const expected = new Matrix2([10, 10, 10, 10]);
+
         expect(result).toEqual(expected);
     });
 
     test('substract a Matrix2', () => {
         const result = new Matrix2(array).substract(new Matrix2(operand));
         const expected = new Matrix2([-6, -2, 2, 6]);
+
         expect(result).toEqual(expected);
     });
 
     test('multiply a Matrix2', () => {
         const result = new Matrix2(array).multiply(new Matrix2(operand));
         const expected = new Matrix2([52, 80, 20, 32]);
+
         expect(result).toEqual(expected);
     });
 
     test('scale a Matrix2', () => {
         const result = new Matrix2(array).scale(new Vector2([4, 2]));
         const expected = new Matrix2([8, 16, 12, 16]);
+
         expect(result).toEqual(expected);
     });
 
     test('rotate a Matrix2', () => {
         const result = new Matrix2(array).rotate(Math.PI);
         const expected = new Matrix2([-2, -4, -6, -8]);
+
         expect(result).toEqual(expected);
     });
 
     test('transpose a Matrix2', () => {
         const result = new Matrix2(array).transpose();
         const expected = new Matrix2([2, 6, 4, 8]);
+
         expect(result).toEqual(expected);
     });
 
     test('determinant of a Matrix2', () => {
         const result = new Matrix2(array).determinant();
         const expected = -40;
+
         expect(result).toBe(expected);
     });
 
@@ -105,17 +135,20 @@ describe('Matrix2 operations', () => {
         const expected = new Matrix2([
             2 * det, -4 * det,
             -6 * det, 8 * det]);
+
         expect(result).toEqual(expected);
     });
 
     describe('when Matrix2 determinant == 0', () => {
         test('determinant of a Matrix2', () => {
             const result = new Matrix3([1,2,3,4]).determinant();
+            
             expect(result).toBe(0);
         });
 
         test('invert a Matrix2 return null', () => {
             const result = new Matrix3([1,2,3,4]).invert();
+
             expect(result).toBeNull();
         });
     });
@@ -124,6 +157,7 @@ describe('Matrix2 operations', () => {
         test('determinant of a Matrix2', () => {
             const result = new Matrix2(array).determinant();
             const expected = -40;
+
             expect(result).toBe(expected);
         });
     
@@ -133,6 +167,7 @@ describe('Matrix2 operations', () => {
             const expected = new Matrix2([
                 2 * det, -4 * det,
                 -6 * det, 8 * det]);
+
             expect(result).toEqual(expected);
         });
     });
