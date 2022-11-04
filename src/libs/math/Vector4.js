@@ -18,7 +18,7 @@ export class Vector4  extends Float32Array{
                 this[3] = x[3];
             }
             else{
-                this[1] = x;
+                this[0] = x;
                 if (Number.isFinite(y)) {
                     this[1] = y;
                 }
@@ -107,16 +107,16 @@ export class Vector4  extends Float32Array{
         const y = this[1];
         const z = this[2];
         const w = this[3];
-        let len = x * x + y * y + z * z + w * w;
+        let dot = x * x + y * y + z * z + w * w;
 
-        if (len > 0) {
-            len = 1 / Math.sqrt(len);
+        if (dot > 0) {
+            dot = 1 / Math.sqrt(dot);
         }
 
-        this[0] = x * len;
-        this[1] = y * len;
-        this[2] = z * len;
-        this[3] = w * len;
+        this[0] = x * dot;
+        this[1] = y * dot;
+        this[2] = z * dot;
+        this[3] = w * dot;
 
         return this;
     }

@@ -85,7 +85,7 @@ export class Matrix3 extends Float32Array{
         return this;
     }
 
-    /** Scale the current Matrix3 by a vector2 array
+    /** Scale the current Matrix3 by a Vector2 array
      * @param {Vector2} vector translation vector
      * @return the current updated Matrix3
     */
@@ -175,9 +175,9 @@ export class Matrix3 extends Float32Array{
     }
 
     /** Invert the current Matrix3
-     * @return the current updated Matrix3
+     * @return the current updated Matrix3 or null if determinant == 0
     */
-    invertMatrix() {
+    invert() {
         const a00 = this[0],
             a01 = this[1],
             a02 = this[2],

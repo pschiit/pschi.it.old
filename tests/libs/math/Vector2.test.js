@@ -5,7 +5,13 @@ import { Vector2 } from '../../../src/libs/math/Vector2';
 import { Vector3 } from '../../../src/libs/math/Vector3';
 import { Vector4 } from '../../../src/libs/math/Vector4';
 
-describe('initialize', () => {
+describe('initialize Vector2', () => {
+    test('with x', () => {
+        const x = 2;
+        const result = new Vector2(x);
+        expect(result[0]).toBe(x);
+        expect(result[1]).toBe(0);
+    });
     test('with x and y', () => {
         const x = 2;
         const y = 4;
@@ -33,9 +39,9 @@ describe('Convert <2,4> to', () => {
         const expected = new Vector3(2, 4, 0);
         expect(result).toEqual(expected);
     });
-    test('Vector3 with z = 1', () => {
-        const result = new Vector2(2, 4).toVector3(1);
-        const expected = new Vector3(2, 4, 1);
+    test('Vector3 with z = 6', () => {
+        const result = new Vector2(2, 4).toVector3(6);
+        const expected = new Vector3(2, 4, 6);
         expect(result).toEqual(expected);
     });
     test('Vector4 without z and w', () => {
@@ -43,14 +49,14 @@ describe('Convert <2,4> to', () => {
         const expected = new Vector4(2, 4, 0, 0);
         expect(result).toEqual(expected);
     });
-    test('Vector4 with z = 1 and without w', () => {
-        const result = new Vector2(2, 4).toVector4(1);
-        const expected = new Vector4(2, 4, 1, 0);
+    test('Vector4 with z = 6 and without w', () => {
+        const result = new Vector2(2, 4).toVector4(6);
+        const expected = new Vector4(2, 4, 6, 0);
         expect(result).toEqual(expected);
     });
-    test('Vector4 with z = 1 and w = 1', () => {
-        const result = new Vector2(2, 4).toVector4(1, 1);
-        const expected = new Vector4(2, 4, 1, 1);
+    test('Vector4 with z = 6 and w = 8', () => {
+        const result = new Vector2(2, 4).toVector4(6,8);
+        const expected = new Vector4(2, 4, 6,8);
         expect(result).toEqual(expected);
     });
 });
@@ -83,7 +89,7 @@ describe('Vector2 operations', () => {
         });
     });
 
-    describe('<2, 4> * <4,2> = <8,8>', () => {
+    describe('<2,4> * <4,2> = <8,8>', () => {
         test('with a Vector2', () => {
             const result = new Vector2(2, 4).multiply(new Vector2(4, 2));
             const expected = new Vector2(8, 8);
@@ -95,20 +101,6 @@ describe('Vector2 operations', () => {
             expect(result).toEqual(expected);
         });
     });
-
-    describe('<2,4> / <4,2> = <0.5,2>', () => {
-        test('with a Vector2', () => {
-            const result = new Vector2(2, 4).divide(new Vector2(4, 2));
-            const expected = new Vector2(0.5, 2);
-            expect(result).toEqual(expected);
-        });
-        test('with an array of number', () => {
-            const result = new Vector2(2, 4).divide([4, 2]);
-            const expected = new Vector2(0.5, 2);
-            expect(result).toEqual(expected);
-        });
-    });
-
 
     describe('<2,4> / <4,2> = <0.5,2>', () => {
         test('with a Vector2', () => {
@@ -142,7 +134,7 @@ describe('Vector2 operations', () => {
         });
     });
 
-    describe('<2,4> . <4,2> = <0.5,2>', () => {
+    describe('<2,4> . <4,2> = 16', () => {
         test('with a Vector2', () => {
             const result = new Vector2(2, 4).dot(new Vector2(4, 2));
             const expected = 16;
@@ -170,8 +162,8 @@ describe('Normalize', () => {
         expect(result).toEqual(expected);
     });
     test('<0,0> => <0,0>', () => {
-        const result = new Vector2(0, 0).normalize();
-        const expected = new Vector2(0, 0);
+        const result = new Vector2().normalize();
+        const expected = new Vector2();
         expect(result).toEqual(expected);
     });
 });

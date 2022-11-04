@@ -22,7 +22,7 @@ export class Vector3 extends Float32Array {
                 this[2] = x[2];
             }
             else{
-                this[1] = x;
+                this[0] = x;
                 if (Number.isFinite(y)) {
                     this[1] = y;
                 }
@@ -101,15 +101,15 @@ export class Vector3 extends Float32Array {
         const x = this[0];
         const y = this[1];
         const z = this[2];
-        let len = x * x + y * y + z * z;
+        let dot = x * x + y * y + z * z;
 
-        if (len > 0) {
-            len = 1 / Math.sqrt(len);
+        if (dot > 0) {
+            dot = 1 / Math.sqrt(dot);
         }
 
-        this[0] = x * len;
-        this[1] = y * len;
-        this[2] = z * len;
+        this[0] = x * dot;
+        this[1] = y * dot;
+        this[2] = z * dot;
 
         return this;
     }

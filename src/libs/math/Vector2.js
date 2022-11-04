@@ -15,10 +15,11 @@ export class Vector2 extends Float32Array {
             if (Array.isArray(x)) {
                 this[0] = x[0];
                 this[1] = x[1];
-            }
-            this[0] = x;
-            if (Number.isFinite(y)) {
-                this[1] = y;
+            } else {
+                this[0] = x;
+                if (Number.isFinite(y)) {
+                    this[1] = y;
+                }
             }
         }
     }

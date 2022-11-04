@@ -113,9 +113,9 @@ export class Matrix2 extends Float32Array{
     }
 
     /** Invert the current Matrix2
-     * @return the current updated Matrix2
+     * @return the current updated Matrix2 or null if determinant == 0
     */
-    invertMatrix() {
+    invert() {
         let det = this.determinant();
         if (!det) {
             return null;
@@ -136,11 +136,11 @@ export class Matrix2 extends Float32Array{
     toMatrix3() {
         const result = new Matrix3();
 
-        this[0] = this[0];
-        this[1] = this[1];
-        this[3] = this[2];
-        this[4] = this[3];
-        this[8] = 1;
+        result[0] = this[0];
+        result[1] = this[1];
+        result[3] = this[2];
+        result[4] = this[3];
+        result[8] = 1;
 
         return result;
     }
@@ -151,12 +151,12 @@ export class Matrix2 extends Float32Array{
     toMatrix4() {
         const result = new Matrix4();
 
-        this[0] = this[0];
-        this[1] = this[1];
-        this[4] = this[2];
-        this[5] = this[3];
-        this[10] = 1;
-        this[15] = 1;
+        result[0] = this[0];
+        result[1] = this[1];
+        result[4] = this[2];
+        result[5] = this[3];
+        result[10] = 1;
+        result[15] = 1;
 
         return result
     }
