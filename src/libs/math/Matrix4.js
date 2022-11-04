@@ -302,9 +302,9 @@ export class Matrix4 extends Float32Array {
     }
 
     /** Invert the current Matrix4
-     * @return the current updated Matrix4
+     * @return the current updated Matrix4  or null if determinant == 0
     */
-    invertMatrix() {
+    invert() {
         const a00 = this[0],
             a01 = this[1],
             a02 = this[2],
@@ -409,6 +409,9 @@ export class Matrix4 extends Float32Array {
     }
 
     /** Create a new lookAt Matrix4
+     * @param {Vector3} eye Position of the viewer
+     * @param {Vector3} center Point the viewer is looking at
+     * @param {Vector3} up up axis of the viewer
      * @return {Matrix4} the lookAt Matrix4
     */
     static lookAtMatrix(eye, center, up) {
@@ -485,6 +488,12 @@ export class Matrix4 extends Float32Array {
     }
 
     /** Create a new orthographic Matrix4
+     * @param {Number} left bound of the frustum
+     * @param {Number} right bound of the frustum
+     * @param {Number} bottom bound of the frustum
+     * @param {Number} top bound of the frustum
+     * @param {Number} near bound of the frustum
+     * @param {Number} far bound of the frustum
      * @return {Matrix4} the orthographic Matrix4
     */
     static orthographicMatrix(left, right, bottom, top, near, far) {
@@ -505,7 +514,11 @@ export class Matrix4 extends Float32Array {
         return result;
     }
 
-    /** Create a new perspective Matrix4
+    /** Create a new perspective Matrix4to
+     * @param {Number} fovy vertical field of view in degrees
+     * @param {Number} aspect ratio of the frustum 
+     * @param {Number} near bound of the frustum
+     * @param {Number} far bound of the frustum
      * @return {Matrix4} the perspective Matrix4
     */
     static perspectiveMatrix(fovy, aspect, near, far) {
