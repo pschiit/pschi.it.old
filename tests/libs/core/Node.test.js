@@ -115,7 +115,7 @@ describe('When removing an event listener from a Node', () => {
     });
 });
 
-describe('When dispatching an event listener on a Node', () => {
+describe('When dispatching an event on a Node', () => {
     test('should do nothing if no related listener', () => {
         const node = new Node();
         const listener = jest.fn();
