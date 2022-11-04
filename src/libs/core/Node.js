@@ -65,11 +65,11 @@ export class Node {
      * @param {Function} listener event listener to be added
     */
     addEventListener(type, listener) {
-        if (listeners[type] === undefined) {
-            listeners[type] = [];
+        if (this.listeners[type] === undefined) {
+            this.listeners[type] = [];
         }
-        if (listeners[type].indexOf(listener) === - 1) {
-            listeners[type].push(listener);
+        if (this.listeners[type].indexOf(listener) === - 1) {
+            this.listeners[type].push(listener);
         }
     }
 
@@ -80,10 +80,12 @@ export class Node {
     removeEventListener(type, listener) {
         if (this.listeners[type] !== undefined) {
             const index = this.listeners[type].indexOf(listener);
-            if (index !== - 1) {
+            if (index !== -1) {
                 this.listeners[type].splice(index, 1);
+                return;
             }
         }
+        throw new Error(`Listener ${type} ${listener} not found on Node ${this.id}.`);
     }
 
     /** Dispatches an event to the current Node
