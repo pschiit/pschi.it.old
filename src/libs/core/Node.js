@@ -104,6 +104,13 @@ export class Node {
         }
     }
 
+    /** Convert the current Node to JSON
+     * @return {string} the stringify JSON version of the current Node
+    */
+    get JSON(){
+        return JSON.stringify(this);
+    }
+
     /** Generate a random uuid
      * @returns {string} uuid
      */
