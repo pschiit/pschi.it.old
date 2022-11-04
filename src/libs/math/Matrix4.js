@@ -1,7 +1,8 @@
 import { Matrix2 } from './Matrix2';
 import { Matrix3 } from './Matrix3';
+import { MathArray } from './MathArray';
 
-export class Matrix4 extends Float32Array {
+export class Matrix4 extends MathArray {
     /** Create a new Matrix3 from an array of number
      * @param {Array} values values of the matrix 
     */
@@ -12,6 +13,10 @@ export class Matrix4 extends Float32Array {
         }
     }
 
+    /** Return whether or not a Matrix4 array is equals the current Matrix4
+     * @param {Matrix4} matrix the matrix to compare
+     * @return {Boolean} true if matrices are equals
+    */
     equals(matrix) {
         return this[0] === matrix[0] &&
             this[1] === matrix[1] &&

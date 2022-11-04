@@ -1,7 +1,8 @@
 import { Vector2 } from './Vector2';
 import { Vector3 } from './Vector3';
+import { MathArray } from './MathArray';
 
-export class Vector4  extends Float32Array{
+export class Vector4  extends MathArray{
     /** Create a new Vector3 from the coordinates xyzw or a vector array
      * @param {Number} x first coordinate or vector array
      * @param {Number} y second coordinate
@@ -11,7 +12,7 @@ export class Vector4  extends Float32Array{
     constructor(x, y, z, w) {
         super(4);
         if (typeof x !== 'undefined') {
-            if (Array.isArray(x)) {
+            if (!Number.isFinite(x)) {
                 this[0] = x[0];
                 this[1] = x[1];
                 this[2] = x[2];
@@ -32,6 +33,17 @@ export class Vector4  extends Float32Array{
         }
     }
 
+    /** Return whether or not a Vector4 array is equals the current Vector4
+     * @param {Vector4} vector the vector to compare
+     * @return {Boolean} true if vectors are equals
+    */
+    equals(vector) {
+        return this[0] === vector[0] &&
+            this[1] === vector[1] &&
+            this[2] === vector[2] &&
+            this[3] === vector[3];
+    }
+    
     /** Add a vector array to the current Vector4
      * @param {Vector4} vector right operand
      * @return the current updated Vector4
@@ -126,15 +138,15 @@ export class Vector4  extends Float32Array{
      * @param {Matrix4} matrix transformation matrix
      * @return the current updated Vector4
     */
-    transform(matrix) {
+    transform(vector) {
         const x = this[0],
             y = this[1],
             z = this[2],
             w = this[3];
-        this[0] = matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12] * w;
-        this[1] = matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13] * w;
-        this[2] = matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14] * w;
-        this[3] = matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15] * w;
+        this[0] = vector[0] * x + vector[4] * y + vector[8] * z + vector[12] * w;
+        this[1] = vector[1] * x + vector[5] * y + vector[9] * z + vector[13] * w;
+        this[2] = vector[2] * x + vector[6] * y + vector[10] * z + vector[14] * w;
+        this[3] = vector[3] * x + vector[7] * y + vector[11] * z + vector[15] * w;
 
         return this;
     }
