@@ -1,6 +1,7 @@
 import { Matrix3 } from './Matrix3';
 import { Matrix4 } from './Matrix4';
 import { MathArray } from './MathArray';
+import { Vector2 } from './Vector2';
 
 export class Matrix2 extends MathArray{
     /** Create a new Matrix2 from an array of number

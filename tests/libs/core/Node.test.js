@@ -1,5 +1,13 @@
 import { Node } from '../../../src/libs/core/Node';
 
+test('When cloning should return a new copy of the node', () => {
+    const parent = new Node();
+    const clone = parent.clone();
+
+    expect(clone).not.toBe(parent);
+    expect(clone).toEqual(parent);
+});
+
 describe('When appending a child to a Node', () => {
     test('should throw Error if trying to append itself as child', () => {
         const parent = new Node();

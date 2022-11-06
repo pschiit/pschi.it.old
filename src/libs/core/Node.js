@@ -105,6 +105,13 @@ export class Node {
         }
     }
 
+    /** Clone the current Node
+     * @return {Node} the copy Node
+    */
+    clone(){
+        return JSON.parse(this.JSON);
+    }
+
     /** Convert the current Node to JSON
      * @return {string} the stringify JSON version of the current Node
     */
