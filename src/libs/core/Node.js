@@ -13,6 +13,7 @@ export class Node {
 
     /** Validate type of Node (used for appendChild) 
      * Can be override to restrict the type of Node you can append to the current Node
+     * @param {Node} node node to validate
      * @throws {Error} when node is not of type Node
      */
     validateType(node) {

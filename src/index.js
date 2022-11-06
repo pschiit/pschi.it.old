@@ -1,5 +1,6 @@
 import { HtmlNode } from './libs/html/HtmlNode';
 import { WebGLCanvas } from './libs/html/WebGLCanvas';
+import { WebGLRenderer } from './libs/renderer/webgl/WebGLRenderer';
 
 const defaultStyle = {
     width: '100%',
@@ -12,20 +13,19 @@ body.style = defaultStyle;
 
 const canvas = new WebGLCanvas();
 canvas.style = defaultStyle;
-canvas.width = 800;
-canvas.height = 600;
-console.log(canvas.element.getBoundingClientRect());
 body.appendChild(canvas);
 
-console.log
+const renderer = canvas.context;
+renderer.clearColor([0, 0, 0, 1]);
 
-const gl = canvas.context;
-gl.clearColor(0, 0, 0, 1);
-gl.clear(gl.COLOR_BUFFER_BIT);
+const program = WebGLRenderer.simpleProgram();
+renderer.appendChild(program);
+renderer.useProgram(program);
 
-const type = 'DIV';
-const parent = new HtmlNode(type);
-const child = new HtmlNode(type);
-parent.appendChild(child);
-console.log(parent.element)
-console.log(child.element)
+program.parameters.a_VertexPosition.set([0, 0, 0, 1]);
+program.parameters.a_VertexColor.set([1, 0, 0, 1]);
+program.parameters.u_PointSize.set(10);
+
+renderer.clear();
+renderer.drawArrays('POINTS', 0, 1);
+

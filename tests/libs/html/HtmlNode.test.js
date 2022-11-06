@@ -1,4 +1,5 @@
 import { HtmlNode } from '../../../src/libs/html/HtmlNode';
+import { Vector2 } from '../../../src/libs/math/Vector2';
 
 test('HtmlNode.document should return a HtmlNode singleton with document as element', () => {
     expect(HtmlNode.document).toBe(HtmlNode.document);
@@ -99,4 +100,64 @@ test('When setting style of a HtmlNode should add or update properties to the no
     expect(node.element.style.width).toEqual('50%');
     expect(node.element.style.height).toEqual(style.height);
     expect(node.element.style.margin).toEqual(style.margin);
+});
+
+test('getPointerPosition should return the correct position', () => {
+    const width = 800;
+    const height = 600;
+    const clientX = 150;
+    const clientY = 55;
+    const bottom = 10;
+    const left = 10;
+    const type = 'DIV';
+    const node = new HtmlNode(type);
+    node.width = width;
+    node.height = height;
+    Object.defineProperties(node.element, {
+        clientWidth: { configurable: false, value: width },
+        clientHeight: { configurable: false, value: height },
+        getBoundingClientRect: {
+            configurable: false, value: function () {
+                return {
+                    bottom: bottom,
+                    left: left
+                }
+            }
+        },
+    });
+
+    expect(node.getPointerPosition({ clientX: clientX, clientY: clientY })).toEqual(new Vector2(
+        ((clientX - left)),
+        ((bottom - clientY))
+    ));
+});
+
+test('getMouseRelativePositon should return the correct position', () => {
+    const width = 800;
+    const height = 600;
+    const clientX = 150;
+    const clientY = 55;
+    const top = 10;
+    const left = 10;
+    const type = 'DIV';
+    const node = new HtmlNode(type);
+    node.width = width;
+    node.height = height;
+    Object.defineProperties(node.element, {
+        clientWidth: { configurable: false, value: width },
+        clientHeight: { configurable: false, value: height },
+        getBoundingClientRect: {
+            configurable: false, value: function () {
+                return {
+                    top: top,
+                    left: left
+                }
+            }
+        },
+    });
+
+    expect(node.getMouseRelativePositon({ clientX: clientX, clientY: clientY })).toEqual(new Vector2(
+        ((clientX - left)) / width * 2 - 1,
+        ((clientY - top)) / height * -2 + 1)
+    );
 });
