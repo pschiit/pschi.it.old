@@ -11,27 +11,21 @@ export class Node {
         this.visible = true;
     }
 
-    /** Validate type of Node (used for appendChild) 
-     * Can be override to restrict the type of Node you can append to the current Node
-     * @param {Node} node node to validate
-     * @throws {Error} when node is not of type Node
-     */
-    validateType(node) {
-        if (!(node instanceof Node)) {
-            throw new Error(`${node.constructor.name} can't be child of ${this.constructor.name}.`);
-        }
-    }
-
     /** Append a child Node to the current Node
      * and update the child's parent to the new current Node
      * @param {Node} child the node to append 
      * @return the current Node
     */
     appendChild(child) {
+        if (arguments.length > 1) {
+            return Node.repeatFunction(arguments, this.appendChild.bind(this));
+        }
+        if (!(child instanceof Node)) {
+            throw new Error(`${child.constructor.name} can't be child of ${this.constructor.name}.`);
+        }
         if (this === child) {
             throw new Error(`Node ${child.id} can't be his own child.`);
         }
-        this.validateType(child);
         if (child.parent) {
             child.parent.removeChild(child);
         }
@@ -49,6 +43,9 @@ export class Node {
      * @return the current Node
     */
     removeChild(child) {
+        if (arguments.length > 1) {
+            return Node.repeatFunction(arguments, this.removeChild.bind(this));
+        }
         const index = this.childrens.indexOf(child);
         if (index === -1) {
             throw new Error(`Node ${child.id} not found.`);
@@ -108,15 +105,25 @@ export class Node {
     /** Clone the current Node
      * @return {Node} the copy Node
     */
-    clone(){
-        return JSON.parse(this.JSON);
+    clone() {
+        const clone = new this.constructor();
+        Object.assign(clone, JSON.parse(this.JSON));
+        return clone;
     }
 
     /** Convert the current Node to JSON
      * @return {string} the stringify JSON version of the current Node
     */
-    get JSON(){
+    get JSON() {
         return JSON.stringify(this);
+    }
+
+    static repeatFunction(args, fn) {
+        const result = new Array(args.length);
+        for (let i = 0; i < args.length; i++) {
+            result[i] = fn(args[i]);
+        }
+        return result;
     }
 
     /** Generate a random uuid

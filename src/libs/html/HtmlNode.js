@@ -82,16 +82,6 @@ export class HtmlNode extends Node {
         return this.width / this.height;
     }
 
-    /** Validate type of Node (used for appendChild) 
-     * @param {Node} node node to validate
-     * @throws {Error} when node is not of type HtmlNode
-     */
-    validateType(node) {
-        if (!(node instanceof HtmlNode)) {
-            throw new Error(`${node.constructor.name} can't be child of ${this.constructor.name}.`);
-        }
-    }
-
     /** Set the width and height of the current HtmlNode's HTMLElement
      * to the parent's HTMLElement.clientWidth/clientHeight
      * @return the current HtmlNode

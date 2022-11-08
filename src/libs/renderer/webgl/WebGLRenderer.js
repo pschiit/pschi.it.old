@@ -1,10 +1,8 @@
 import { Node } from '../../core/Node';
-import { Program } from './shader/Program';
-import { FragmentShader } from './shader/FragmentShader';
-import { Attribute } from './shader/parameter/Attribute';
-import { Uniform } from './shader/parameter/Uniform';
-import { Varying } from './shader/parameter/Varying';
-import { VertexShader } from './shader/VertexShader';
+import { WebGLBuffer } from './WebGLBuffer';
+import { WebGLProgram } from './WebGLProgram';
+import { WebGLShader } from './WebGLShader';
+import { WebGLVertexArray } from './WebGLVertexArray';
 
 export class WebGLRenderer extends Node {
     /** Create a WebGLRenderer from a WebGLRenderingContext
@@ -14,182 +12,184 @@ export class WebGLRenderer extends Node {
         super();
         this.gl = gl;
         this.polyfillExtension();
-        this.programs = {};
+
+        this.vertexArray = null;
+        this.currentProgram = null;
+        this.currentBuffer = null;
+
         this.addEventListener(Node.event.nodeInserted, (e) => {
-            const program = e.inserted;
-            if (program instanceof Program) {
-                this.createProgram(program);
+            const child = e.inserted;
+            if (child instanceof WebGLShader) {
+                child.location = this.gl.createShader(this.gl[child.type]);
+            }
+            if (child instanceof WebGLProgram) {
+                child.location = this.gl.createProgram();
+            }
+            if (child instanceof WebGLVertexArray) {
+                child.location = this.gl.createVertexArray();
+            }
+            if (child instanceof WebGLBuffer) {
+                child.location = this.gl.createBuffer();
             }
         });
         this.addEventListener(Node.event.nodeRemoved, (e) => {
-            const program = e.removed;
-            if (program instanceof Program) {
-                this.deleteProgram(program);
-            }
-        });
-    }
-
-    /** Validate type of Node (used for appendChild) 
-     * @param {Node} node node to validate
-     * @throws {Error} when node is not of type Program
-     */
-    validateType(node) {
-        if (!(node instanceof Program)) {
-            throw new Error(`${node.constructor.name} can't be child of ${this.constructor.name}.`);
-        }
-    }
-
-    createProgram(program) {
-        try {
-            const compiledShaders = program.childrens.map(s => this.compileShader(s.type, s.source));
-            const webGLProgram = this.linkShaders(compiledShaders);
-
-            for (const key in program.parameters) {
-                if (Object.hasOwnProperty.call(program.parameters, key)) {
-                    const p = program.parameters[key];
-                    if (p instanceof Attribute) {
-                        p.set = this.getAttributeSetter(webGLProgram, p);
-                    } else if (p instanceof Uniform) {
-                        p.set = this.getUniformSetter(webGLProgram, p);
-                    }
+            const child = e.removed;
+            if (child instanceof WebGLShader) {
+                this.gl.deleteShader(child.location);
+                child.location = null;
+            } else if (child instanceof WebGLProgram) {
+                this.gl.deleteProgram(child.location);
+                child.location = null;
+                child.attributes = {};
+                child.uniforms = {};
+                if (this.currentProgram === child) {
+                    this.currentProgram = null;
+                }
+            } else if (child instanceof WebGLVertexArray) {
+                child.location = this.gl.deleteVertexArray(child.location);
+                if (this.vertexArray === child) {
+                    this.vertexArray = null;
+                }
+            } else if (child instanceof WebGLBuffer) {
+                this.gl.deleteBuffer(child.location);
+                child.location = null;
+                if (this.currentBuffer === child) {
+                    this.currentBuffer = null;
                 }
             }
-            this.programs[program.id] = webGLProgram;
-        } catch (error) {
-            this.removeChild(program);
-            throw error;
-        }
-
-        return program;
-    }
-
-    deleteProgram(program) {
-        if (this.programs[program.id]) {
-            this.gl.deleteProgram(this.programs[program.id]);
-        }
-        this.programs[program.id] = null;
-    }
-
-    useProgram(program) {
-        this.gl.useProgram(this.programs[program.id]);
-    }
-
-    compileShader(type, source) {
-        const shader = this.gl.createShader(this.gl[type]);
-        this.gl.shaderSource(shader, source);
-        this.gl.compileShader(shader);
-        const success = this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS);
-        if (success) {
-            return shader;
-        }
-        else {
-            const error = new Error(`Failed to create ${type} :\n${this.gl.getShaderInfoLog(shader)}\n\n${source}`);
-            this.gl.deleteShader(shader);
-            throw error;
-        }
-    }
-
-    linkShaders(compiledShaders) {
-        const program = this.gl.createProgram();
-        compiledShaders.forEach(s => {
-            this.gl.attachShader(program, s);
         });
-        this.gl.linkProgram(program);
+    }
 
-        if (this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
-            return program;
+    /** Compile a WebGLShader with the current WebGLRenderer
+     * @param {WebGLShader} shader WebGLShader to compile
+     * @returns {WebGLRenderer} the current WebGLRenderer
+     */
+    compileShader(shader) {
+        this.appendChild(shader);
+        this.gl.shaderSource(shader.location, shader.source);
+        this.gl.compileShader(shader.location);
+        const success = this.gl.getShaderParameter(shader.location, this.gl.COMPILE_STATUS);
+        if (success) {
+            return this;
         }
-        const error = new Error(`Failed to create program : ${this.gl.getProgramInfoLog(program)}`);
+        const error = new Error(`Failed to create ${shader.type} :\n${this.gl.getShaderInfoLog(shader.location)}\n\n${shader.source}`);
+        this.removeChild(shader);
         throw error;
     }
 
-    getUniformSetter(program, uniform) {
-        const location = this.gl.getUniformLocation(program, uniform);
-        switch (uniform.type) {
-            case 'sampler2D':
-            case 'bool':
-                return (value) => {
-                    this.gl.uniform1i(location, value);
-                };
-            case 'mat2':
-                return (value) => {
-                    this.gl.uniformMatrix2fv(location, false, value);
-                };
-            case 'mat3':
-                return (value) => {
-                    this.gl.uniformMatrix3fv(location, false, value)
-                };
-            case 'mat4':
-                return (value) => {
-                    this.gl.uniformMatrix4fv(location, false, value);
-                };
-            case 'float':
-                return (value) => {
-                    if (Number.isFinite(value)) {
-                        this.gl.uniform1f(location, value);
-                    } else {
-                        this.gl.uniform1fv(location, value);
-                    }
-                };
-            case 'vec2':
-                return (value) => {
-                    this.gl.uniform2fv(location, value);
-                };
-            case 'vec3':
-                return (value) => {
-                    this.gl.uniform3fv(location, value);
-                };
-            case 'vec4':
-                return (value) => {
-                    this.gl.uniform4fv(location, value);
-                };
-            case 'samplerCube':
-            default:
-                throw new Error(`${uniform.type} is missing getUniformSetter implementation.`);
+    /** Create a WebGLProgram with the current WebGLRenderer.
+     * Compile the WebGLShader if not compile on the current WebGLRenderer
+     * @param {WebGLProgram} program WebGLProgram to create
+     * @returns {WebGLRenderer} the current WebGLRenderer
+     */
+    linkProgram(program) {
+        this.appendChild(program);
+        if (program.vertexShader.parent != this) {
+            this.compileShader(program.vertexShader);
         }
-    }
-
-    getAttributeSetter(program, attribute) {
-        attribute.location = this.gl.getAttribLocation(program, attribute);
-        switch (attribute.type) {
-            case 'float':
-                return (value) => {
-                    if (Number.isFinite(value)) {
-                        this.gl.vertexAttrib1f(attribute.location, value);
-                    } else {
-                        this.gl.vertexAttrib1fv(attribute.location, value);
-                    }
-                };
-            case 'mat2':
-            case 'vec2':
-                return (value) => {
-                    this.gl.vertexAttrib2fv(attribute.location, value);
-                };
-            case 'mat3':
-            case 'vec3':
-                return (value) => {
-                    this.gl.vertexAttrib3fv(attribute.location, value);
-                };
-            case 'mat4':
-            case 'vec4':
-                return (value) => {
-                    this.gl.vertexAttrib4fv(attribute.location, value);
-                };
-            case 'samplerCube':
-            default:
-                throw new Error(`${attribute.type} is missing getAttributeSetter implementation.`);
+        this.gl.attachShader(program.location, program.vertexShader.location);
+        if (program.fragmentShader.parent != this) {
+            this.compileShader(program.fragmentShader);
         }
+        this.gl.attachShader(program.location, program.fragmentShader.location);
+        this.gl.linkProgram(program.location);
+
+        if (this.gl.getProgramParameter(program.location, this.gl.LINK_STATUS)) {
+            const uniformsCount = this.gl.getProgramParameter(program.location, this.gl.ACTIVE_UNIFORMS);
+            for (let i = 0; i < uniformsCount; i++) {
+                const uniform = this.gl.getActiveUniform(program.location, i);
+                createUniform(this, program, uniform);
+            }
+            console.log(program.uniforms);
+            const attributesCount = this.gl.getProgramParameter(program.location, this.gl.ACTIVE_ATTRIBUTES);
+            for (let i = 0; i < attributesCount; i++) {
+                const attribute = this.gl.getActiveAttrib(program.location, i);
+                createAttribute(this, program, attribute);
+            }
+            console.log(program.attributes);
+            return this;
+        }
+        const error = new Error(`Failed to create program : ${this.gl.getProgramInfoLog(program.location)}`);
+        this.removeChild(program);
+        throw error;
     }
 
-    enableVertexAttribArray(attribute, size, type, normalized, stride, offset) {
-        attribute.vertexAttribArray = true;
-        this.gl.vertexAttribPointer(attribute.location, size, type, normalized, stride, offset);
-        this.gl.enableVertexAttribArray(attribute.location);
-    }
+    /** Set the WebGLProgram as the current program of the WebGLRenderer.
+     * Link the WebGLProgram if not linked on the current WebGLRenderer
+     * @param {WebGLProgram} program program to use
+     * @returns {WebGLRenderer} the current WebGLRenderer
+     */
+    useProgram(program) {
+        if (this.currentProgram != program) {
+            if (program.parent != this) {
+                this.linkProgram(program);
+            }
+            this.gl.useProgram(program.location);
+            this.currentProgram = program;
+        }
 
-    disableVertexAttribArray(attribute) {
-        this.gl.disableVertexAttribArray(attribute.location);
         return this;
+    }
+
+    /** Bind the buffer as the current buffer of the WebGLRenderer.
+     * Create the WebGLBuffer if not created on the current WebGLRenderer
+     * @param {WebGLBuffer} buffer WebGLBuffer to bind
+     * @returns {WebGLRenderer} the current WebGLRenderer
+     */
+    bindBuffer(buffer) {
+        if (this.currentBuffer != buffer) {
+            if (buffer.parent != this) {
+                this.appendChild(buffer);
+            }
+            this.gl.bindBuffer(this.gl[buffer.type], buffer.location);
+            this.currentBuffer = buffer;
+        }
+
+        return this;
+    }
+
+    setBufferData(buffer) {
+        if (this.currentBuffer != buffer) {
+            this.bindBuffer(buffer);
+        }
+        this.gl.bufferData(buffer.type, buffer.data, this.gl[buffer.usage]);
+    }
+
+    setBufferSubData(buffer, offset, subData) {
+        if (this.currentBuffer != buffer) {
+            this.bindBuffer(buffer);
+        }
+        this.gl.bufferSubData(buffer.type, offset, subData);
+    }
+
+    enableBuffer(buffer) {
+        buffer.childrens.forEach(a => {
+            this.gl.vertexAttribPointer(a.location, a.size, a.type, a.normalized, buffer.stride, a.offset);
+            this.gl.enableVertexAttribArray(a.location);
+        });
+    }
+
+    setParameterValue(parameter, value) {
+        this.gl[parameter.setter](parameter.location, value);
+    }
+
+    //to be removed
+    enable(capability) {
+        this.gl.enable(this.gl[capability]);
+    }
+
+    disable(capability) {
+        this.gl.disable(this.gl[capability]);
+    }
+
+    scissor(x, y, width, height) {
+        console.log(x, y, width, height);
+        this.gl.viewport(x, y, width, height);
+        this.gl.scissor(x, y, width, height);
+    }
+
+    viewport(x, y, width, height) {
+        this.gl.viewport(x, y, width, height);
     }
 
     clearColor(color) {
@@ -226,118 +226,213 @@ export class WebGLRenderer extends Node {
     polyfillExtension() {
         this.extensions = {};
         this.gl.getSupportedExtensions().forEach(e => this.extensions[e] = this.gl.getExtension(e))
-        const instancedArrays = this.extensions['ANGLE_instanced_arrays'];
-        if (instancedArrays) {
-            this.gl.drawArraysInstanced = instancedArrays.drawArraysInstancedANGLE;
-            this.gl.drawElementsInstanced = instancedArrays.drawElementsInstancedANGLE;
-            this.gl.vertexAttribDivisor = instancedArrays.vertexAttribDivisorANGLE;
+        let ext = this.getExtension('ANGLE_instanced_arrays');
+        Object.defineProperties(this.gl, {
+            VERTEX_ATTRIB_ARRAY_DIVISOR: {
+                value: ext.VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE,
+                writable: false
+            },
+            drawArraysInstanced: {
+                value: ext.drawArraysInstancedANGLE,
+                writable: false
+            },
+            drawElementsInstanced: {
+                value: ext.drawElementsInstancedANGLE,
+                writable: false
+            },
+            vertexAttribDivisor: {
+                value: ext.vertexAttribDivisorANGLE,
+                writable: false
+            },
+        });
+        ext = this.getExtension('OES_vertex_array_object');
+        Object.defineProperties(this.gl, {
+            VERTEX_ARRAY_BINDING: {
+                value: ext.VERTEX_ARRAY_BINDING_OES,
+                writable: false
+            },
+            createVertexArray: {
+                value: ext.createVertexArrayOES,
+                writable: false
+            },
+            deleteVertexArray: {
+                value: ext.deleteVertexArrayOES,
+                writable: false
+            },
+            isVertexArray: {
+                value: ext.isVertexArray,
+                writable: false
+            },
+            bindVertexArray: {
+                value: ext.bindVertexArrayOES,
+                writable: false
+            },
+        });
+    }
+
+    getExtension(name) {
+        return this.extensions[name]
+            || this.extensions['MOZ_' + name]
+            || this.extensions['OP_' + name]
+            || this.extensions['WEBKIT_' + name];
+    }
+
+    static capability = {
+        blend: 'BLEND',
+        cullFace: 'CULL_FACE',
+        depth: 'DEPTH_TEST',
+        dither: 'DITHER',
+        polygonOffsetFill: 'POLYGON_OFFSET_FILL',
+        sampleAlphaToCoverage: 'SAMPLE_ALPHA_TO_COVERAGE',
+        sampleCoverage: 'SAMPLE_COVERAGE',
+        scissor: 'SCISSOR_TEST',
+        stencil: 'STENCIL_TEST',
+    };
+}
+
+/** Create a attribute for a WebGLProgram with the current WebGLRenderer.
+ * @param {WebGLRenderer} renderer WebGLRenderer context
+ * @param {WebGLProgram} program WebGLProgram to update
+ * @param {WebGLActiveInfo} attribute WebGL location of Attribute
+ */
+function createAttribute(renderer, program, attribute) {
+    const location = renderer.gl.getAttribLocation(program.location, attribute.name);
+    Object.defineProperty(program.attributes, attribute.name, {
+        get() { return location },
+        set(v) {
+            if (v instanceof WebGLBuffer) {
+                renderer.bindBuffer(v);
+                renderer.gl.enableVertexAttribArray(location);
+                //renderer.vertexAttribPointer(i, v.numComponents || v.size, v.type || gl.FLOAT, v.normalize || false, v.stride || 0, v.offset || 0);
+            } else {
+                renderer.gl.disableVertexAttribArray(location);
+                if (Number.isFinite(v)) {
+                    renderer.gl.vertexAttrib1f(location, v);
+                } else {
+                    switch (v.length) {
+                        case 4:
+                            renderer.gl.vertexAttrib4fv(location, v);
+                            break;
+                        case 3:
+                            renderer.gl.vertexAttrib3fv(location, v);
+                            break;
+                        case 2:
+                            renderer.gl.vertexAttrib2fv(location, v);
+                            break;
+                        case 1:
+                            renderer.gl.vertexAttrib1fv(location, v);
+                            break;
+                        default:
+                            throw new Error('the length of a float constant value must be between 1 and 4!');
+                    }
+                }
+            }
         }
-    }
+    });
+}
 
-    static simpleProgram() {
-        const program = new Program();
-        const aVertexPosition = new Attribute('vec4', 'a_VertexPosition');
-        const aVertexColor = new Attribute('vec4', 'a_VertexColor');
-
-        const uPointSize = new Uniform('float', 'u_PointSize');
-
-        const vVertexColor = new Varying('vec4', 'v_VertexColor');
-
-        program.appendChild(new VertexShader(
-            [
-                aVertexPosition, aVertexColor,
-                uPointSize,
-                vVertexColor,
-            ],
-            [
-                'void main(){',
-                `gl_PointSize = ${uPointSize};`,
-                `gl_Position = ${aVertexPosition};`,
-                `${vVertexColor} = ${aVertexColor};`,
-                '}'
-            ].join('')
-        ));
-
-        program.appendChild(new FragmentShader(
-            'highp',
-            [
-                vVertexColor,
-            ],
-            [
-                'void main(){',
-                `gl_FragColor = ${vVertexColor};`,
-                '}'
-            ].join('')
-        ));
-        return program;
-    }
-
-    static defaultProgram() {
-        const program = new Program();
-        const aVertexPosition = new Attribute('vec4', 'a_VertexPosition');
-        const aVertexColor = new Attribute('vec4', 'a_VertexColor');
-        const aVertexNormal = new Attribute('vec4', 'a_VertexNormal');
-
-        const uViewMatrix = new Uniform('mat4', 'u_ViewMatrix');
-        const uVertexMatrix = new Uniform('mat4', 'u_VertexMatrix');
-        const uNormalMatrix = new Uniform('mat4', 'u_NormalMatrix');
-        const uPointSize = new Uniform('float', 'u_PointSize');
-        const uClicked = new Uniform('bool', 'u_Clicked');
-
-        const vVertexColor = new Varying('vec4', 'v_VertexColor');
-        const vVertexNormal = new Varying('vec3', 'v_VertexNormal');
-        const vVertexPosition = new Varying('vec3', 'v_VertexPosition');
-        const vDistance = new Varying('float', 'v_Distance');
-
-        program.appendChild(new VertexShader(
-            [
-                aVertexPosition, aVertexColor, aVertexNormal,
-                uViewMatrix, , uVertexMatrix, uNormalMatrix, uPointSize, uClicked,
-                vVertexColor, vVertexNormal, vVertexPosition, vDistance,
-            ],
-            [
-                'void main(){',
-                `gl_PointSize = ${uPointSize};`,
-                `gl_Position = ${uViewMatrix} * ${uVertexMatrix} * ${aVertexPosition};`,
-                `${vVertexColor} = ${aVertexColor};`,
-                `if(${uClicked}) {`,
-                `return;`,
-                `}`,
-                `${vVertexNormal} = normalize(vec3(${uNormalMatrix} * ${aVertexNormal}));`,
-                `${vVertexPosition} = vec3(${uVertexMatrix} * ${aVertexPosition});`,
-                `${vDistance} = gl_Position.w;`,
-                '}'
-            ].join('')
-        ));
-
-        const uLightColor = new Uniform('vec3', 'u_LightColor');
-        const uLightPosition = new Uniform('vec3', 'u_LightPosition');
-        const uAmbientLight = new Uniform('vec3', 'u_AmbientLight');
-        const uFogColor = new Uniform('vec3', 'u_FogColor');
-        const uFogDistance = new Uniform('vec2', 'u_FogDist');
-
-        program.appendChild(new FragmentShader(
-            'highp',
-            [
-                uLightColor, uLightPosition, uAmbientLight, uClicked, uFogColor, uFogDistance,
-                vVertexColor, vVertexNormal, vVertexPosition, vDistance,
-            ],
-            [
-                'void main(){',
-                `if(${uClicked}) {`,
-                `gl_FragColor = ${vVertexColor};`,
-                `return;`,
-                `}`,
-                `vec3 lightDirection = normalize(${uLightPosition} - ${vVertexPosition});`,
-                `float nDotL = max(dot(lightDirection, ${vVertexNormal}), 0.0);`,
-                `vec3 diffuse = ${uLightColor} * ${vVertexColor}.rgb * nDotL;`,
-                `vec3 ambient = ${uAmbientLight} * ${vVertexColor}.rgb;`,
-                `float fogFactor = clamp((${uFogDistance}.y - ${vDistance}) / (${uFogDistance}.y - ${uFogDistance}.x), 0.0, 1.0);`,
-                `vec3 color = mix(${uFogColor}, vec3(diffuse + ambient), fogFactor);`,
-                `gl_FragColor = vec4(color, ${vVertexColor}.a);`,
-                '}'
-            ].join('')
-        ));
-        return program;
+/** Create a uniform for a WebGLProgram with the current WebGLRenderer.
+ * @param {WebGLRenderer} renderer WebGLRenderer context
+ * @param {WebGLProgram} program WebGLProgram to update
+ * @param {WebGLActiveInfo} uniform WebGL location of Uniform
+ */
+function createUniform(renderer, program, uniform) {
+    const location = renderer.gl.getUniformLocation(program.location, uniform.name);
+    switch (uniform.type) {
+        case renderer.gl.FLOAT:
+            Object.defineProperty(program.uniforms, uniform.name, {
+                get() { return location },
+                set(v) {
+                    renderer.gl.uniform1fv(location, v);
+                }
+            });
+            break;
+        case renderer.gl.FLOAT_VEC2:
+            Object.defineProperty(program.uniforms, uniform.name, {
+                get() { return location },
+                set(v) {
+                    renderer.gl.uniform2fv(location, v);
+                }
+            });
+            break;
+        case renderer.gl.FLOAT_VEC3:
+            Object.defineProperty(program.uniforms, uniform.name, {
+                get() { return location },
+                set(v) {
+                    renderer.gl.uniform3fv(location, v);
+                }
+            });
+            break;
+        case renderer.gl.FLOAT_VEC4:
+            Object.defineProperty(program.uniforms, uniform.name, {
+                get() { return location },
+                set(v) {
+                    renderer.gl.uniform4fv(location, v);
+                }
+            });
+            break;
+        case renderer.gl.BOOL:
+        case renderer.gl.INT:
+            Object.defineProperty(program.uniforms, uniform.name, {
+                get() { return location },
+                set(v) {
+                    renderer.gl.uniform1i(location, v);
+                }
+            });
+            break;
+        case renderer.gl.BOOL_VEC2:
+        case renderer.gl.INT_VEC2:
+            Object.defineProperty(program.uniforms, uniform.name, {
+                get() { return location },
+                set(v) {
+                    renderer.gl.uniform2iv(location, v);
+                }
+            });
+            break;
+        case renderer.gl.BOOL_VEC3:
+        case renderer.gl.INT_VEC3:
+            Object.defineProperty(program.uniforms, uniform.name, {
+                get() { return location },
+                set(v) {
+                    renderer.gl.uniform3iv(location, v);
+                }
+            });
+            break;
+        case renderer.gl.BOOL_VEC4:
+        case renderer.gl.INT_VEC4:
+            Object.defineProperty(program.uniforms, uniform.name, {
+                get() { return location },
+                set(v) {
+                    renderer.gl.uniform4iv(location, v);
+                }
+            });
+            break;
+        case renderer.gl.FLOAT_MAT2:
+            Object.defineProperty(program.uniforms, uniform.name, {
+                get() { return location },
+                set(v) {
+                    renderer.gl.uniformMatrix2fv(location, false, v);
+                }
+            });
+            break;
+        case renderer.gl.FLOAT_MAT3:
+            Object.defineProperty(program.uniforms, uniform.name, {
+                get() { return location },
+                set(v) {
+                    renderer.gl.uniformMatrix3fv(location, false, v);
+                }
+            });
+            break;
+        case renderer.gl.FLOAT_MAT4:
+            Object.defineProperty(program.uniforms, uniform.name, {
+                get() { return location },
+                set(v) {
+                    renderer.gl.uniformMatrix4fv(location, false, v);
+                }
+            });
+            break;
+        case renderer.gl.SAMPLER_2D:
+        case renderer.gl.SAMPLER_CUBE:
+            throw new Error(`${uniform.type} is missing createUniform implementation.`);
     }
 }

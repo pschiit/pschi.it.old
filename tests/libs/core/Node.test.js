@@ -4,6 +4,7 @@ test('When cloning should return a new copy of the node', () => {
     const parent = new Node();
     const clone = parent.clone();
 
+    expect(clone).toBeInstanceOf(Node);
     expect(clone).not.toBe(parent);
     expect(clone).toEqual(parent);
 });
