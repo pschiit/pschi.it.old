@@ -1,7 +1,7 @@
 import { Node } from '../../core/Node';
 
 export class WebGLVertexArray extends Node {
-    constructor(){
+    constructor() {
         super();
         this.location = null;
     }

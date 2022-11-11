@@ -11,7 +11,7 @@ export class WebGLCanvas extends Canvas {
         this.initContext();
 
         this.element.addEventListener('webglcontextlost', (e) => {
-            this.gl = null;
+            this.context = null;
 
         });
         this.element.addEventListener('webglcontextrestored', (e) => {
@@ -20,9 +20,11 @@ export class WebGLCanvas extends Canvas {
     }
 
     initContext(contextOptions) {
-        this.context = new WebGLRenderer(this.element.getContext('webgl', contextOptions) || this.element.getContext('experimental-webgl', contextOptions));
-        if (!this.context) {
+        const newContext = new WebGLRenderer(this.element.getContext('webgl', contextOptions) || this.element.getContext('experimental-webgl', contextOptions));
+        if (!newContext) {
             this.element.innerText = 'WebGL is not supported.';
+            throw new Error(this.element.innerText);
         }
+        this.context = newContext;
     }
 }

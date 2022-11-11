@@ -1,5 +1,4 @@
 import { Node } from '../../core/Node';
-import { GLSLShader } from '../../shader/GLSLShader';
 
 export class WebGLShader extends Node {
     /** Create a GLSLShader

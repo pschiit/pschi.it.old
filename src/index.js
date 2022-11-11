@@ -1,11 +1,12 @@
+import { Node3d } from './libs/3d/Node3d';
+import { Buffer } from './libs/core/Buffer';
+import { ArrayBuffer } from './libs/core/ArrayBuffer';
 import { HtmlNode } from './libs/html/HtmlNode';
 import { WebGLCanvas } from './libs/html/WebGLCanvas';
-import { WebGLBuffer } from './libs/renderer/webgl/WebGLBuffer';
-import { GLSLParameter } from './libs/shader/GLSLParameter';
-import { WebGLProgram } from './libs/renderer/webgl/WebGLProgram';
-import { WebGLShader } from './libs/renderer/webgl/WebGLShader';
-import { GLSLShader } from './libs/shader/GLSLShader';
-import { WebGLRenderer } from './libs/renderer/webgl/WebGLRenderer';
+import { GLSLMaterial } from './libs/material/GLSLMaterial';
+import { GeometryBuffer } from './libs/3d/geometry/GeometryBuffer';
+import { GLSLShader } from './libs/renderer/shader/GLSL/GLSLShader';
+import { GLSLParameter } from './libs/renderer/shader/GLSL/GLSLParameter';
 
 const defaultStyle = {
     width: '100%',
@@ -17,77 +18,52 @@ const body = HtmlNode.body;
 body.style = defaultStyle;
 
 const canvas = new WebGLCanvas();
-canvas.style = defaultStyle;
 body.appendChild(canvas);
+canvas.style = defaultStyle;
 canvas.fitParent();
 
 const renderer = canvas.context;
-renderer.clearColor([0, 0, 0, 1]);
-renderer.enable(WebGLRenderer.capability.scissor);
 
-const aVertexPosition = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, 'a_VertexPosition');
-const aVertexColor = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, 'a_VertexColor');
-
-const uPointSize = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, 'u_PointSize');
-
-const vVertexColor = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.vec4, 'v_VertexColor');
+const position = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, GeometryBuffer.positionName);
+const color = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, GeometryBuffer.colorName);
+const vColor = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.vec4, 'v_' + GeometryBuffer.colorName);
 
 const vertexShader = new GLSLShader(GLSLShader.type.vertexShader, [
-    aVertexPosition, aVertexColor,
-    uPointSize,
-    vVertexColor], [
-        'void main(){',
-        `gl_PointSize = ${uPointSize};`,
-        `gl_Position = ${aVertexPosition};`,
-        `${vVertexColor} = ${aVertexColor};`,
-        '}'
-    ].join('')
-);
+    position,
+    color,
+    vColor
+], [
+    'void main(){',
+    `${vColor} = ${color};`,
+    `gl_Position = ${position};`,
+    '}'
+].join('\n'))
 
-const fragmentShader = new GLSLShader(GLSLShader.type.fragmentShader, [
-    vVertexColor], [
-        'void main(){',
-        `gl_FragColor = ${vVertexColor};`,
-        '}'
-    ].join(''),
-    'highp'
-);
+const fragmentShader = new GLSLShader(GLSLShader.type.vertexShader, [
+    vColor,
+], [
+    'void main(){',
+    `gl_FragColor = ${vColor};`,
+    '}'
+].join('\n'), GLSLShader.precision.high)
 
-const program = new WebGLProgram(
-    new WebGLShader(vertexShader.type, vertexShader.source),
-    new WebGLShader(fragmentShader.type, fragmentShader.source)
-);
+const material = new GLSLMaterial(vertexShader, fragmentShader);
+const geometry = new GeometryBuffer();
 
-renderer.useProgram(program);
+geometry.index = [0, 1, 2];
+geometry.position = [
+    -.5, -0.5, 0,
+    0, 0.5, 0,
+    0.5, -0.5, 0];
+geometry.color = [
+    1, 0, 0, 1,
+    0, 1, 0, 1,
+    0, 0, 1, 1];
 
-const width = canvas.element.clientWidth / 2;
-const height = canvas.element.clientHeight / 2;
-
-const buffer = new WebGLBuffer(WebGLBuffer.type.arrayBuffer, WebGLBuffer.usage.staticDraw);
-buffer.data = new Float32Array([
-    0, 0, 0, 1, 0, 0, 1,
-    0, 0, 0, 0, 1, 0, 1,
-    0, 0, 0, 0, 0, 1, 1,
-    0, 0, 0, 1, 1, 0, 1,]);
-
-renderer.bindBuffer(buffer);
-program.attributes[aVertexColor] = [1, 0, 0, 1];
-program.attributes[aVertexPosition] = [0, 0, 0, 1];
-program.uniforms[uPointSize] = [10];
-
-renderer.scissor(0, 0, width, height);
+renderer.load(geometry);
+renderer.load(material);
+renderer.program.attributes[GeometryBuffer.positionName] = geometry.position;
+renderer.program.attributes[GeometryBuffer.colorName] = geometry.color;
+renderer.viewport(0, 0, canvas.element.clientWidth, canvas.element.clientHeight);
 renderer.clear();
-
-renderer.drawArrays('POINTS', 0, 1);
-
-renderer.scissor(width, 0, width, height);
-renderer.clear();
-renderer.drawArrays('POINTS', 0, 1);
-
-renderer.scissor(0, height, width, height);
-renderer.clear();
-renderer.drawArrays('POINTS', 0, 1);
-
-renderer.scissor(width, height, width, height);
-renderer.clear();
-renderer.drawArrays('POINTS', 0, 1);
+renderer.drawBuffer(geometry.primitive, geometry);

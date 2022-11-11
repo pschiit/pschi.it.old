@@ -1,8 +1,10 @@
 import { Node } from '../../core/Node';
+import { Buffer } from '../../core/Buffer';
+import { ArrayBuffer } from '../../core/ArrayBuffer';
+import { Material } from '../../material/Material';
 import { WebGLBuffer } from './WebGLBuffer';
 import { WebGLProgram } from './WebGLProgram';
 import { WebGLShader } from './WebGLShader';
-import { WebGLVertexArray } from './WebGLVertexArray';
 
 export class WebGLRenderer extends Node {
     /** Create a WebGLRenderer from a WebGLRenderingContext
@@ -12,24 +14,21 @@ export class WebGLRenderer extends Node {
         super();
         this.gl = gl;
         this.polyfillExtension();
+        this.clearColor([0, 0, 0, 1]);
 
-        this.vertexArray = null;
-        this.currentProgram = null;
-        this.currentBuffer = null;
+        this._currentVertexArray = null;
+        this._program = null;
+        this._arrayBuffer = null;
+        this._elementArrayBuffer = null;
 
         this.addEventListener(Node.event.nodeInserted, (e) => {
             const child = e.inserted;
             if (child instanceof WebGLShader) {
-                child.location = this.gl.createShader(this.gl[child.type]);
-            }
-            if (child instanceof WebGLProgram) {
-                child.location = this.gl.createProgram();
-            }
-            if (child instanceof WebGLVertexArray) {
-                child.location = this.gl.createVertexArray();
-            }
-            if (child instanceof WebGLBuffer) {
-                child.location = this.gl.createBuffer();
+                compileShader(this, child);
+            } else if (child instanceof WebGLProgram) {
+                linkProgram(this, child);
+            } else if (child instanceof WebGLBuffer) {
+                createBuffer(this, child);
             }
         });
         this.addEventListener(Node.event.nodeRemoved, (e) => {
@@ -45,132 +44,198 @@ export class WebGLRenderer extends Node {
                 if (this.currentProgram === child) {
                     this.currentProgram = null;
                 }
-            } else if (child instanceof WebGLVertexArray) {
-                child.location = this.gl.deleteVertexArray(child.location);
-                if (this.vertexArray === child) {
-                    this.vertexArray = null;
-                }
             } else if (child instanceof WebGLBuffer) {
+                if (child.index) {
+                    this.gl.deleteBuffer(child.index.location);
+                    child.index.location = null;
+                }
                 this.gl.deleteBuffer(child.location);
                 child.location = null;
-                if (this.currentBuffer === child) {
+                delete child.update;
+                if (this.arrayBuffer === child) {
                     this.currentBuffer = null;
                 }
             }
         });
     }
 
-    /** Compile a WebGLShader with the current WebGLRenderer
-     * @param {WebGLShader} shader WebGLShader to compile
-     * @returns {WebGLRenderer} the current WebGLRenderer
+    /** Return the WebGLProgram currently used by the WebGLRenderer
+     * @return {WebGLProgram} the WebGLProgram used
      */
-    compileShader(shader) {
-        this.appendChild(shader);
-        this.gl.shaderSource(shader.location, shader.source);
-        this.gl.compileShader(shader.location);
-        const success = this.gl.getShaderParameter(shader.location, this.gl.COMPILE_STATUS);
-        if (success) {
-            return this;
-        }
-        const error = new Error(`Failed to create ${shader.type} :\n${this.gl.getShaderInfoLog(shader.location)}\n\n${shader.source}`);
-        this.removeChild(shader);
-        throw error;
+    get program() {
+        return this._program;
     }
 
-    /** Create a WebGLProgram with the current WebGLRenderer.
-     * Compile the WebGLShader if not compile on the current WebGLRenderer
-     * @param {WebGLProgram} program WebGLProgram to create
+    /** Set a WebGLProgram as the current program of the WebGLRenderer
+     * @param {WebGLProgram} v WebGLProgram to use
+     */
+    set program(v) {
+        if (this._program != v) {
+            this.gl.useProgram(v.location);
+            this._program = v;
+        }
+    }
+
+    /** Return the WebGLBuffer currently binded as ARRAY_BUFFER to the WebGLRenderer
+     * @return {WebGLBuffer} the WebGLBuffer binded
+     */
+    get arrayBuffer() {
+        return this._arrayBuffer;
+    }
+
+    /** Bind a WebGLBuffer as the current ARRAY_BUFFER of WebGLRenderer
+     * @param {WebGLBuffer} v WebGLBuffer to bind
+     */
+    set arrayBuffer(v) {
+        if (this.arrayBuffer != v) {
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, v.location);
+            this._arrayBuffer = v;
+        }
+    }
+
+    /** Return the WebGLBuffer currently binded as ELEMENT_ARRAY_BUFFER to the WebGLRenderer
+     * @return {WebGLBuffer} the WebGLBuffer binded
+     */
+    get elementArrayBuffer() {
+        return this._elementArrayBuffer;
+    }
+
+    /** Bind a WebGLBuffer as the current ELEMENT_ARRAY_BUFFER of WebGLRenderer
+     * @param {WebGLBuffer} v WebGLBuffer to bind
+     */
+    set elementArrayBuffer(v) {
+        if (this._elementArrayBuffer != v) {
+            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, v.location);
+            this._elementArrayBuffer = v;
+        }
+    }
+
+    /** Load a Node in the current WebGLRenderer
+     * @param {Node} node Node to render
      * @returns {WebGLRenderer} the current WebGLRenderer
      */
-    linkProgram(program) {
+    load(node) {
+        if (node instanceof Material) {
+            this.useMaterial(node);
+        } else if (node instanceof ArrayBuffer) {
+            this.loadBuffer(node);
+        } else if (node instanceof Buffer) {
+            this.loadBuffer(node);
+        }
+        return this;
+    }
+
+    /** Render a Node in the current WebGLRenderer
+     * @param {Node} node Node to render
+     * @returns {WebGLRenderer} the current WebGLRenderer
+     */
+    render(node) {
+        return this;
+    }
+
+    /** Load a Material in the current WebGLRenderer.
+     * Will replace the previous program used for this Material
+     * @param {Material} material Material to load
+     * @returns {WebGLRenderer} the current WebGLRenderer
+     */
+    loadMaterial(material) {
+        let program = this[material.id];
+        if (program) {
+            this.removeChild(program)
+        }
+        const vertexShader = new WebGLShader(WebGLShader.type.vertexShader, material.vertexShader.source);
+        const fragmentShader = new WebGLShader(WebGLShader.type.fragmentShader, material.fragmentShader.source);
+        program = new WebGLProgram(vertexShader, fragmentShader);
         this.appendChild(program);
-        if (program.vertexShader.parent != this) {
-            this.compileShader(program.vertexShader);
-        }
-        this.gl.attachShader(program.location, program.vertexShader.location);
-        if (program.fragmentShader.parent != this) {
-            this.compileShader(program.fragmentShader);
-        }
-        this.gl.attachShader(program.location, program.fragmentShader.location);
-        this.gl.linkProgram(program.location);
+        this[material.id] = program;
 
-        if (this.gl.getProgramParameter(program.location, this.gl.LINK_STATUS)) {
-            const uniformsCount = this.gl.getProgramParameter(program.location, this.gl.ACTIVE_UNIFORMS);
-            for (let i = 0; i < uniformsCount; i++) {
-                const uniform = this.gl.getActiveUniform(program.location, i);
-                createUniform(this, program, uniform);
-            }
-            console.log(program.uniforms);
-            const attributesCount = this.gl.getProgramParameter(program.location, this.gl.ACTIVE_ATTRIBUTES);
-            for (let i = 0; i < attributesCount; i++) {
-                const attribute = this.gl.getActiveAttrib(program.location, i);
-                createAttribute(this, program, attribute);
-            }
-            console.log(program.attributes);
-            return this;
-        }
-        const error = new Error(`Failed to create program : ${this.gl.getProgramInfoLog(program.location)}`);
-        this.removeChild(program);
-        throw error;
+        return this;
     }
 
-    /** Set the WebGLProgram as the current program of the WebGLRenderer.
-     * Link the WebGLProgram if not linked on the current WebGLRenderer
-     * @param {WebGLProgram} program program to use
+    /** Load or update a Buffer in the current WebGLRenderer.
+     * @param {Buffer | ArrayBuffer} buffer Buffer to load
      * @returns {WebGLRenderer} the current WebGLRenderer
      */
-    useProgram(program) {
-        if (this.currentProgram != program) {
-            if (program.parent != this) {
-                this.linkProgram(program);
+    loadBuffer(buffer) {
+        let arrayBuffer = this[buffer.id];
+        if (!arrayBuffer) {
+            arrayBuffer = new WebGLBuffer();
+            this.appendChild(arrayBuffer);
+            this[buffer.id] = arrayBuffer;
+        }
+        const usage = getUsage(this, buffer);
+        this.arrayBuffer = arrayBuffer;
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, buffer.data, usage);
+
+        if (buffer.index) {
+            let elementArrayBuffer = this[buffer.index.id];
+            if (!elementArrayBuffer) {
+                elementArrayBuffer = new WebGLBuffer();
+                this.appendChild(elementArrayBuffer);
+                this[buffer.index.id] = elementArrayBuffer;
             }
-            this.gl.useProgram(program.location);
-            this.currentProgram = program;
+            this.elementArrayBuffer = elementArrayBuffer;
+            this.elementArrayBuffer = elementArrayBuffer;
+            this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, buffer.index.data, usage);
         }
 
         return this;
     }
 
-    /** Bind the buffer as the current buffer of the WebGLRenderer.
-     * Create the WebGLBuffer if not created on the current WebGLRenderer
-     * @param {WebGLBuffer} buffer WebGLBuffer to bind
+    /** Set the Material as the current program of the WebGLRenderer.
+     * Load the Material if not loaded on the current WebGLRenderer or need an update
+     * @param {Material} material Material to use
+     * @returns {WebGLRenderer} the current WebGLRenderer
+     */
+    useMaterial(material) {
+        if (!this[material.id]) {
+            this.loadMaterial(material);
+        }
+        const program = this[material.id];
+        this.program = program;
+
+        return this;
+    }
+
+    /** Bind the Buffer as the current buffer of the WebGLRenderer.
+     * Load the Buffer if not loaded on the current WebGLRenderer
+     * @param {(Buffer | ArrayBuffer)} buffer Buffer to bind
      * @returns {WebGLRenderer} the current WebGLRenderer
      */
     bindBuffer(buffer) {
-        if (this.currentBuffer != buffer) {
-            if (buffer.parent != this) {
-                this.appendChild(buffer);
-            }
-            this.gl.bindBuffer(this.gl[buffer.type], buffer.location);
-            this.currentBuffer = buffer;
+        if (!this[buffer.id]) {
+            this.loadBuffer(buffer);
+        }
+        const webglBuffer = this[buffer.id];
+        this.arrayBuffer = webglBuffer;
+        if (buffer.index) {
+            this.elementArrayBuffer = this[buffer.index.id];
         }
 
         return this;
     }
 
-    setBufferData(buffer) {
-        if (this.currentBuffer != buffer) {
-            this.bindBuffer(buffer);
+
+    /** Draw the Buffer in the WebGLRenderer.
+     * Load the Buffer if not loaded on the current WebGLRenderer
+     * @param {(Buffer | ArrayBuffer)} buffer Buffer to bind
+     * @returns {WebGLRenderer} the current WebGLRenderer
+     */
+    drawBuffer(mode, buffer) {
+        console.log(buffer);
+        this.bindBuffer(buffer);
+        console.log(buffer.index);
+        if (buffer.index) {
+            this.drawElements(this.gl[mode], buffer.count, getType(this, buffer.index), buffer.offset);
         }
-        this.gl.bufferData(buffer.type, buffer.data, this.gl[buffer.usage]);
+        this.drawArrays(this.gl[mode], buffer.offset, buffer.count);
+
+        return this;
     }
 
-    setBufferSubData(buffer, offset, subData) {
-        if (this.currentBuffer != buffer) {
-            this.bindBuffer(buffer);
-        }
-        this.gl.bufferSubData(buffer.type, offset, subData);
-    }
-
-    enableBuffer(buffer) {
-        buffer.childrens.forEach(a => {
-            this.gl.vertexAttribPointer(a.location, a.size, a.type, a.normalized, buffer.stride, a.offset);
-            this.gl.enableVertexAttribArray(a.location);
-        });
-    }
-
-    setParameterValue(parameter, value) {
-        this.gl[parameter.setter](parameter.location, value);
+    createVertexArray(buffer, program) {
+        this.useProgram(program);
+        this.bindBuffer(buffer);
     }
 
     //to be removed
@@ -233,15 +298,21 @@ export class WebGLRenderer extends Node {
                 writable: false
             },
             drawArraysInstanced: {
-                value: ext.drawArraysInstancedANGLE,
+                value: function (mode, first, count, primcount) {
+                    return ext.drawArraysInstancedANGLE(mode, first, count, primcount);
+                },
                 writable: false
             },
             drawElementsInstanced: {
-                value: ext.drawElementsInstancedANGLE,
+                value: function (mode, count, type, offset, primcount) {
+                    return ext.drawElementsInstancedANGLE(mode, count, type, offset, primcount);
+                },
                 writable: false
             },
             vertexAttribDivisor: {
-                value: ext.vertexAttribDivisorANGLE,
+                value: function (index, divisor) {
+                    return ext.vertexAttribDivisorANGLE(index, divisor);
+                },
                 writable: false
             },
         });
@@ -252,19 +323,27 @@ export class WebGLRenderer extends Node {
                 writable: false
             },
             createVertexArray: {
-                value: ext.createVertexArrayOES,
+                value: function () {
+                    return ext.createVertexArrayOES();
+                },
                 writable: false
             },
             deleteVertexArray: {
-                value: ext.deleteVertexArrayOES,
+                value: function (arrayObject) {
+                    return ext.deleteVertexArrayOES(arrayObject);
+                },
                 writable: false
             },
             isVertexArray: {
-                value: ext.isVertexArray,
+                value: function (arrayObject) {
+                    return ext.isVertexArray(arrayObject);
+                },
                 writable: false
             },
             bindVertexArray: {
-                value: ext.bindVertexArrayOES,
+                value: function (arrayObject) {
+                    return ext.bindVertexArrayOES(arrayObject);
+                },
                 writable: false
             },
         });
@@ -290,6 +369,73 @@ export class WebGLRenderer extends Node {
     };
 }
 
+/** Create a WebGLProgram for the current WebGLRenderer.
+ * Compile the WebGLShader if not compile on the current WebGLRenderer
+ * @param {WebGLRenderer} renderer WebGLRenderer context
+ * @param {WebGLProgram} program WebGLProgram to create
+ * @returns {WebGLProgram} the linked WebGLProgram
+ */
+function linkProgram(renderer, program) {
+    program.location = renderer.gl.createProgram();
+
+    if (program.vertexShader.parent != renderer) {
+        renderer.appendChild(program.vertexShader);
+    }
+    renderer.gl.attachShader(program.location, program.vertexShader.location);
+
+    if (program.fragmentShader.parent != renderer) {
+        renderer.appendChild(program.fragmentShader);
+    }
+    renderer.gl.attachShader(program.location, program.fragmentShader.location);
+
+    renderer.gl.linkProgram(program.location);
+
+    if (renderer.gl.getProgramParameter(program.location, renderer.gl.LINK_STATUS)) {
+        const uniformsCount = renderer.gl.getProgramParameter(program.location, renderer.gl.ACTIVE_UNIFORMS);
+        for (let i = 0; i < uniformsCount; i++) {
+            const uniform = renderer.gl.getActiveUniform(program.location, i);
+            createUniform(renderer, program, uniform);
+        }
+        const attributesCount = renderer.gl.getProgramParameter(program.location, renderer.gl.ACTIVE_ATTRIBUTES);
+        for (let i = 0; i < attributesCount; i++) {
+            const attribute = renderer.gl.getActiveAttrib(program.location, i);
+            createAttribute(renderer, program, attribute);
+        }
+        return program;
+    }
+    const error = new Error(`Failed to create program : ${renderer.gl.getProgramInfoLog(program.location)}`);
+    renderer.removeChild(program);
+    throw error;
+}
+
+/** Compile a WebGLShader for the current WebGLRenderer
+ * @param {WebGLRenderer} renderer WebGLRenderer context
+ * @param {WebGLShader} shader WebGLShader to compile
+ * @returns {WebGLShader} the compiled WebGLShader
+ */
+function compileShader(renderer, shader) {
+    shader.location = renderer.gl.createShader(renderer.gl[shader.type]);
+    renderer.gl.shaderSource(shader.location, shader.source);
+    renderer.gl.compileShader(shader.location);
+    const success = renderer.gl.getShaderParameter(shader.location, renderer.gl.COMPILE_STATUS);
+    if (success) {
+        return shader;
+    }
+    const error = new Error(`Failed to create ${shader.type} :\n${renderer.gl.getShaderInfoLog(shader.location)}\n\n${shader.source}`);
+    renderer.removeChild(shader);
+    throw error;
+}
+
+/** Create a WebGLBuffer for the current WebGLRenderer
+ * @param {WebGLRenderer} renderer WebGLRenderer context
+ * @param {WebGLBuffer} buffer WebGLBuffer to create
+ * @returns {WebGLBuffer} the created WebGLBuffer
+ */
+function createBuffer(renderer, buffer) {
+    buffer.location = renderer.gl.createBuffer();
+    return buffer;
+}
+
 /** Create a attribute for a WebGLProgram with the current WebGLRenderer.
  * @param {WebGLRenderer} renderer WebGLRenderer context
  * @param {WebGLProgram} program WebGLProgram to update
@@ -300,10 +446,10 @@ function createAttribute(renderer, program, attribute) {
     Object.defineProperty(program.attributes, attribute.name, {
         get() { return location },
         set(v) {
-            if (v instanceof WebGLBuffer) {
-                renderer.bindBuffer(v);
+            if (v instanceof Buffer) {
+                renderer.bindBuffer(v.parent || v);
                 renderer.gl.enableVertexAttribArray(location);
-                //renderer.vertexAttribPointer(i, v.numComponents || v.size, v.type || gl.FLOAT, v.normalize || false, v.stride || 0, v.offset || 0);
+                renderer.gl.vertexAttribPointer(location, v.step, getType(renderer, v), v.normalize, v.parent?.BYTES_PER_STEP || 0, v.BYTES_PER_OFFSET);
             } else {
                 renderer.gl.disableVertexAttribArray(location);
                 if (Number.isFinite(v)) {
@@ -343,7 +489,7 @@ function createUniform(renderer, program, uniform) {
             Object.defineProperty(program.uniforms, uniform.name, {
                 get() { return location },
                 set(v) {
-                    renderer.gl.uniform1fv(location, v);
+                    renderer.gl.uniform1f(location, v);
                 }
             });
             break;
@@ -434,5 +580,42 @@ function createUniform(renderer, program, uniform) {
         case renderer.gl.SAMPLER_2D:
         case renderer.gl.SAMPLER_CUBE:
             throw new Error(`${uniform.type} is missing createUniform implementation.`);
+    }
+}
+
+
+/** return the value of Buffer.usage in a WebGLRenderer
+ * @param {WebGLRenderer} renderer WebGLRenderer context
+ * @param {Buffer | ArrayBuffer} buffer a buffer with usage
+ * @returns {Number} gl.STATIC_DRAW || gl.DYNAMIC_DRAW || gl.STREAM_DRAW
+*/
+function getUsage(renderer, buffer) {
+    if (buffer.usage === Buffer.usage.static) {
+        return renderer.gl.STATIC_DRAW;
+    } else if (buffer.usage === Buffer.usage.dynamic) {
+        return renderer.gl.DYNAMIC_DRAW;
+    } else if (buffer.usage === Buffer.usage.stream) {
+        return renderer.gl.STREAM_DRAW;
+    } else {
+        throw new Error(`${buffer.usage} is missing implementation for ${getUsage.name}.`)
+    }
+}
+
+/** return the value of Buffer.type in a WebGLRenderer
+ * @param {WebGLRenderer} renderer WebGLRenderer context
+ * @param {Buffer | ArrayBuffer} buffer a buffer with usage
+ * @returns {Number} gl.FLOAT || gl.UNSIGNED_INT || gl.UNSIGNED_SHORT || gl.UNSIGNED_BYTE
+*/
+function getType(renderer, buffer) {
+    if (buffer.data instanceof Float32Array) {
+        return renderer.gl.FLOAT;
+    } else if (buffer.data instanceof Uint32Array) {
+        return renderer.gl.UNSIGNED_INT;
+    } else if (buffer.data instanceof Uint16Array) {
+        return renderer.gl.UNSIGNED_SHORT;
+    } else if (buffer.data instanceof Uint8Array) {
+        return renderer.gl.UNSIGNED_BYTE;
+    } else {
+        throw new Error(`${buffer.data.constructor.name} is missing implementation for ${getType.name}.`)
     }
 }

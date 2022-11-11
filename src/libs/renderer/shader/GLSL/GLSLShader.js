@@ -1,4 +1,4 @@
-import { Node } from '../core/Node';
+import { Node } from '../../../core/Node';
 import { GLSLParameter } from './GLSLParameter';
 
 export class GLSLShader extends Node {
@@ -14,7 +14,6 @@ export class GLSLShader extends Node {
         this.parameters = parameters;
         this.script = script;
         this.precision = precision;
-        this.location = null;
     }
 
     /** Return all the attributes of the current GLSLShader.
@@ -59,5 +58,13 @@ export class GLSLShader extends Node {
     static type = {
         vertexShader: 'VERTEX_SHADER',
         fragmentShader: 'FRAGMENT_SHADER'
+    };
+
+    /** GLSLShader precision value
+    */
+    static precision = {
+        low: 'lowp',
+        medium: 'mediump',
+        high: 'highp'
     };
 }

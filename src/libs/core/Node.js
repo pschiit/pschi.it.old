@@ -5,6 +5,7 @@ export class Node {
     */
     constructor() {
         this.id = Node.generate();
+        this.name = null;
         this.parent = null;
         this.childrens = [];
         this.listeners = {};
@@ -14,11 +15,13 @@ export class Node {
     /** Append a child Node to the current Node
      * and update the child's parent to the new current Node
      * @param {Node} child the node to append 
-     * @return the current Node
+     * @return {Node} the current Node
     */
     appendChild(child) {
         if (arguments.length > 1) {
-            return Node.repeatFunction(arguments, this.appendChild.bind(this));
+            Node.repeatFunction(arguments, this.appendChild.bind(this));
+
+            return this;
         }
         if (!(child instanceof Node)) {
             throw new Error(`${child.constructor.name} can't be child of ${this.constructor.name}.`);
@@ -31,8 +34,8 @@ export class Node {
         }
 
         child.parent = this;
-        this.childrens.push(child);
-        this.dispatchEvent({ type: Node.event.nodeInserted, inserted: child });
+        const index = this.childrens.push(child);
+        this.dispatchEvent({ type: Node.event.nodeInserted, inserted: child, index: index - 1});
 
         return this;
     }
@@ -40,11 +43,12 @@ export class Node {
     /** Remove a child Node to the current Node
      * and remove the child's parent
      * @param {Node} child the node to remove to 
-     * @return the current Node
+     * @return {Node} the current Node
     */
     removeChild(child) {
         if (arguments.length > 1) {
-            return Node.repeatFunction(arguments, this.removeChild.bind(this));
+            Node.repeatFunction(arguments, this.removeChild.bind(this));
+            return this;
         }
         const index = this.childrens.indexOf(child);
         if (index === -1) {
@@ -53,7 +57,7 @@ export class Node {
 
         child.parent = null;
         this.childrens.splice(index, 1);
-        this.dispatchEvent({ type: Node.event.nodeRemoved, removed: child });
+        this.dispatchEvent({ type: Node.event.nodeRemoved, removed: child, index: index });
 
         return this;
     }
@@ -61,6 +65,7 @@ export class Node {
     /** Registers an event handler of a specific event type on the current Node
      * @param {string} type the type of event for which to add an event listener
      * @param {Function} listener event listener to be added
+     * @return {Node} the current Node
     */
     addEventListener(type, listener) {
         if (this.listeners[type] === undefined) {
@@ -69,18 +74,21 @@ export class Node {
         if (this.listeners[type].indexOf(listener) === - 1) {
             this.listeners[type].push(listener);
         }
+
+        return this;
     }
 
     /** Removes an event listener from the current Node
      * @param {string} type the type of event for which to remove an event listener
      * @param {Function} listener the event listener to be removed
+     * @return {Node} the current Node
     */
     removeEventListener(type, listener) {
         if (this.listeners[type] !== undefined) {
             const index = this.listeners[type].indexOf(listener);
             if (index !== -1) {
                 this.listeners[type].splice(index, 1);
-                return;
+                return this;
             }
         }
         throw new Error(`Listener ${type} ${listener} not found on Node ${this.id}.`);
@@ -89,6 +97,7 @@ export class Node {
     /** Dispatches an event to the current Node
      * the event will carry the current Node as target
      * @param {Object} event the object to dispatch
+     * @return {Node} the current Node
     */
     dispatchEvent(event) {
         if (this.listeners[event.type] !== undefined) {
@@ -100,6 +109,8 @@ export class Node {
                 listeners[i].call(this, event);
             }
         }
+
+        return this;
     }
 
     /** Clone the current Node
@@ -108,6 +119,7 @@ export class Node {
     clone() {
         const clone = new this.constructor();
         Object.assign(clone, JSON.parse(this.JSON));
+
         return clone;
     }
 
@@ -123,6 +135,7 @@ export class Node {
         for (let i = 0; i < args.length; i++) {
             result[i] = fn(args[i]);
         }
+        
         return result;
     }
 
