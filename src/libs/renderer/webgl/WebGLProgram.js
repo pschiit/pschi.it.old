@@ -92,61 +92,91 @@ function createUniform(renderer, program, uniform) {
     switch (uniform.type) {
         case renderer.gl.FLOAT:
             program.uniforms[uniform.name] = (v) => {
-                renderer.gl.uniform1f(location, v);
+                if (program.cache.uniforms[uniform.name] != v) {
+                    renderer.gl.uniform1f(location, v);
+                    program.cache.uniforms[uniform.name] = v;
+                }
             };
             break;
         case renderer.gl.FLOAT_VEC2:
             program.uniforms[uniform.name] = (v) => {
-                renderer.gl.uniform2fv(location, v);
+                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
+                    renderer.gl.uniform2fv(location, v);
+                    program.cache.uniforms[uniform.name] = v.clone();
+                }
             };
             break;
         case renderer.gl.FLOAT_VEC3:
             program.uniforms[uniform.name] = (v) => {
-                renderer.gl.uniform3fv(location, v);
+                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
+                    renderer.gl.uniform3fv(location, v);
+                    program.cache.uniforms[uniform.name] = v.clone();
+                }
             };
             break;
         case renderer.gl.FLOAT_VEC4:
             program.uniforms[uniform.name] = (v) => {
-                renderer.gl.uniform4fv(location, v);
+                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
+                    renderer.gl.uniform4fv(location, v);
+                    program.cache.uniforms[uniform.name] = v.clone();
+                }
             };
             break;
         case renderer.gl.BOOL:
         case renderer.gl.INT:
             program.uniforms[uniform.name] = (v) => {
-                renderer.gl.uniform1i(location, v);
+                if (program.cache.uniforms[uniform.name] != v) {
+                    renderer.gl.uniform1i(location, v);
+                    program.cache.uniforms[uniform.name] = v;
+                }
             };
             break;
         case renderer.gl.BOOL_VEC2:
         case renderer.gl.INT_VEC2:
             program.uniforms[uniform.name] = (v) => {
-                renderer.gl.uniform2iv(location, v);
+                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
+                    renderer.gl.uniform2iv(location, v);
+                    program.cache.uniforms[uniform.name] = v.clone();
+                }
             };
             break;
         case renderer.gl.BOOL_VEC3:
         case renderer.gl.INT_VEC3:
             program.uniforms[uniform.name] = (v) => {
-                renderer.gl.uniform3iv(location, v);
+                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
+                    renderer.gl.uniform3iv(location, v);
+                    program.cache.uniforms[uniform.name] = v.clone();
+                }
             };
             break;
         case renderer.gl.BOOL_VEC4:
         case renderer.gl.INT_VEC4:
             program.uniforms[uniform.name] = (v) => {
-                renderer.gl.uniform4iv(location, v);
+                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
+                    renderer.gl.uniform4iv(location, v);
+                    program.cache.uniforms[uniform.name] = v.clone();
+                }
             };
             break;
         case renderer.gl.FLOAT_MAT2:
             program.uniforms[uniform.name] = (v) => {
-                renderer.gl.uniformMatrix2fv(location, false, v);
+                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
+                    renderer.gl.uniformMatrix2fv(location, false, v);
+                    program.cache.uniforms[uniform.name] = v.clone();
+                }
             };
             break;
         case renderer.gl.FLOAT_MAT3:
             program.uniforms[uniform.name] = (v) => {
-                renderer.gl.uniformMatrix3fv(location, false, v);
+                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
+                    renderer.gl.uniformMatrix3fv(location, false, v);
+                    program.cache.uniforms[uniform.name] = v.clone();
+                }
             };
             break;
         case renderer.gl.FLOAT_MAT4:
             program.uniforms[uniform.name] = (v) => {
-                if (!program.cache.uniforms[uniform.name]?.equals(v)){
+                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
                     renderer.gl.uniformMatrix4fv(location, false, v);
                     program.cache.uniforms[uniform.name] = v.clone();
                 }
