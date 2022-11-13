@@ -15,6 +15,9 @@ export class WebGLProgram extends WebGLNode {
         super(renderer, material.id);
         this.attributes = {};
         this.uniforms = {};
+        this.cache = {
+            uniforms: {},
+        };
         this.location = renderer.gl.createProgram();
         if (material instanceof GLSLMaterial) {
             this.vertexShader = renderer[material.vertexShader.id] || new WebGLShader(renderer, material.vertexShader);
@@ -50,8 +53,7 @@ function createAttribute(renderer, program, attribute) {
     const location = renderer.gl.getAttribLocation(program.location, attribute.name);
     program.attributes[attribute.name] = (v) => {
         if (v instanceof Buffer) {
-            const buffer = renderer[v.mainBuffer] || new WebGLBuffer(renderer, v.mainBuffer, renderer.gl.ARRAY_BUFFER);
-            renderer.arrayBuffer = buffer;
+            renderer.arrayBuffer = renderer[v.mainBuffer.id] || new WebGLBuffer(renderer, v.mainBuffer, renderer.gl.ARRAY_BUFFER);
             renderer.gl.enableVertexAttribArray(location);
             renderer.gl.vertexAttribPointer(location, v.step, renderer.arrayBuffer.type, v.normalize, v.BYTES_PER_PARENT_STEP, v.BYTES_PER_OFFSET);
         } else {
@@ -144,7 +146,10 @@ function createUniform(renderer, program, uniform) {
             break;
         case renderer.gl.FLOAT_MAT4:
             program.uniforms[uniform.name] = (v) => {
-                renderer.gl.uniformMatrix4fv(location, false, v);
+                if (!program.cache.uniforms[uniform.name]?.equals(v)){
+                    renderer.gl.uniformMatrix4fv(location, false, v);
+                    program.cache.uniforms[uniform.name] = v.clone();
+                }
             };
             break;
         case renderer.gl.SAMPLER_2D:

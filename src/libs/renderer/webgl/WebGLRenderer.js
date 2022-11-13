@@ -1,9 +1,11 @@
 import { Node } from '../../core/Node';
+import { Buffer } from '../../core/Buffer';
 import { WebGLBuffer } from './WebGLBuffer';
 import { WebGLProgram } from './WebGLProgram';
 import { WebGLShader } from './WebGLShader';
 import { Render } from '../Render';
 import { WebGLVertexArray } from './WebGLVertexArray';
+import { Node3d } from '../../3d/Node3d';
 
 export class WebGLRenderer extends Node {
     /** Create a WebGLRenderer from a WebGLRenderingContext
@@ -14,7 +16,13 @@ export class WebGLRenderer extends Node {
         this.gl = gl;
         this.polyfillExtension();
         this.gl.clearColor(0, 0, 0, 1);
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+        this.gl.enable(this.gl.DEPTH_TEST);
+        this.clear();
+        gl.enable(gl.CULL_FACE);
+        gl.cullFace(gl.FRONT);
+
+        this.clear();
+        this.renders = [];
 
         this._vertexArray = null;
         this._program = null;
@@ -127,22 +135,75 @@ export class WebGLRenderer extends Node {
     }
 
     /** Render a Render in the current WebGLRenderer
-     * @param {Render} node Render to render
+     * @param {Node} node Render to render
      * @returns {WebGLRenderer} the current WebGLRenderer
      */
     render(node) {
         this.gl.viewport(0, 0, this.gl.canvas.clientWidth, this.gl.canvas.clientHeight);
         this.clear();
-        if (node instanceof Render) {
-            this.vertexArray = this[node.id] || new WebGLVertexArray(this, node);
-            this.program = this[node.material.id];
-            if (node.index) {
-                this.gl.drawElements(this.gl[node.primitive], node.count, this.elementArrayBuffer.type, node.offset);
+        this.renders = [];
+        this.load(node);
+        this.renders.forEach(r => draw(this, r));
+
+        this.renders = [];
+
+        return this;
+
+        /** Draw a Render in a WebGLRenderer
+         * @param {WebGLRenderer} renderer WebGLRenderer context
+         * @param {Render} render Render to draw
+         */
+        function draw(renderer, render) {
+            renderer.vertexArray = renderer[render.id] || new WebGLVertexArray(renderer, render);
+            renderer.program = renderer[render.material.id];
+
+            for (const name in renderer.program.uniforms) {
+                if (render.parameters[name]) {
+                    renderer.program.uniforms[name](render.parameters[name]);
+                }
+            }
+            if (render.index) {
+                renderer.elementArrayBuffer = renderer[render.index.id];
+                renderer.gl.drawElements(renderer.gl[render.primitive], render.count, renderer.elementArrayBuffer.type, render.offset);
             } else {
-                console.log(this.gl[node.primitive], node.offset, node.count);
-                this.gl.drawArrays(this.gl[node.primitive], node.offset, node.count);
+                renderer.gl.drawArrays(renderer.gl[render.primitive], render.offset, render.count);
             }
         }
+    }
+
+    /** Render a Render in the current WebGLRenderer
+     * @param {Node} node Render to render
+     * @returns {WebGLRenderer} the current WebGLRenderer
+     */
+    load(node) {
+        if (node instanceof Render) {
+            for (const name in node.parameters) {
+                const parameter = node.parameters[name];
+                if (parameter instanceof Buffer) {
+                    this.arrayBuffer = this[parameter.mainBuffer.id] || new WebGLBuffer(this, parameter.mainBuffer, this.gl.ARRAY_BUFFER);
+                    if (parameter.mainBuffer.updated) {
+                        this.gl.bufferData(this.arrayBuffer.target, parameter.mainBuffer.data, this.arrayBuffer.usage);
+                        parameter.mainBuffer.updated = false;
+                    }
+                }
+            }
+            if (node.index) {
+                this.elementArrayBuffer = this[node.index.id] || new WebGLBuffer(this, node.index, this.gl.ELEMENT_ARRAY_BUFFER);
+                if (node.index.updated) {
+                    this.gl.bufferData(this.elementArrayBuffer.target, node.index.data, this.elementArrayBuffer.usage);
+                    node.index.updated = false;
+                }
+            }
+            if (!this[node.id]) {
+                new WebGLVertexArray(this, node);
+            }
+            if (node.parent?.matrix) {
+                node.setParameter(Node3d.vertexMatrixName, node.parent.matrix);
+            }
+            this.renders.push(node);
+        }
+
+        node.childrens.forEach(this.load.bind(this));
 
         return this;
     }

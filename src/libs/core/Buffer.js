@@ -1,3 +1,6 @@
+import { Vector2 } from '../math/Vector2';
+import { Vector3 } from '../math/Vector3';
+import { Vector4 } from '../math/Vector4';
 import { Node } from './Node';
 
 export class Buffer extends Node {
@@ -7,6 +10,7 @@ export class Buffer extends Node {
         this.data = data;
         this.step = step;
         this.normalize = false;
+        this.updated = true;
 
         this.addEventListener(Node.event.nodeInserted, (e) => {
             const child = e.inserted;
@@ -87,7 +91,7 @@ export class Buffer extends Node {
     }
 
     get offset() {
-        if(this.parent instanceof Buffer){
+        if (this.parent instanceof Buffer) {
             return this.parent.childrens
                 .slice(0, this.parent.childrens.indexOf(this))
                 .reduce((r, b) => { return r + b.step; }, 0);
@@ -95,7 +99,48 @@ export class Buffer extends Node {
         return 0;
     }
 
-    get mainBuffer(){
+    getParameter(name) {
+        return this.childrens.find(c => c.name == name);
+    }
+
+    setParameter(name, v, step) {
+        const buffer = this.getParameter(name);
+        if (v) {
+            if (v.constructor != this.type) {
+                v = new this.type(v);
+            }
+            if (!buffer) {
+                const buffer = new Buffer(v, step);
+                buffer.name = name;
+                this.appendChild(buffer);
+            } else {
+                buffer.data = v;
+            }
+        } else if (buffer) {
+            this.removeChild(buffer);
+        }
+    }
+
+    removeParameter(name) {
+        this.removeChild(this.getParameter(name));
+    }
+
+    applyMatrix(matrix) {
+        let vector = this.step == 4 ? new Vector4()
+            : this.step == 3 ? new Vector3() :
+                new Vector2();
+        for (let i = 0; i < this.count; i += this.step) {
+            for (let j = 0; j < vector.length; j++) {
+                vector[j] = this.data[i + j];
+            }
+            vector.transform(matrix);
+            for (let j = 0; j < vector.length; j++) {
+                this.data[i + j] = vector[j];
+            }
+        }
+    }
+
+    get mainBuffer() {
         return this.parent instanceof Buffer ? this.parent.mainBuffer : this;
     }
 

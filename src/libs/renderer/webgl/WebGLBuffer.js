@@ -21,11 +21,17 @@ export class WebGLBuffer extends WebGLNode {
                 : buffer.data instanceof Uint16Array ? renderer.gl.UNSIGNED_SHORT
                     : buffer.data instanceof Uint8Array ? renderer.gl.UNSIGNED_BYTE
                         : null;
+
         if (target === renderer.gl.ELEMENT_ARRAY_BUFFER) {
-            renderer.elementArrayBuffer = this;
+            this.update = (buffer) => {
+                renderer.elementArrayBuffer = this;
+                renderer.gl.bufferData(this.target, buffer.data, this.usage);
+            };
         } else {
-            renderer.arrayBuffer = this;
+            this.update = (buffer) => {
+                renderer.arrayBuffer = this;
+                renderer.gl.bufferData(this.target, buffer.data, this.usage);
+            };
         }
-        renderer.gl.bufferData(this.target, buffer.data, this.usage);
     }
 }

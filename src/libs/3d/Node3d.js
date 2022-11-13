@@ -1,6 +1,6 @@
+import { Node } from '../core/Node';
 import { Matrix4 } from '../math/Matrix4';
 import { Vector3 } from '../math/Vector3';
-import { Node } from '../core/Node';
 
 export class Node3d extends Node {
     /** Create a new Node3d
@@ -44,9 +44,15 @@ export class Node3d extends Node {
      * @param {Matrix4} matrix translation vector
      * @return the current Node3d
     */
-    applyMatrix(matrix) {
+    transform(matrix) {
         this.matrix.multiply(matrix);
 
         return this;
     }
+
+    addRender(material, geometry) {
+        this.appendChild(geometry.createRender(material));
+    }
+
+    static vertexMatrixName = 'vertexMatrix'
 }

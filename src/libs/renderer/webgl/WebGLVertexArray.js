@@ -11,14 +11,20 @@ export class WebGLVertexArray extends WebGLNode {
      */
     constructor(renderer, render) {
         super(renderer, render.id);
+        renderer.arrayBuffer = null;
+        renderer.elementArrayBuffer = null;
         this.location = renderer.gl.createVertexArray();
+        const previous = renderer.vertexArray;
         renderer.vertexArray = this;
         const program = renderer[render.material.id] || new WebGLProgram(renderer, render.material);
         if (render.index) {
             renderer.elementArrayBuffer = renderer[render.index.id] || new WebGLBuffer(renderer, render.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
         }
         for (const name in program.attributes) {
-            program.attributes[name](render.parameters[name]);
+            if (render.parameters[name]) {
+                program.attributes[name](render.parameters[name]);
+            }
         }
+        renderer.vertexArray = previous;
     }
 }
