@@ -1,7 +1,7 @@
-import { Node } from '../../../core/Node';
+import { Shader } from '../Shader';
 import { GLSLParameter } from './GLSLParameter';
 
-export class GLSLShader extends Node {
+export class GLSLShader extends Shader {
     /** Create a GLSLShader
      * @param {string} type GLSLShader type
      * @param {GLSLParameter[]} parameters GLSLShader parameters

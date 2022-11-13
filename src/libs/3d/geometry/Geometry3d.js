@@ -1,25 +1,40 @@
-import { ArrayBuffer } from '../../core/ArrayBuffer';
 import { Buffer } from '../../core/Buffer';
 
-export class GeometryBuffer extends ArrayBuffer {
-    constructor(type = Float32Array) {
-        super(type);
-        
-        this.primitive = GeometryBuffer.primitive;
+export class Geometry3d extends Buffer {
+    constructor(data = new Float32Array()) {
+        super(data, 0);
+        this._index = null;
 
-        this.positionName = GeometryBuffer.positionName;
-        this.normalName = GeometryBuffer.normalName;
-        this.colorName = GeometryBuffer.colorName;
-        this.uvName = GeometryBuffer.uvName;
+        this.primitive = null;
 
-        this.positionLength = GeometryBuffer.positionLength;
-        this.normalLength = GeometryBuffer.normalLength;
-        this.colorLength = GeometryBuffer.colorLength;
-        this.uvLength = GeometryBuffer.uvLength;
+        this.positionName = Geometry3d.positionName;
+        this.normalName = Geometry3d.normalName;
+        this.colorName = Geometry3d.colorName;
+        this.uvName = Geometry3d.uvName;
+
+        this.positionLength = Geometry3d.positionLength;
+        this.normalLength = Geometry3d.normalLength;
+        this.colorLength = Geometry3d.colorLength;
+        this.uvLength = Geometry3d.uvLength;
+    }
+
+    get index() {
+        return this._index;
+    }
+
+    set index(v) {
+        if (Array.isArray(v)) {
+            v = new Uint32Array(v);
+        }
+        if(this.index){
+            this.index.data = v;
+        } else {
+            this._index = new Buffer(v);
+        }
     }
 
     get position() {
-        return this[this.positionName];
+        return this.childrens.find(c => c.name == this.positionName);
     }
 
     set position(v) {
@@ -37,7 +52,7 @@ export class GeometryBuffer extends ArrayBuffer {
     }
 
     get normal() {
-        return this[this.normalName];
+        return this.childrens.find(c => c.name == this.normalName);
     }
 
     set normal(v) {
@@ -55,7 +70,7 @@ export class GeometryBuffer extends ArrayBuffer {
     }
 
     get color() {
-        return this[this.colorName];
+        return this.childrens.find(c => c.name == this.colorName);
     }
 
     set color(v) {
@@ -73,7 +88,7 @@ export class GeometryBuffer extends ArrayBuffer {
     }
 
     get uv() {
-        return this[this.uvName];
+        return this.childrens.find(c => c.name == this.uv);
     }
 
     set uv(v) {
@@ -89,6 +104,7 @@ export class GeometryBuffer extends ArrayBuffer {
             buffer.data = v;
         }
     }
+
     static positionName = 'vertexPosition';
     static normalName = 'vertexNormal';
     static colorName = 'vertexColor';
@@ -98,6 +114,4 @@ export class GeometryBuffer extends ArrayBuffer {
     static normalLength = 3;
     static colorLength = 4;
     static uvLength = 2;
-
-    static primitive = 'TRIANGLES';
 }

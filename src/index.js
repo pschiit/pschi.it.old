@@ -1,12 +1,11 @@
-import { Node3d } from './libs/3d/Node3d';
+import { Geometry3d } from './libs/3d/geometry/Geometry3d';
 import { Buffer } from './libs/core/Buffer';
-import { ArrayBuffer } from './libs/core/ArrayBuffer';
 import { HtmlNode } from './libs/html/HtmlNode';
 import { WebGLCanvas } from './libs/html/WebGLCanvas';
-import { GLSLMaterial } from './libs/material/GLSLMaterial';
-import { GeometryBuffer } from './libs/3d/geometry/GeometryBuffer';
-import { GLSLShader } from './libs/renderer/shader/GLSL/GLSLShader';
+import { GLSLMaterial } from './libs/renderer/material/GLSLMaterial';
+import { Render } from './libs/renderer/Render';
 import { GLSLParameter } from './libs/renderer/shader/GLSL/GLSLParameter';
+import { GLSLShader } from './libs/renderer/shader/GLSL/GLSLShader';
 
 const defaultStyle = {
     width: '100%',
@@ -24,9 +23,9 @@ canvas.fitParent();
 
 const renderer = canvas.context;
 
-const position = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, GeometryBuffer.positionName);
-const color = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, GeometryBuffer.colorName);
-const vColor = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.vec4, 'v_' + GeometryBuffer.colorName);
+const position = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, Geometry3d.positionName);
+const color = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, Geometry3d.colorName);
+const vColor = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.vec4, 'v_' + Geometry3d.colorName);
 
 const vertexShader = new GLSLShader(GLSLShader.type.vertexShader, [
     position,
@@ -35,11 +34,12 @@ const vertexShader = new GLSLShader(GLSLShader.type.vertexShader, [
 ], [
     'void main(){',
     `${vColor} = ${color};`,
+    `gl_PointSize = 15.0;`,
     `gl_Position = ${position};`,
     '}'
 ].join('\n'))
 
-const fragmentShader = new GLSLShader(GLSLShader.type.vertexShader, [
+const fragmentShader = new GLSLShader(GLSLShader.type.fragmentShader, [
     vColor,
 ], [
     'void main(){',
@@ -48,8 +48,8 @@ const fragmentShader = new GLSLShader(GLSLShader.type.vertexShader, [
 ].join('\n'), GLSLShader.precision.high)
 
 const material = new GLSLMaterial(vertexShader, fragmentShader);
-const geometry = new GeometryBuffer();
 
+const geometry = new Geometry3d();
 geometry.index = [0, 1, 2];
 geometry.position = [
     -.5, -0.5, 0,
@@ -60,10 +60,14 @@ geometry.color = [
     0, 1, 0, 1,
     0, 0, 1, 1];
 
-renderer.load(geometry);
-renderer.load(material);
-renderer.program.attributes[GeometryBuffer.positionName] = geometry.position;
-renderer.program.attributes[GeometryBuffer.colorName] = geometry.color;
-renderer.viewport(0, 0, canvas.element.clientWidth, canvas.element.clientHeight);
-renderer.clear();
-renderer.drawBuffer(geometry.primitive, geometry);
+const render = new Render();
+render.primitive = Render.primitive.triangles;
+render.material = material;
+render.index = new Buffer(
+    new Uint8Array([0, 1, 2])
+);
+render.parameters[position] = geometry.position;
+render.parameters[color] = geometry.color;
+render.count = 3;
+renderer.render(render);
+console.log(renderer.childrens);

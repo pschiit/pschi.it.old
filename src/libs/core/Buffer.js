@@ -7,37 +7,71 @@ export class Buffer extends Node {
         this.data = data;
         this.step = step;
         this.normalize = false;
-        this._index = null;
+
+        this.addEventListener(Node.event.nodeInserted, (e) => {
+            const child = e.inserted;
+            if (!(child instanceof Buffer)
+                || (this.type != child.data.constructor)) {
+                this.removeChild(child);
+                return;
+            }
+        });
     }
 
-    get index() {
-        return this._index;
+    get data() {
+        if (this.childrens.length > 0) {
+            const data = new this.type(this.length);
+            const arrayStep = this.step;
+
+            this.childrens.forEach(buffer => {
+                const offset = buffer.offset;
+                let position = 0;
+                for (let i = 0; i < data.length; i += arrayStep) {
+                    for (let j = 0; j < buffer.step; j++) {
+                        data[offset + i + j] = buffer.data[position++];
+                    }
+                }
+            });
+            return data;
+        }
+        return this._data;
     }
 
-    set index(v) {
-        if (Array.isArray(v)) {
-            v = new Buffer.defaultIndexType(v);
+    set data(v) {
+        this._data = v;
+    }
+
+    get step() {
+        if (this.childrens.length > 0) {
+            return this.childrens.reduce((r, b) => { return r + b.step; }, 0);
         }
-        if (this._index) {
-            this._index.data = v;
-        } else{
-            this._index =  new Buffer(v);
-        }
+        return this._step;
+    }
+
+    set step(v) {
+        this._step = v;
     }
 
     get count() {
-        if (this.index) {
-            return this.index.length;
-        }
         return this.length / this.step;
     }
 
     get type() {
+        if (this.childrens.length > 0) {
+            return this.childrens[0].type;
+        }
         return this.data.constructor;
     }
 
     get length() {
+        if (this.childrens.length > 0) {
+            return this.childrens.reduce((r, b) => { return r + b.length; }, 0);
+        }
         return this.data.length;
+    }
+
+    get BYTES_PER_PARENT_STEP() {
+        return this.parent instanceof Buffer ? this.parent.BYTES_PER_STEP : this.BYTES_PER_STEP;
     }
 
     get BYTES_PER_STEP() {
@@ -53,12 +87,16 @@ export class Buffer extends Node {
     }
 
     get offset() {
-        if (!this.parent) {
-            return 0;
+        if(this.parent instanceof Buffer){
+            return this.parent.childrens
+                .slice(0, this.parent.childrens.indexOf(this))
+                .reduce((r, b) => { return r + b.step; }, 0);
         }
-        return this.parent.childrens
-            .slice(0, this.parent.childrens.indexOf(this))
-            .reduce((r, b) => { return r + b.step; }, 0);
+        return 0;
+    }
+
+    get mainBuffer(){
+        return this.parent instanceof Buffer ? this.parent.mainBuffer : this;
     }
 
     static usage = {
@@ -66,6 +104,4 @@ export class Buffer extends Node {
         dynamic: 'DYNAMIC',
         stream: 'STREAM',
     }
-
-    static defaultIndexType = Uint32Array.prototype.constructor;
 }

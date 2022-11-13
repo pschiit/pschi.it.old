@@ -1,4 +1,4 @@
-import { GLSLShader } from '../renderer/shader/GLSL/GLSLShader';
+import { GLSLShader } from '../shader/GLSL/GLSLShader';
 import { Material } from './Material';
 
 export class GLSLMaterial extends Material {
