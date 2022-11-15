@@ -4,7 +4,7 @@ import { MathArray } from './MathArray';
 
 export class Vector4  extends MathArray{
     /** Create a new Vector3 from the coordinates xyzw or a vector array
-     * @param {Number} x first coordinate or vector array
+     * @param {Number|Number[]} x first coordinate or vector array
      * @param {Number} y second coordinate
      * @param {Number} z third coordinate
      * @param {Number} w fourth coordinate

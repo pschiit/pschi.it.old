@@ -79,7 +79,7 @@ export class HtmlNode extends Node {
      * @return {Number} width / height of the HTMLElement
     */
     get aspectRatio() {
-        return this.width / this.height;
+        return this.element.clientWidth / this.element.clientHeight;
     }
 
     /** Set the width and height of the current HtmlNode's HTMLElement

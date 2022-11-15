@@ -4,7 +4,7 @@ import { MathArray } from './MathArray';
 
 export class Matrix3 extends MathArray{
     /** Create a new Matrix3 from an array of number
-     * @param {Array} values values of the matrix 
+     * @param {Number[]} values values of the matrix 
     */
     constructor(values) {
         super(9);

@@ -1,6 +1,6 @@
 import { Buffer } from '../../core/Buffer';
-import { GLSLMaterial } from '../material/GLSLMaterial';
-import { Material } from '../material/Material';
+import { GLSLMaterial } from '../../material/GLSLMaterial';
+import { Material } from '../../material/Material';
 import { WebGLBuffer } from './WebGLBuffer';
 import { WebGLNode } from './WebGLNode';
 import { WebGLRenderer } from './WebGLRenderer';

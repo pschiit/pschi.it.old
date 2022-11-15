@@ -1,16 +1,21 @@
 import { Matrix2 } from './Matrix2';
 import { Matrix3 } from './Matrix3';
 import { MathArray } from './MathArray';
+import { Vector3 } from './Vector3';
 
 export class Matrix4 extends MathArray {
     /** Create a new Matrix3 from an array of number
-     * @param {Array} values values of the matrix 
+     * @param {Number[]} values values of the matrix 
     */
     constructor(values) {
         super(16);
         if (values) {
             this.set(values);
         }
+    }
+
+    matrixPosition() {
+        return new Vector3(this[12], this[13], this[14]);
     }
 
     /** Return whether or not a Matrix4 array is equals the current Matrix4
@@ -528,15 +533,19 @@ export class Matrix4 extends MathArray {
     */
     static perspectiveMatrix(fovy, aspect, near, far) {
         const result = new Matrix4();
-        const f = 1.0 / Math.tan(fovy / 2);
-        let nf;
+        let f = 1.0 / Math.tan(fovy / 2),
+            nf;
         result[0] = f / aspect;
         result[5] = f;
         result[11] = -1;
-
-        nf = 1 / (near - far);
-        result[10] = (far + near) * nf;
-        result[14] = 2 * far * near * nf;
+        if (far != null && far !== Infinity) {
+            nf = 1 / (near - far);
+            result[10] = (far + near) * nf;
+            result[14] = 2 * far * near * nf;
+        } else {
+            result[10] = -1;
+            result[14] = -2 * near;
+        }
 
         return result;
     }

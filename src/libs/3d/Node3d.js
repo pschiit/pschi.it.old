@@ -7,35 +7,55 @@ export class Node3d extends Node {
     */
     constructor() {
         super();
-        this.matrix = Matrix4.identityMatrix();
+        this.up = Vector3.yAxis.clone();
+        this._matrix = Matrix4.identityMatrix();
     }
 
+    get matrix() {
+        return this.parent instanceof Node3d ? this.parent.matrix.clone().multiply(this._matrix)
+            : this._matrix;
+    }
+
+    set matrix(v) {
+        this._matrix = v;
+    }
+
+    get position() {
+        return this.matrix.matrixPosition();
+    }
     /** Translate the Node3d by a Vector3 array
-     * @param {Vector3} vector3 translation vector
+     * @param {Number} x first coordinate of the  Vector3
+     * @param {Number} y second coordinate of the  Vector3
+     * @param {Number} z third coordinate of the  Vector3
      * @return the current Node3d
     */
-    translate(vector3) {
-        this.matrix.translate(vector3);
+    translate(x = 0, y = 0, z = 0) {
+        this._matrix.translate(new Vector3(x, y, z));
 
         return this;
     }
 
     /** Rescale the Node3d by a Vector3 array
-     * @param {Vector3} vector3 scaling vector
+     * @param {Number} x first coordinate of the  Vector3
+     * @param {Number} y second coordinate of the  Vector3
+     * @param {Number} z third coordinate of the  Vector3
      * @return the current Node3d
     */
-    rescale(vector3) {
-        this.matrix.scale(vector3);
+    rescale(x = 0, y = 0, z = 0) {
+        this._matrix.scale(new Vector3(x, y, z));
 
         return this;
     }
 
     /** Rotate the Node3d by a Vector3 array
-     * @param {Vector3} vector3 rotation vector
+     * @param {Number} radians angle in radians of the rotation
+     * @param {Number} x first coordinate of the  Vector3
+     * @param {Number} y second coordinate of the  Vector3
+     * @param {Number} z third coordinate of the  Vector3
      * @return the current Node3d
     */
-    rotate(radians, vector3) {
-        this.matrix.rotate(radians, vector3);
+    rotate(radians, x = 0, y = 0, z = 0) {
+        this._matrix.rotate(radians, new Vector3(x, y, z));
 
         return this;
     }
@@ -45,7 +65,22 @@ export class Node3d extends Node {
      * @return the current Node3d
     */
     transform(matrix) {
-        this.matrix.multiply(matrix);
+        this._matrix.multiply(matrix);
+
+        return this;
+    }
+
+    /** Look at the position of a Vector3 array
+     * @param {Number|Node3d} x first coordinate of the  Vector3
+     * @param {Number} y second coordinate of the  Vector3
+     * @param {Number} z third coordinate of the  Vector3
+     * @return the current Node3d
+    */
+    lookAt(x = 0, y = 0, z = 0) {
+        const target = x instanceof Node3d ? 
+        new Vector3(x.position)
+        : new Vector3(x,y,z);
+        this._matrix = Matrix4.lookAtMatrix(this.position, target, this.up);
 
         return this;
     }
@@ -54,5 +89,5 @@ export class Node3d extends Node {
         this.appendChild(geometry.createRender(material));
     }
 
-    static vertexMatrixName = 'vertexMatrix'
+    static vertexMatrixName = 'vertexMatrix';
 }

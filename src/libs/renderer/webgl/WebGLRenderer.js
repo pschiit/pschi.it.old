@@ -1,11 +1,13 @@
-import { Node } from '../../core/Node';
+import { Camera } from '../../3d/camera/Camera';
+import { Node3d } from '../../3d/Node3d';
 import { Buffer } from '../../core/Buffer';
+import { Node } from '../../core/Node';
+import { Matrix4 } from '../../math/Matrix4';
+import { Render } from '../Render';
 import { WebGLBuffer } from './WebGLBuffer';
 import { WebGLProgram } from './WebGLProgram';
 import { WebGLShader } from './WebGLShader';
-import { Render } from '../Render';
 import { WebGLVertexArray } from './WebGLVertexArray';
-import { Node3d } from '../../3d/Node3d';
 
 export class WebGLRenderer extends Node {
     /** Create a WebGLRenderer from a WebGLRenderingContext
@@ -13,15 +15,18 @@ export class WebGLRenderer extends Node {
      */
     constructor(gl) {
         super();
+        this.resized = true;
         this.gl = gl;
         this.polyfillExtension();
         this.gl.clearColor(0, 0, 0, 1);
         this.gl.enable(this.gl.DEPTH_TEST);
         this.clear();
-        gl.enable(gl.CULL_FACE);
-        gl.cullFace(gl.FRONT);
+        // gl.enable(gl.CULL_FACE);
+        // gl.cullFace(gl.FRONT);
 
         this.clear();
+
+        this.cameras = [];
         this.renders = [];
 
         this._vertexArray = null;
@@ -139,15 +144,79 @@ export class WebGLRenderer extends Node {
      * @returns {WebGLRenderer} the current WebGLRenderer
      */
     render(node) {
-        this.gl.viewport(0, 0, this.gl.canvas.clientWidth, this.gl.canvas.clientHeight);
+        if (this.resized) {
+            console.log('resized');
+            this.gl.viewport(0, 0, this.gl.canvas.clientWidth, this.gl.canvas.clientHeight);
+            this.resized = false;
+        }
         this.clear();
         this.renders = [];
-        this.load(node);
-        this.renders.forEach(r => draw(this, r));
+        load(this, node);
+        if (this.cameras.length == 0) {
+            const camera = Matrix4.identityMatrix();
+            this.renders.forEach(r => {
+                r.parameters[Camera.cameraMatrixName] = camera;
+                draw(this, r);
+            });
+        } else {
+            const aspectRatio = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
+            this.cameras.forEach(c => {
+                if (c.aspectRatio
+                    && c.aspectRatio != aspectRatio) {
+                        c.aspectRatio = aspectRatio;
+                        c.updateProjection();
+                }
+                this.renders.forEach(r => {
+                    r.parameters[Camera.cameraMatrixName] = c.projectionMatrix;
+                    draw(this, r);
+                });
+            });
+        }
 
         this.renders = [];
 
         return this;
+
+
+
+        /** Load a Node in the current WebGLRenderer
+         * @param {WebGLRenderer} renderer WebGLRenderer context
+         * @param {Node} node Node to load
+         */
+        function load(renderer, node) {
+            if (node instanceof Camera) {
+                renderer.cameras.push(node);
+            } else if (node instanceof Render) {
+                for (const name in node.parameters) {
+                    const parameter = node.parameters[name];
+                    if (parameter instanceof Buffer) {
+                        renderer.arrayBuffer = renderer[parameter.mainBuffer.id] || new WebGLBuffer(renderer, parameter.mainBuffer, renderer.gl.ARRAY_BUFFER);
+                        if (parameter.mainBuffer.updated) {
+                            renderer.gl.bufferData(renderer.arrayBuffer.target, parameter.mainBuffer.data, renderer.arrayBuffer.usage);
+                            parameter.mainBuffer.updated = false;
+                        }
+                    }
+                }
+                if (node.index) {
+                    renderer.elementArrayBuffer = renderer[node.index.id] || new WebGLBuffer(renderer, node.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
+                    if (node.index.updated) {
+                        renderer.gl.bufferData(renderer.elementArrayBuffer.target, node.index.data, renderer.elementArrayBuffer.usage);
+                        node.index.updated = false;
+                    }
+                }
+                if (!renderer[node.id]) {
+                    new WebGLVertexArray(renderer, node);
+                }
+                if (node.parent instanceof Node3d) {
+                    node.setParameter(Node3d.vertexMatrixName, node.parent.matrix);
+                }
+                renderer.renders.push(node);
+            }
+
+            node.childrens.forEach(c => {
+                load(renderer, c);
+            });
+        }
 
         /** Draw a Render in a WebGLRenderer
          * @param {WebGLRenderer} renderer WebGLRenderer context
@@ -169,43 +238,6 @@ export class WebGLRenderer extends Node {
                 renderer.gl.drawArrays(renderer.gl[render.primitive], render.offset, render.count);
             }
         }
-    }
-
-    /** Render a Render in the current WebGLRenderer
-     * @param {Node} node Render to render
-     * @returns {WebGLRenderer} the current WebGLRenderer
-     */
-    load(node) {
-        if (node instanceof Render) {
-            for (const name in node.parameters) {
-                const parameter = node.parameters[name];
-                if (parameter instanceof Buffer) {
-                    this.arrayBuffer = this[parameter.mainBuffer.id] || new WebGLBuffer(this, parameter.mainBuffer, this.gl.ARRAY_BUFFER);
-                    if (parameter.mainBuffer.updated) {
-                        this.gl.bufferData(this.arrayBuffer.target, parameter.mainBuffer.data, this.arrayBuffer.usage);
-                        parameter.mainBuffer.updated = false;
-                    }
-                }
-            }
-            if (node.index) {
-                this.elementArrayBuffer = this[node.index.id] || new WebGLBuffer(this, node.index, this.gl.ELEMENT_ARRAY_BUFFER);
-                if (node.index.updated) {
-                    this.gl.bufferData(this.elementArrayBuffer.target, node.index.data, this.elementArrayBuffer.usage);
-                    node.index.updated = false;
-                }
-            }
-            if (!this[node.id]) {
-                new WebGLVertexArray(this, node);
-            }
-            if (node.parent?.matrix) {
-                node.setParameter(Node3d.vertexMatrixName, node.parent.matrix);
-            }
-            this.renders.push(node);
-        }
-
-        node.childrens.forEach(this.load.bind(this));
-
-        return this;
     }
 
     clearColor(color) {

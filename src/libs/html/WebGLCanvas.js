@@ -17,6 +17,11 @@ export class WebGLCanvas extends Canvas {
         this.element.addEventListener('webglcontextrestored', (e) => {
             this.initContext(contextOptions);
         });
+        
+        window.onresize = (e) => {
+            this.fitParent();
+            this.context.resized = true;
+        };
     }
 
     initContext(contextOptions) {

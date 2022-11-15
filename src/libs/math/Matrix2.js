@@ -5,7 +5,7 @@ import { Vector2 } from './Vector2';
 
 export class Matrix2 extends MathArray{
     /** Create a new Matrix2 from an array of number
-     * @param {Array} values values of the matrix 
+     * @param {Number[]} values values of the matrix 
     */
     constructor(values) {
         super(4);
