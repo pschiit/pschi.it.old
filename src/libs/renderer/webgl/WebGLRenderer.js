@@ -1,8 +1,15 @@
 import { Camera } from '../../3d/camera/Camera';
+import { PerspectiveCamera } from '../../3d/camera/PerspectiveCamera';
+import { Fog } from '../../3d/Fog';
+import { DirectionalLight } from '../../3d/light/DirectionalLight';
+import { Light } from '../../3d/light/Light';
 import { Node3d } from '../../3d/Node3d';
 import { Buffer } from '../../core/Buffer';
+import { Color } from '../../core/Color';
 import { Node } from '../../core/Node';
 import { Matrix4 } from '../../math/Matrix4';
+import { Vector2 } from '../../math/Vector2';
+import { Vector3 } from '../../math/Vector3';
 import { Render } from '../Render';
 import { WebGLBuffer } from './WebGLBuffer';
 import { WebGLProgram } from './WebGLProgram';
@@ -18,16 +25,12 @@ export class WebGLRenderer extends Node {
         this.resized = true;
         this.gl = gl;
         this.polyfillExtension();
-        this.gl.clearColor(0, 0, 0, 1);
+        this.clearColor();
         this.gl.enable(this.gl.DEPTH_TEST);
-        this.clear();
         // gl.enable(gl.CULL_FACE);
         // gl.cullFace(gl.FRONT);
 
         this.clear();
-
-        this.cameras = [];
-        this.renders = [];
 
         this._vertexArray = null;
         this._program = null;
@@ -69,6 +72,10 @@ export class WebGLRenderer extends Node {
                 }
             }
         });
+    }
+
+    get programs() {
+        return this.childrens.filter(c => c instanceof WebGLProgram);
     }
 
     /** Return the WebGLProgram currently used by the WebGLRenderer
@@ -139,44 +146,50 @@ export class WebGLRenderer extends Node {
         }
     }
 
-    /** Render a Render in the current WebGLRenderer
-     * @param {Node} node Render to render
+    /** Render a Node in the current WebGLRenderer
+     * @param {Node} node Node to render
      * @returns {WebGLRenderer} the current WebGLRenderer
      */
     render(node) {
         if (this.resized) {
-            console.log('resized');
             this.gl.viewport(0, 0, this.gl.canvas.clientWidth, this.gl.canvas.clientHeight);
             this.resized = false;
         }
-        this.clear();
-        this.renders = [];
-        load(this, node);
-        if (this.cameras.length == 0) {
-            const camera = Matrix4.identityMatrix();
-            this.renders.forEach(r => {
-                r.parameters[Camera.cameraMatrixName] = camera;
-                draw(this, r);
-            });
-        } else {
-            const aspectRatio = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
-            this.cameras.forEach(c => {
-                if (c.aspectRatio
-                    && c.aspectRatio != aspectRatio) {
-                        c.aspectRatio = aspectRatio;
-                        c.updateProjection();
+        let camera = null;
+        if (node instanceof Camera) {
+            camera = node;
+            this.clearColor(node.background);
+            if (node instanceof PerspectiveCamera) {
+                const aspectRatio = this.parent.aspectRatio;
+                if (aspectRatio != node.aspectRatio) {
+                    node.aspectRatio = aspectRatio;
+                    node.updateProjection();
                 }
-                this.renders.forEach(r => {
-                    r.parameters[Camera.cameraMatrixName] = c.projectionMatrix;
-                    draw(this, r);
-                });
-            });
+            }
         }
-
-        this.renders = [];
+        let vertexMatrix = Matrix4.identityMatrix();
+        const materials = [];
+        const lights = [];
+        const renders = [];
+        load(this, node.root);
+        this.clear();
+        renders.forEach(r => {
+            if (camera) {
+                r.setParameter(Fog.fogColorName, camera.fog.color.rgb);
+                r.setParameter(Fog.fogDistanceName, camera.fog.distance);
+                r.setParameter(Camera.ambientLightColorName, camera.ambientLight.rgb);
+                r.setParameter(Camera.cameraMatrixName, camera.projectionMatrix);
+            }
+            lights.forEach(l => {
+                if (l instanceof DirectionalLight) {
+                    r.setParameter(DirectionalLight.lightColorName, l.color.rgb);
+                    r.setParameter(DirectionalLight.lightDirectionName, l.direction);
+                }
+            });
+            draw(this, r);
+        });
 
         return this;
-
 
 
         /** Load a Node in the current WebGLRenderer
@@ -184,8 +197,12 @@ export class WebGLRenderer extends Node {
          * @param {Node} node Node to load
          */
         function load(renderer, node) {
-            if (node instanceof Camera) {
-                renderer.cameras.push(node);
+            const previousVertexMatrix = vertexMatrix;
+            if (node instanceof Node3d) {
+                vertexMatrix = node.matrix;
+                if (node instanceof Light) {
+                    lights.push(node);
+                }
             } else if (node instanceof Render) {
                 for (const name in node.parameters) {
                     const parameter = node.parameters[name];
@@ -205,17 +222,17 @@ export class WebGLRenderer extends Node {
                     }
                 }
                 if (!renderer[node.id]) {
-                    new WebGLVertexArray(renderer, node);
+                    const vertexArray = new WebGLVertexArray(renderer, node);
                 }
-                if (node.parent instanceof Node3d) {
-                    node.setParameter(Node3d.vertexMatrixName, node.parent.matrix);
-                }
-                renderer.renders.push(node);
+                node.setParameter(Node3d.vertexMatrixName, vertexMatrix);
+                node.setParameter(Node3d.normalMatrixName, vertexMatrix.clone().invert().transpose());
+                renders.push(node);
             }
 
             node.childrens.forEach(c => {
                 load(renderer, c);
             });
+            vertexMatrix = previousVertexMatrix;
         }
 
         /** Draw a Render in a WebGLRenderer
@@ -240,11 +257,10 @@ export class WebGLRenderer extends Node {
         }
     }
 
-    clearColor(color) {
-        if (color) {
+    clearColor(color = new Color(0, 0, 0, 1)) {
+        if (color != this._clearColor) {
             this.gl.clearColor(color[0], color[1], color[2], color[3]);
-        } else {
-            this.gl.clearColor(0, 0, 0, 1);
+            this._clearColor = color;
         }
     }
 

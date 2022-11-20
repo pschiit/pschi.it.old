@@ -50,7 +50,7 @@ export class GLSLShader extends Shader {
         });
         result.push(this.script);
 
-        return result.join('');
+        return result.join('\n');
     }
 
     /** GLSLShader type value

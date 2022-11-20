@@ -1,5 +1,5 @@
 import { Buffer } from '../../core/Buffer';
-import { GLSLMaterial } from '../../material/GLSLMaterial';
+import { GLSLMaterial } from '../shader/GLSL/GLSLMaterial';
 import { Material } from '../../material/Material';
 import { WebGLBuffer } from './WebGLBuffer';
 import { WebGLNode } from './WebGLNode';
@@ -19,27 +19,28 @@ export class WebGLProgram extends WebGLNode {
             uniforms: {},
         };
         this.location = renderer.gl.createProgram();
-        if (material instanceof GLSLMaterial) {
-            this.vertexShader = renderer[material.vertexShader.id] || new WebGLShader(renderer, material.vertexShader);
-            renderer.gl.attachShader(this.location, this.vertexShader.location);
-            this.fragmentShader = renderer[material.fragmentShader.id] || new WebGLShader(renderer, material.fragmentShader);
-            renderer.gl.attachShader(this.location, this.fragmentShader.location);
-            renderer.gl.linkProgram(this.location);
-            if (!renderer.gl.getProgramParameter(this.location, renderer.gl.LINK_STATUS)) {
-                const error = new Error(`Failed to create program : ${renderer.gl.getProgramInfoLog(this.location)}`);
-                renderer.removeChild(this);
-                throw error;
-            }
-            const uniformsCount = renderer.gl.getProgramParameter(this.location, renderer.gl.ACTIVE_UNIFORMS);
-            for (let i = 0; i < uniformsCount; i++) {
-                const uniform = renderer.gl.getActiveUniform(this.location, i);
-                createUniform(renderer, this, uniform);
-            }
-            const attributesCount = renderer.gl.getProgramParameter(this.location, renderer.gl.ACTIVE_ATTRIBUTES);
-            for (let i = 0; i < attributesCount; i++) {
-                const attribute = renderer.gl.getActiveAttrib(this.location, i);
-                createAttribute(renderer, this, attribute);
-            }
+        if (!(material instanceof GLSLMaterial)) {
+            material = GLSLMaterial.from(material);
+        }
+        this.vertexShader = renderer[material.vertexShader.id] || new WebGLShader(renderer, material.vertexShader);
+        renderer.gl.attachShader(this.location, this.vertexShader.location);
+        this.fragmentShader = renderer[material.fragmentShader.id] || new WebGLShader(renderer, material.fragmentShader);
+        renderer.gl.attachShader(this.location, this.fragmentShader.location);
+        renderer.gl.linkProgram(this.location);
+        if (!renderer.gl.getProgramParameter(this.location, renderer.gl.LINK_STATUS)) {
+            const error = new Error(`Failed to create program : ${renderer.gl.getProgramInfoLog(this.location)}`);
+            renderer.removeChild(this);
+            throw error;
+        }
+        const uniformsCount = renderer.gl.getProgramParameter(this.location, renderer.gl.ACTIVE_UNIFORMS);
+        for (let i = 0; i < uniformsCount; i++) {
+            const uniform = renderer.gl.getActiveUniform(this.location, i);
+            createUniform(renderer, this, uniform);
+        }
+        const attributesCount = renderer.gl.getProgramParameter(this.location, renderer.gl.ACTIVE_ATTRIBUTES);
+        for (let i = 0; i < attributesCount; i++) {
+            const attribute = renderer.gl.getActiveAttrib(this.location, i);
+            createAttribute(renderer, this, attribute);
         }
     }
 }

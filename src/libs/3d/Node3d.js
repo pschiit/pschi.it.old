@@ -90,4 +90,5 @@ export class Node3d extends Node {
     }
 
     static vertexMatrixName = 'vertexMatrix';
+    static normalMatrixName = 'normalMatrix';
 }

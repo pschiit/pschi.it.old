@@ -8,7 +8,6 @@ export class Render extends Node {
         super();
         this.primitive = null;
         this.material = null;
-        this.buffer = null;
         this.index = null;
         this.parameters = {};
         this.count = 0;

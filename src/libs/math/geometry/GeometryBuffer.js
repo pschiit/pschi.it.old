@@ -1,5 +1,5 @@
-import { Buffer } from '../core/Buffer';
-import { Render } from '../renderer/Render';
+import { Buffer } from '../../core/Buffer';
+import { Render } from '../../renderer/Render';
 
 export class GeometryBuffer extends Buffer {
     constructor(data = new Float32Array()) {
@@ -87,12 +87,8 @@ export class GeometryBuffer extends Buffer {
     createRender(material) {
         const render = new Render();
         render.material = material;
-        if (this.primitive) {
-            render.primitive = this.primitive;
-        }
-        if (this.index) {
-            render.index = this.index;
-        }
+        render.primitive = this.primitive;
+        render.index = this.index;
         this.childrens.forEach(b => {
             if (b.name) {
                 render.setParameter(b.name, b);

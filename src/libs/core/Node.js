@@ -10,6 +10,10 @@ export class Node {
         this.visible = true;
     }
 
+    get root() {
+        return this.parent ? this.parent.root : this;
+    }
+
     /** Append a child Node to the current Node
      * and update the child's parent to the new current Node
      * @param {Node} child the Node to append 
@@ -31,7 +35,7 @@ export class Node {
 
         child.parent = this;
         const index = this.childrens.push(child) - 1;
-        this.dispatchEvent({ type: Node.event.nodeInserted, inserted: child, index: index});
+        this.dispatchEvent({ type: Node.event.nodeInserted, inserted: child, index: index });
 
         return index;
     }
@@ -130,7 +134,7 @@ export class Node {
         for (let i = 0; i < args.length; i++) {
             result[i] = fn(args[i]);
         }
-        
+
         return result;
     }
 
