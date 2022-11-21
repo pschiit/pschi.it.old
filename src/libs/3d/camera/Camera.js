@@ -1,9 +1,9 @@
-import { Color } from '../../core/Color';
-import { Matrix4 } from '../../math/Matrix4';
-import { Vector3 } from '../../math/Vector3';
-import { Node3d } from '../Node3d';
+import Color from'../../core/Color';
+import Matrix4 from'../../math/Matrix4';
+import Vector3 from'../../math/Vector3';
+import Node3d from'../Node3d';
 
-export class Camera extends Node3d {
+export default class  Camera extends Node3d {
     constructor() {
         super();
         this.projectionMatrix = Matrix4.identityMatrix();

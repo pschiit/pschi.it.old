@@ -1,6 +1,6 @@
-import { Material } from './Material';
+import Material from'./Material';
 
-export class LambertMaterial extends Material {
+export default class  LambertMaterial extends Material {
     constructor(){
         super();
     }

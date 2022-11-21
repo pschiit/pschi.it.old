@@ -1,6 +1,6 @@
-import { Node } from '../../../core/Node';
+import Node from'../../../core/Node';
 
-export class GLSLParameter extends Node {
+export default class  GLSLParameter extends Node {
     /** Create a GLSL Parameter
      * @param {string} qualifier parameter qualifier
      * @param {string} type parameter type

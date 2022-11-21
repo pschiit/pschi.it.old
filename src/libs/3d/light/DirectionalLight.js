@@ -1,6 +1,6 @@
-import { Light } from './Light';
+import Light from'./Light';
 
-export class DirectionalLight extends Light {
+export default class  DirectionalLight extends Light {
     constructor(color, position, target) {
         super(color);
         this.translate(position);

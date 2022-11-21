@@ -1,4 +1,4 @@
-export class MathArray extends Float32Array {
+export default class  MathArray extends Float32Array {
     constructor(length){
         super(length);
     }

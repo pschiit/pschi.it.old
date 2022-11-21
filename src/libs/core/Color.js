@@ -1,7 +1,7 @@
-import { Vector3 } from '../math/Vector3';
-import { Vector4 } from '../math/Vector4';
+import Vector3 from'../math/Vector3';
+import Vector4 from'../math/Vector4';
 
-export class Color extends Vector4 {
+export default class  Color extends Vector4 {
     /** Create a new Color from the RGBA value
      * @param {Number} r red value
      * @param {Number} g green value

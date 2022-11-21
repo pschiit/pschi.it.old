@@ -1,5 +1,5 @@
-import { WebGLCanvas } from '../../../src/libs/html/WebGLCanvas';
-import { WebGLRenderer } from '../../../src/libs/renderer/webgl/WebGLRenderer';
+import WebGLCanvas from'../../../src/libs/html/WebGLCanvas';
+import WebGLRenderer from'../../../src/libs/renderer/webgl/WebGLRenderer';
 
 HTMLCanvasElement.prototype.getContext = () => {
     return {

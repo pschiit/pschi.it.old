@@ -1,7 +1,7 @@
-import { Node } from '../core/Node';
-import { Vector2 } from '../math/Vector2';
+import Node from'../core/Node';
+import Vector2 from'../math/Vector2';
 
-export class HtmlNode extends Node {
+export default class  HtmlNode extends Node {
     /** Create a new HtmlNode
      * @param {string} type the HTML tag of the new HtmlNode HTMLElement
     */

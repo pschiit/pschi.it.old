@@ -1,5 +1,5 @@
-import { Canvas } from '../../../src/libs/html/Canvas';
-import { Vector2 } from '../../../src/libs/math/Vector2';
+import Canvas from'../../../src/libs/html/Canvas';
+import Vector2 from'../../../src/libs/math/Vector2';
 
 test('When created, Canvas should have a HTMLElement canvas as element', () => {
     const canvas = new Canvas();

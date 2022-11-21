@@ -1,6 +1,6 @@
-import { Light } from './Light';
+import Light from'./Light';
 
-export class PointLight extends Light {
+export default class  PointLight extends Light {
     constructor(color, position) {
         super(color);
         this.translate(position);

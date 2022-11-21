@@ -1,7 +1,7 @@
-import { Buffer } from '../../core/Buffer';
-import { Render } from '../../renderer/Render';
+import Buffer from'../../core/Buffer';
+import Render from'../../renderer/Render';
 
-export class GeometryBuffer extends Buffer {
+export default class  GeometryBuffer extends Buffer {
     constructor(data = new Float32Array()) {
         super(data, 0);
         this._index = null;

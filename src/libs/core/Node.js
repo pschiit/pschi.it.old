@@ -1,4 +1,4 @@
-export class Node {
+export default class  Node {
     /** Create a new Node
     */
     constructor() {

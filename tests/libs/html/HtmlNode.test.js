@@ -1,5 +1,5 @@
-import { HtmlNode } from '../../../src/libs/html/HtmlNode';
-import { Vector2 } from '../../../src/libs/math/Vector2';
+import HtmlNode from'../../../src/libs/html/HtmlNode';
+import Vector2 from'../../../src/libs/math/Vector2';
 
 test('HtmlNode.document should return a HtmlNode singleton with document as element', () => {
     expect(HtmlNode.document).toBe(HtmlNode.document);

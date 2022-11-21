@@ -1,6 +1,6 @@
-import { Material } from './Material';
+import Material from'./Material';
 
-export class PhongMaterial extends Material {
+export default class  PhongMaterial extends Material {
     constructor(){
         super();
     }

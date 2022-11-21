@@ -1,10 +1,10 @@
-import { Render } from '../Render';
-import { WebGLNode } from './WebGLNode';
-import { WebGLBuffer } from './WebGLBuffer';
-import { WebGLProgram } from './WebGLProgram';
-import { WebGLRenderer } from './WebGLRenderer';
+import Render from'../Render';
+import WebGLNode from'./WebGLNode';
+import WebGLBuffer from'./WebGLBuffer';
+import WebGLProgram from'./WebGLProgram';
+import WebGLRenderer from'./WebGLRenderer';
 
-export class WebGLVertexArray extends WebGLNode {
+export default class  WebGLVertexArray extends WebGLNode {
     /** Create a WebGLVertexArray from a Node for a WebGLRenderingContext
      * @param {WebGLRenderer} renderer the context of the renderer
      * @param {Render} render  associated Render

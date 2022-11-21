@@ -1,12 +1,12 @@
-import { Buffer } from '../../core/Buffer';
-import { GLSLMaterial } from '../shader/GLSL/GLSLMaterial';
-import { Material } from '../../material/Material';
-import { WebGLBuffer } from './WebGLBuffer';
-import { WebGLNode } from './WebGLNode';
-import { WebGLRenderer } from './WebGLRenderer';
-import { WebGLShader } from './WebGLShader';
+import Buffer from'../../core/Buffer';
+import GLSLMaterial from'../shader/GLSL/GLSLMaterial';
+import Material from'../../material/Material';
+import WebGLBuffer from'./WebGLBuffer';
+import WebGLNode from'./WebGLNode';
+import WebGLRenderer from'./WebGLRenderer';
+import WebGLShader from'./WebGLShader';
 
-export class WebGLProgram extends WebGLNode {
+export default class  WebGLProgram extends WebGLNode {
     /** Create a WebGLProgram from a Material for a WebGLRenderingContext
      * @param {WebGLRenderer} renderer the context of the renderer
      * @param {Material} material  associated Material

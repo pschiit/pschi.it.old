@@ -1,9 +1,9 @@
-import { Vector2 } from '../math/Vector2';
-import { Vector3 } from '../math/Vector3';
-import { Vector4 } from '../math/Vector4';
-import { Node } from './Node';
+import Vector2 from'../math/Vector2';
+import Vector3 from'../math/Vector3';
+import Vector4 from'../math/Vector4';
+import Node from'./Node';
 
-export class Buffer extends Node {
+export default class  Buffer extends Node {
     constructor(data, step = 1) {
         super();
         this.usage = Buffer.usage.static;

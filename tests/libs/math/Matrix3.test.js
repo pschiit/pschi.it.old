@@ -1,7 +1,7 @@
-import { Matrix2 } from '../../../src/libs/math/Matrix2';
-import { Matrix3 } from '../../../src/libs/math/Matrix3';
-import { Matrix4 } from '../../../src/libs/math/Matrix4';
-import { Vector2 } from '../../../src/libs/math/Vector2';
+import Matrix2 from'../../../src/libs/math/Matrix2';
+import Matrix3 from'../../../src/libs/math/Matrix3';
+import Matrix4 from'../../../src/libs/math/Matrix4';
+import Vector2 from'../../../src/libs/math/Vector2';
 
 const array = [
     2, 4, 6,
