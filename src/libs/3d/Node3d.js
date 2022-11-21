@@ -1,8 +1,8 @@
-import { Node } from '../core/Node';
-import { Matrix4 } from '../math/Matrix4';
-import { Vector3 } from '../math/Vector3';
+import Node from'../core/Node';
+import Matrix4 from'../math/Matrix4';
+import Vector3 from'../math/Vector3';
 
-export class Node3d extends Node {
+export default class  Node3d extends Node {
     /** Create a new Node3d
     */
     constructor() {

@@ -1,9 +1,9 @@
 
-import { Buffer } from '../../core/Buffer';
-import { WebGLNode } from './WebGLNode';
-import { WebGLRenderer } from './WebGLRenderer';
+import Buffer from'../../core/Buffer';
+import WebGLNode from'./WebGLNode';
+import WebGLRenderer from'./WebGLRenderer';
 
-export class WebGLBuffer extends WebGLNode {
+export default class  WebGLBuffer extends WebGLNode {
     /** Create a WebGLBuffer from a Buffer for a WebGLRenderingContext
      * @param {WebGLRenderer} renderer the context of the renderer
      * @param {Buffer} buffer  Buffer

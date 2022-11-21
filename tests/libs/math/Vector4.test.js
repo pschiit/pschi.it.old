@@ -1,7 +1,7 @@
-import { Matrix4 } from '../../../src/libs/math/Matrix4';
-import { Vector2 } from '../../../src/libs/math/Vector2';
-import { Vector3 } from '../../../src/libs/math/Vector3';
-import { Vector4 } from '../../../src/libs/math/Vector4';
+import Matrix4 from'../../../src/libs/math/Matrix4';
+import Vector2 from'../../../src/libs/math/Vector2';
+import Vector3 from'../../../src/libs/math/Vector3';
+import Vector4 from'../../../src/libs/math/Vector4';
 
 describe('initialize Vector4', () => {
     test('with x', () => {

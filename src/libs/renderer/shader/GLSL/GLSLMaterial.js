@@ -1,16 +1,16 @@
-import { Camera } from '../../../3d/camera/Camera';
-import { Fog } from '../../../3d/Fog';
-import { DirectionalLight } from '../../../3d/light/DirectionalLight';
-import { Node3d } from '../../../3d/Node3d';
-import { GeometryBuffer } from '../../../math/geometry/GeometryBuffer';
-import { GLSLParameter } from './GLSLParameter';
-import { GLSLShader } from './GLSLShader';
-import { LambertMaterial } from '../../../material/LambertMaterial';
-import { Material } from '../../../material/Material';
-import { PhongMaterial } from '../../../material/PhongMaterial';
-import { PointLight } from '../../../3d/light/PointLight';
+import Camera from'../../../3d/camera/Camera';
+import Fog from'../../../3d/Fog';
+import DirectionalLight from'../../../3d/light/DirectionalLight';
+import Node3d from'../../../3d/Node3d';
+import GeometryBuffer from'../../../math/geometry/GeometryBuffer';
+import GLSLParameter from'./GLSLParameter';
+import GLSLShader from'./GLSLShader';
+import LambertMaterial from'../../../material/LambertMaterial';
+import Material from'../../../material/Material';
+import PhongMaterial from'../../../material/PhongMaterial';
+import PointLight from'../../../3d/light/PointLight';
 
-export class GLSLMaterial extends Material {
+export default class  GLSLMaterial extends Material {
     /** Create a new GLSLMaterial from a vertex and fragment GLSLShader
      * @param {GLSLShader} vertexShader GLSL shader
      * @param {GLSLShader} fragmentShader GLSL shader

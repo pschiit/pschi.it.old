@@ -1,21 +1,21 @@
-import { Camera } from '../../3d/camera/Camera';
-import { PerspectiveCamera } from '../../3d/camera/PerspectiveCamera';
-import { Fog } from '../../3d/Fog';
-import { DirectionalLight } from '../../3d/light/DirectionalLight';
-import { Light } from '../../3d/light/Light';
-import { PointLight } from '../../3d/light/PointLight';
-import { Node3d } from '../../3d/Node3d';
-import { Buffer } from '../../core/Buffer';
-import { Color } from '../../core/Color';
-import { Node } from '../../core/Node';
-import { Matrix4 } from '../../math/Matrix4';
-import { Render } from '../Render';
-import { WebGLBuffer } from './WebGLBuffer';
-import { WebGLProgram } from './WebGLProgram';
-import { WebGLShader } from './WebGLShader';
-import { WebGLVertexArray } from './WebGLVertexArray';
+import Camera from'../../3d/camera/Camera';
+import PerspectiveCamera from'../../3d/camera/PerspectiveCamera';
+import Fog from'../../3d/Fog';
+import DirectionalLight from'../../3d/light/DirectionalLight';
+import Light from'../../3d/light/Light';
+import PointLight from'../../3d/light/PointLight';
+import Node3d from'../../3d/Node3d';
+import Buffer from'../../core/Buffer';
+import Color from'../../core/Color';
+import Node from'../../core/Node';
+import Matrix4 from'../../math/Matrix4';
+import Render from'../Render';
+import WebGLBuffer from'./WebGLBuffer';
+import WebGLProgram from'./WebGLProgram';
+import WebGLShader from'./WebGLShader';
+import WebGLVertexArray from'./WebGLVertexArray';
 
-export class WebGLRenderer extends Node {
+export default class  WebGLRenderer extends Node {
     /** Create a WebGLRenderer from a WebGLRenderingContext
      * @param {WebGLRenderingContext} gl the context of the renderer
      */

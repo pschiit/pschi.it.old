@@ -1,5 +1,5 @@
-import { Color } from '../../../src/libs/core/Color';
-import { Vector3 } from '../../../src/libs/math/Vector3';
+import Color from'../../../src/libs/core/Color';
+import Vector3 from'../../../src/libs/math/Vector3';
 
 describe('When using Color get / set', () => {
     test('get rgba should return a Vector4 equal to the Color', () => {

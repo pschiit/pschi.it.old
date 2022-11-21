@@ -1,8 +1,8 @@
-import { Matrix2 } from './Matrix2';
-import { Matrix4 } from './Matrix4';
-import { MathArray } from './MathArray';
+import Matrix2 from'./Matrix2';
+import Matrix4 from'./Matrix4';
+import MathArray from'./MathArray';
 
-export class Matrix3 extends MathArray{
+export default class  Matrix3 extends MathArray{
     /** Create a new Matrix3 from an array of number
      * @param {Number[]} values values of the matrix 
     */

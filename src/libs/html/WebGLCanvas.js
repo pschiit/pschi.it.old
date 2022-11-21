@@ -1,8 +1,8 @@
-import { Canvas } from './Canvas';
-import { Node } from '../core/Node';
-import { WebGLRenderer } from '../renderer/webgl/WebGLRenderer';
+import Canvas from'./Canvas';
+import Node from'../core/Node';
+import WebGLRenderer from'../renderer/webgl/WebGLRenderer';
 
-export class WebGLCanvas extends Canvas {
+export default class  WebGLCanvas extends Canvas {
 
     /** Create a new WebGLCanvas HtmlNode
      * @param {Object} contextOptions webgl options for context initialization 

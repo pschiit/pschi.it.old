@@ -1,4 +1,4 @@
-import { Angle } from '../../../src/libs/math/Angle';
+import Angle from'../../../src/libs/math/Angle';
 
 describe('Angle conversion', () =>{
     test('180 degrees equals π radians', ()=>{

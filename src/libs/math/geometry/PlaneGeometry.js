@@ -1,8 +1,8 @@
-import { Color } from '../../core/Color';
-import { Render } from '../../renderer/Render';
-import { GeometryBuffer } from './GeometryBuffer';
+import Color from'../../core/Color';
+import Render from'../../renderer/Render';
+import GeometryBuffer from'./GeometryBuffer';
 
-export class PlaneGeometry extends GeometryBuffer {
+export default class  PlaneGeometry extends GeometryBuffer {
     constructor(width = 1, height = 1,color = PlaneGeometry.rainbowColor, primitive = Render.primitive.triangles) {
         super();
 

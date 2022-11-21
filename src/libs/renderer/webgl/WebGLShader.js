@@ -1,9 +1,9 @@
-import { GLSLShader } from '../shader/GLSL/GLSLShader';
-import { Shader } from '../shader/Shader';
-import { WebGLNode } from './WebGLNode';
-import { WebGLRenderer } from './WebGLRenderer';
+import GLSLShader from'../shader/GLSL/GLSLShader';
+import Shader from'../shader/Shader';
+import WebGLNode from'./WebGLNode';
+import WebGLRenderer from'./WebGLRenderer';
 
-export class WebGLShader extends WebGLNode {
+export default class  WebGLShader extends WebGLNode {
     /** Create a WebGLShader from a Shader for a WebGLRenderingContext
      * @param {WebGLRenderer} renderer the context of the renderer
      * @param {Shader} shader  associated Shader

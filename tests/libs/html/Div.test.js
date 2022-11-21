@@ -1,4 +1,4 @@
-import { Div } from '../../../src/libs/html/Div';
+import Div from'../../../src/libs/html/Div';
 
 test('When created, Div should have a HTMLElement div as element', ()=>{
     const div = new Div();

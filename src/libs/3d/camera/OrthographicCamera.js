@@ -1,7 +1,7 @@
-import { Matrix4 } from '../../math/Matrix4';
-import { Camera } from './Camera';
+import Matrix4 from'../../math/Matrix4';
+import Camera from'./Camera';
 
-export class OrthographicCamera extends Camera {
+export default class  OrthographicCamera extends Camera {
     constructor(left, right, bottom, top, near, far) {
         super();
         this.left = left;

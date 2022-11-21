@@ -1,4 +1,4 @@
-import { Node } from '../../../src/libs/core/Node';
+import Node from'../../../src/libs/core/Node';
 
 test('When cloning should return a new copy of the node', () => {
     const parent = new Node();

@@ -1,11 +1,11 @@
-import { Matrix2 } from './Matrix2';
-import { Matrix3 } from './Matrix3';
-import { Matrix4 } from './Matrix4';
-import { Vector3 } from './Vector3';
-import { Vector4 } from './Vector4';
-import { MathArray } from './MathArray';
+import Matrix2 from'./Matrix2';
+import Matrix3 from'./Matrix3';
+import Matrix4 from'./Matrix4';
+import Vector3 from'./Vector3';
+import Vector4 from'./Vector4';
+import MathArray from './MathArray';
 
-export class Vector2 extends MathArray {
+export default class  Vector2 extends MathArray {
     /** Create a new Vector2 from the coordinates xy or a vector array
      * @param {Number|Number[]} x first coordinate or vector array
      * @param {Number} y second coordinate

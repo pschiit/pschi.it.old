@@ -1,4 +1,4 @@
-export class Angle {
+export default class  Angle {
     /** Convert radians to degrees
      * @param {Number} radian Angle in radians
      * @return {Number} angle in degrees

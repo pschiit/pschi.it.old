@@ -1,6 +1,6 @@
-import { HtmlNode } from './HtmlNode';
+import HtmlNode from'./HtmlNode';
 
-export class Div extends HtmlNode {
+export default class  Div extends HtmlNode {
     static elementTag = 'DIV';
     
 

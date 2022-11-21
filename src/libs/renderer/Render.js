@@ -1,7 +1,7 @@
-import { Buffer } from '../core/Buffer';
-import { Node } from '../core/Node';
+import Buffer from'../core/Buffer';
+import Node from'../core/Node';
 
-export class Render extends Node {
+export default class  Render extends Node {
     /** Create a Render readable by a Renderer
      */
     constructor() {

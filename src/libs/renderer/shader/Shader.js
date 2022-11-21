@@ -1,5 +1,5 @@
-import { Node } from '../../core/Node';
-export class Shader extends Node {
+import Node from'../../core/Node';
+export default class  Shader extends Node {
     /** Create a Shader
      */
     constructor() {
