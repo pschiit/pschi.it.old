@@ -5,12 +5,14 @@ export class GLSLParameter extends Node {
      * @param {string} qualifier parameter qualifier
      * @param {string} type parameter type
      * @param {string} name parameter name
+     * @param {Number} arrayLength parameter array length(uniform array)
      */
-    constructor(qualifier, type, name) {
+    constructor(qualifier, type, name, arrayLength = 0) {
         super();
         this.qualifier = qualifier
         this.type = type;
         this.name = name;
+        this.arrayLength = arrayLength;
     }
 
     /** Return the declaration line of the parameter.
@@ -18,7 +20,7 @@ export class GLSLParameter extends Node {
      * @returns {string} the declaration 'qualifier type name;'
     */
     get declaration() {
-        return `${this.qualifier} ${this.type} ${this.name};`
+        return `${this.qualifier} ${this.type} ${this.name}${this.arrayLength > 0 ? `[${this.arrayLength}]` : ''};`
     }
 
     /** Return the parameter name.

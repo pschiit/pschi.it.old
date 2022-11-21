@@ -1,11 +1,12 @@
+import { Color } from '../../core/Color';
 import { Render } from '../../renderer/Render';
 import { GeometryBuffer } from './GeometryBuffer';
 
 export class BoxGeometry extends GeometryBuffer {
-    constructor(width = 1, height = 1, depth = 1, color = null, primitive = Render.primitive.triangles) {
+    constructor(width = 1, height = 1, depth = 1, color = BoxGeometry.rainbowColor, primitive = Render.primitive.triangles) {
         super();
 
-        this.resize(width, height, depth);
+        this.setDimensions(width, height, depth);
         this.normal = [
             0, 0, -1,//F
             0, 0, -1,
@@ -37,73 +38,12 @@ export class BoxGeometry extends GeometryBuffer {
             0, -1, 0,
             0, -1, 0,
         ];
-        if (color) {
-            this.color = [
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
 
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],];
-        } else {
-            this.color = [
-                0, 0, 0, 1,
-                0, 1, 0, 1,
-                1, 1, 0, 1,
-                1, 0, 0, 1,
-
-                1, 0, 0, 1,
-                1, 1, 0, 1,
-                1, 1, 1, 1,
-                1, 0, 1, 1,
-
-                1, 0, 1, 1,
-                1, 1, 1, 1,
-                0, 1, 1, 1,
-                0, 0, 1, 1,
-
-                1, 1, 1, 1,
-                1, 1, 0, 1,
-                0, 1, 0, 1,
-                0, 1, 1, 1,
-
-                0, 0, 1, 1,
-                0, 1, 1, 1,
-                0, 1, 0, 1,
-                0, 0, 0, 1,
-
-                0, 0, 1, 1,
-                0, 0, 0, 1,
-                1, 0, 0, 1,
-                1, 0, 1, 1,];
-        }
+        this.setColor(color);
         this.setPrimitive(primitive);
     }
 
-    resize(width, height, depth) {
+    setDimensions(width, height, depth) {
         Object.defineProperty(this, 'width', {
             value: width,
             writable: false,
@@ -176,4 +116,72 @@ export class BoxGeometry extends GeometryBuffer {
                 20, 21, 21, 22, 22, 23, 23, 20];
         }
     }
+
+    setColor(color) {
+        if (color instanceof Color) {
+            this.color = [
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],
+
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],
+
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],
+
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],
+
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],
+
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],
+                color[0], color[1], color[2], color[3],];
+        } else if (color) {
+            this.color = color;
+        }
+    }
+
+    static rainbowColor = [
+        0, 0, 0, 1,
+        0, 1, 0, 1,
+        1, 1, 0, 1,
+        1, 0, 0, 1,
+
+        1, 0, 0, 1,
+        1, 1, 0, 1,
+        1, 1, 1, 1,
+        1, 0, 1, 1,
+
+        1, 0, 1, 1,
+        1, 1, 1, 1,
+        0, 1, 1, 1,
+        0, 0, 1, 1,
+
+        1, 1, 1, 1,
+        1, 1, 0, 1,
+        0, 1, 0, 1,
+        0, 1, 1, 1,
+
+        0, 0, 1, 1,
+        0, 1, 1, 1,
+        0, 1, 0, 1,
+        0, 0, 0, 1,
+
+        0, 0, 1, 1,
+        0, 0, 0, 1,
+        1, 0, 0, 1,
+        1, 0, 1, 1,];
 }

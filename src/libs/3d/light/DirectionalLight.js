@@ -1,9 +1,15 @@
 import { Light } from './Light';
 
 export class DirectionalLight extends Light {
-    constructor(color, direction) {
+    constructor(color, position, target) {
         super(color);
-        this.direction = direction;
+        this.translate(position);
+        this.lookAt(target);
     }
-    static lightDirectionName = 'lightDirection';
+
+    get direction(){
+        return this.position.clone().substract(this.target);
+    }
+    static lightColorName = 'directionalLightColor';
+    static lightDirectionName = 'directionalLightDirection';
 }

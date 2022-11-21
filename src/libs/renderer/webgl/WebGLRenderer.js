@@ -3,13 +3,12 @@ import { PerspectiveCamera } from '../../3d/camera/PerspectiveCamera';
 import { Fog } from '../../3d/Fog';
 import { DirectionalLight } from '../../3d/light/DirectionalLight';
 import { Light } from '../../3d/light/Light';
+import { PointLight } from '../../3d/light/PointLight';
 import { Node3d } from '../../3d/Node3d';
 import { Buffer } from '../../core/Buffer';
 import { Color } from '../../core/Color';
 import { Node } from '../../core/Node';
 import { Matrix4 } from '../../math/Matrix4';
-import { Vector2 } from '../../math/Vector2';
-import { Vector3 } from '../../math/Vector3';
 import { Render } from '../Render';
 import { WebGLBuffer } from './WebGLBuffer';
 import { WebGLProgram } from './WebGLProgram';
@@ -184,6 +183,9 @@ export class WebGLRenderer extends Node {
                 if (l instanceof DirectionalLight) {
                     r.setParameter(DirectionalLight.lightColorName, l.color.rgb);
                     r.setParameter(DirectionalLight.lightDirectionName, l.direction);
+                } else if (l instanceof PointLight) {
+                    r.setParameter(PointLight.lightColorName, l.color.rgb);
+                    r.setParameter(PointLight.lightPositionName, l.position);
                 }
             });
             draw(this, r);
