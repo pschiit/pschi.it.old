@@ -10,7 +10,7 @@ export class Vector3 extends MathArray {
     static zAxis = new Vector3(0, 0, 1);
 
     /** Create a new Vector3 from the coordinates xyz or a vector array
-     * @param {Number} x first coordinate or vector array
+     * @param {Number|Number[]} x first coordinate or vector array
      * @param {Number} y second coordinate
      * @param {Number} z third coordinate
     */

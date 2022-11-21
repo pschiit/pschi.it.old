@@ -1,4 +1,5 @@
 import { Node } from '../core/Node';
+import { Vector2 } from '../math/Vector2';
 
 export class HtmlNode extends Node {
     /** Create a new HtmlNode
@@ -78,17 +79,7 @@ export class HtmlNode extends Node {
      * @return {Number} width / height of the HTMLElement
     */
     get aspectRatio() {
-        return this.width / this.height;
-    }
-
-    /** Validate type of HtmlNode (used for appendChild) 
-     * Can be override to restrict the type of HtmlNode you can append to the current HtmlNode
-     * @throws {Error} when node is not of type HtmlNode
-     */
-    validateType(node) {
-        if (!(node instanceof HtmlNode)) {
-            throw new Error(`${node.constructor.name} can't be child of ${this.constructor.name}.`);
-        }
+        return this.element.clientWidth / this.element.clientHeight;
     }
 
     /** Set the width and height of the current HtmlNode's HTMLElement
@@ -102,6 +93,32 @@ export class HtmlNode extends Node {
         }
 
         return this;
+    }
+    
+    /** Get the pointer position from an Pointer(or Mouse) Event,
+     * assumes HTMLElement doesn't have padding or border
+     * @param {PointerEvent} event Pointer event
+     * @return {Vector2} the pointer position as Vector2
+    */
+    getPointerPosition(event) {
+        const rect = this.element.getBoundingClientRect();
+        return new Vector2(
+            ((event.clientX - rect.left) * this.width / this.element.clientWidth),
+            ((rect.bottom - event.clientY) * this.height / this.element.clientHeight)
+        );
+    }
+    
+    /** Get the pointer webgl-relative position (-1, 1) from an Pointer(or Mouse) Event,
+     * assumes HTMLElement doesn't have padding or border
+     * @param {PointerEvent} event Pointer event
+     * @return {Vector2} the pointer position as Vector2
+    */
+     getMouseRelativePositon(event) {
+        const rect = this.element.getBoundingClientRect();
+        return new Vector2(
+            ((event.clientX - rect.left) * this.width / this.element.clientWidth) / this.width * 2 - 1,
+            ((event.clientY - rect.top) * this.height / this.element.clientHeight) / this.height * -2 + 1
+        );
     }
 
     /** Return the HtmlNode singleton of the document

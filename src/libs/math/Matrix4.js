@@ -1,16 +1,34 @@
 import { Matrix2 } from './Matrix2';
 import { Matrix3 } from './Matrix3';
 import { MathArray } from './MathArray';
+import { Vector3 } from './Vector3';
 
 export class Matrix4 extends MathArray {
     /** Create a new Matrix3 from an array of number
-     * @param {Array} values values of the matrix 
+     * @param {Number[]} values values of the matrix 
     */
     constructor(values) {
         super(16);
         if (values) {
             this.set(values);
         }
+    }
+
+    /** Return a Vector3 reflecting the position from the current Matrix
+     * @return {Vector3} position vector
+    */
+    get positionVector() {
+        return new Vector3(this[12], this[13], this[14]);
+    }
+
+    /** Return a Vector3 reflecting the scale from the current Matrix
+     * @return {Vector3} scale vector
+    */
+    get scaleVector() {
+        return new Vector3(
+            Math.hypot(this[0], this[1], this[2]), 
+            Math.hypot(this[4], this[5], this[6]), 
+            Math.hypot(this[8], this[9], this[10]));
     }
 
     /** Return whether or not a Matrix4 array is equals the current Matrix4
@@ -492,6 +510,54 @@ export class Matrix4 extends MathArray {
         return result;
     }
 
+    /** Create a new target Matrix4
+     * @param {Vector3} eye Position of the viewer
+     * @param {Vector3} target Point to target
+     * @param {Vector3} up up axis of the viewer
+     * @return {Matrix4} the lookAt Matrix4
+    */
+    static targetMatrix(eye, target, up) {
+        const result = new Matrix4();
+        let z0 = eye[0] - target[0],
+          z1 = eye[1] - target[1],
+          z2 = eye[2] - target[2];
+        let len = z0 * z0 + z1 * z1 + z2 * z2;
+        if (len > 0) {
+          len = 1 / Math.sqrt(len);
+          z0 *= len;
+          z1 *= len;
+          z2 *= len;
+        }
+        let x0 = up[1] * z2 - up[2] * z1,
+          x1 = up[2] * z0 - up[0] * z2,
+          x2 = up[0] * z1 - up[1] * z0;
+        len = x0 * x0 + x1 * x1 + x2 * x2;
+        if (len > 0) {
+          len = 1 / Math.sqrt(len);
+          x0 *= len;
+          x1 *= len;
+          x2 *= len;
+        }
+        result[0] = x0;
+        result[1] = x1;
+        result[2] = x2;
+        result[3] = 0;
+        result[4] = z1 * x2 - z2 * x1;
+        result[5] = z2 * x0 - z0 * x2;
+        result[6] = z0 * x1 - z1 * x0;
+        result[7] = 0;
+        result[8] = z0;
+        result[9] = z1;
+        result[10] = z2;
+        result[11] = 0;
+        result[12] = eye[0];
+        result[13] = eye[1];
+        result[14] = eye[2];
+        result[15] = 1;
+        
+        return result;
+    }
+
     /** Create a new orthographic Matrix4
      * @param {Number} left bound of the frustum
      * @param {Number} right bound of the frustum
@@ -528,15 +594,19 @@ export class Matrix4 extends MathArray {
     */
     static perspectiveMatrix(fovy, aspect, near, far) {
         const result = new Matrix4();
-        const f = 1.0 / Math.tan(fovy / 2);
-        let nf;
+        let f = 1.0 / Math.tan(fovy / 2),
+            nf;
         result[0] = f / aspect;
         result[5] = f;
         result[11] = -1;
-
-        nf = 1 / (near - far);
-        result[10] = (far + near) * nf;
-        result[14] = 2 * far * near * nf;
+        if (far != null && far !== Infinity) {
+            nf = 1 / (near - far);
+            result[10] = (far + near) * nf;
+            result[14] = 2 * far * near * nf;
+        } else {
+            result[10] = -1;
+            result[14] = -2 * near;
+        }
 
         return result;
     }

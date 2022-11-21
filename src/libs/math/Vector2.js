@@ -7,7 +7,7 @@ import { MathArray } from './MathArray';
 
 export class Vector2 extends MathArray {
     /** Create a new Vector2 from the coordinates xy or a vector array
-     * @param {Number} x first coordinate or vector array
+     * @param {Number|Number[]} x first coordinate or vector array
      * @param {Number} y second coordinate
     */
     constructor(x, y) {
