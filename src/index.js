@@ -120,7 +120,7 @@ function draw() {
     camera.translate(0.1, 0, 0);
     camera.lookAt(camera.target);
     camera.updateProjection();
-    canvas.render(camera);
+    canvas.render(world);
     requestAnimationFrame(draw);
 }
 requestAnimationFrame(draw);

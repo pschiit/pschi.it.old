@@ -7,6 +7,7 @@ import GeometryBuffer from '../../../3d/geometry/GeometryBuffer';
 import GLSLParameter from './GLSLParameter';
 import GLSLShader from './GLSLShader';
 import DirectionalLight from '../../../3d/light/DirectionalLight';
+import Light from '../../../3d/light/Light';
 
 export default class GLSLMaterial extends Material {
     /** Create a new GLSLMaterial from a vertex and fragment GLSLShader
@@ -37,14 +38,17 @@ export default class GLSLMaterial extends Material {
             const normalMatrix = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.mat4, Node3d.normalMatrixName);
             const materialShininess = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, PhongMaterial.shininessName);
 
-            const directionalLightColor = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, DirectionalLight.colorName, DirectionalLight.created.length);
-            const directionalLightDirection = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, DirectionalLight.directionName, DirectionalLight.created.length);
-            const directionalLightAmbientStrength = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, DirectionalLight.ambientStrengthName, DirectionalLight.created.length);
+            let directionalLightCount = material.directionalLigthsCount;
+            let pointLightCount = material.pointLigthsCount;
 
-            const pointLightColor = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, PointLight.colorName, PointLight.created.length);
-            const pointLightPosition = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, PointLight.positionName, PointLight.created.length);
-            const pointLightAmbientStrength = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, PointLight.ambientStrengthName, PointLight.created.length);
-            const pointLightIntensity = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, PointLight.intensityName, PointLight.created.length);
+            const directionalLightColor = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, DirectionalLight.colorName, directionalLightCount);
+            const directionalLightDirection = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, DirectionalLight.directionName, directionalLightCount);
+            const directionalLightAmbientStrength = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, DirectionalLight.ambientStrengthName, directionalLightCount);
+
+            const pointLightColor = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, PointLight.colorName, pointLightCount);
+            const pointLightPosition = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, PointLight.positionName, pointLightCount);
+            const pointLightAmbientStrength = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, PointLight.ambientStrengthName, pointLightCount);
+            const pointLightIntensity = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, PointLight.intensityName, pointLightCount);
 
 
             const vDistance = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.float, 'v_' + Camera.fogDistanceName);
@@ -114,16 +118,16 @@ export default class GLSLMaterial extends Material {
             }
 
             function createDirectionalLight() {
-                return DirectionalLight.created.length > 0 ? [
-                    `for(int i = 0; i < ${DirectionalLight.created.length}; i++){`,
+                return directionalLightCount > 0 ? [
+                    `for(int i = 0; i < ${directionalLightCount}; i++){`,
                     `color += calculateLight(${vColor}.rgb,${directionalLightDirection}[i], ${directionalLightColor}[i], ${directionalLightAmbientStrength}[i], ${materialShininess}, cameraPosition, normal);`,
                     '}',].join('\n')
                     : '';
             }
 
             function createPointLight() {
-                return PointLight.created.length > 0 ? [
-                    `for(int i = 0; i < ${PointLight.created.length}; i++){`,
+                return pointLightCount > 0 ? [
+                    `for(int i = 0; i < ${pointLightCount}; i++){`,
                     `vec3 lightDistance = ${pointLightPosition}[i] - ${vPosition};`,
                     `float attenuation = clamp(${pointLightIntensity}[i] / length(lightDistance), 0.0, 1.0);`,
                     `vec3 lightDirection = normalize(lightDistance);`,

@@ -6,5 +6,6 @@ export default class Light extends Node3d {
         this.color = color;
         this.ambientStrength = 0.1;
         this.intensity = 1;
+        this.on = true;
     }
 }
