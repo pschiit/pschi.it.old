@@ -3,9 +3,10 @@ import PointLight from '../../../3d/light/PointLight';
 import Node3d from '../../../3d/Node3d';
 import Material from '../../../material/Material';
 import PhongMaterial from '../../../material/PhongMaterial';
-import GeometryBuffer from '../../../math/geometry/GeometryBuffer';
+import GeometryBuffer from '../../../3d/geometry/GeometryBuffer';
 import GLSLParameter from './GLSLParameter';
 import GLSLShader from './GLSLShader';
+import DirectionalLight from '../../../3d/light/DirectionalLight';
 
 export default class GLSLMaterial extends Material {
     /** Create a new GLSLMaterial from a vertex and fragment GLSLShader
@@ -27,19 +28,25 @@ export default class GLSLMaterial extends Material {
             const position = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, GeometryBuffer.positionName);
             const normal = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, GeometryBuffer.normalName);
             const color = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, GeometryBuffer.colorName);
-    
+
             const cameraPosition = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, Camera.positionName);
             const cameraMatrix = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.mat4, Camera.projectionMatrixName);
-            const fogColor = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, Camera.fogColorName);
+            const fogColor = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, Camera.backgroundColorName);
             const fogDistance = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec2, Camera.fogDistanceName);
             const vertexMatrix = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.mat4, Node3d.vertexMatrixName);
             const normalMatrix = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.mat4, Node3d.normalMatrixName);
-            const pointLightColor = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, PointLight.lightColorName);
-            const pointLightPosition = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, PointLight.lightPositionName);
-            const pointLightAmbientStrength = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, PointLight.pointLightAmbientStrengthName);
-            const pointLightIntensity = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, PointLight.pointLightIntensityName);
             const materialShininess = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, PhongMaterial.shininessName);
-    
+
+            const directionalLightColor = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, DirectionalLight.colorName, DirectionalLight.created.length);
+            const directionalLightDirection = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, DirectionalLight.directionName, DirectionalLight.created.length);
+            const directionalLightAmbientStrength = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, DirectionalLight.ambientStrengthName, DirectionalLight.created.length);
+
+            const pointLightColor = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, PointLight.colorName, PointLight.created.length);
+            const pointLightPosition = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, PointLight.positionName, PointLight.created.length);
+            const pointLightAmbientStrength = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, PointLight.ambientStrengthName, PointLight.created.length);
+            const pointLightIntensity = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, PointLight.intensityName, PointLight.created.length);
+
+
             const vDistance = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.float, 'v_' + Camera.fogDistanceName);
             const vColor = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.vec4, 'v_' + GeometryBuffer.colorName);
             const vPosition = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.vec3, 'v_' + GeometryBuffer.positionName);
@@ -70,6 +77,9 @@ export default class GLSLMaterial extends Material {
                 cameraPosition,
                 fogColor,
                 fogDistance,
+                directionalLightColor,
+                directionalLightDirection,
+                directionalLightAmbientStrength,
                 pointLightAmbientStrength,
                 pointLightColor,
                 pointLightPosition,
@@ -85,11 +95,8 @@ export default class GLSLMaterial extends Material {
                 'void main(){',
                 `vec3 normal = normalize(${vNormal});`,
                 `vec3 cameraPosition = normalize(${cameraPosition} - ${vPosition});`,
-                `vec3 lightDistance = ${pointLightPosition} - ${vPosition};`,
-                `vec3 lightDirection = normalize(lightDistance);`,
-                `vec3 color = calculateLight(${vColor}.rgb,lightDirection, ${pointLightColor}, ${pointLightAmbientStrength}, ${materialShininess}, cameraPosition, normal);`,
-                `float attenuation = clamp(${pointLightIntensity} / length(lightDistance), 0.0, 1.0);`,
-                'color *= attenuation;',
+                'vec3 color = vec3(0.0);',
+                createLight(),
                 `color = calculateFog(${fogDistance}, ${fogColor}, ${vDistance}, color);`,
                 `gl_FragColor =  vec4(color, ${vColor}.a);`,
                 '}'
@@ -98,8 +105,35 @@ export default class GLSLMaterial extends Material {
             const result = new GLSLMaterial(vertexShader, fragmentShader);
             result.id = material.id;
             return result;
+
+            function createLight() {
+                var result = createDirectionalLight() + createPointLight();
+
+                return result.length > 0 ? result
+                    : `color += ${vColor}.rgb;`;
+            }
+
+            function createDirectionalLight() {
+                return DirectionalLight.created.length > 0 ? [
+                    `for(int i = 0; i < ${DirectionalLight.created.length}; i++){`,
+                    `color += calculateLight(${vColor}.rgb,${directionalLightDirection}[i], ${directionalLightColor}[i], ${directionalLightAmbientStrength}[i], ${materialShininess}, cameraPosition, normal);`,
+                    '}',].join('\n')
+                    : '';
+            }
+
+            function createPointLight() {
+                return PointLight.created.length > 0 ? [
+                    `for(int i = 0; i < ${PointLight.created.length}; i++){`,
+                    `vec3 lightDistance = ${pointLightPosition}[i] - ${vPosition};`,
+                    `float attenuation = clamp(${pointLightIntensity}[i] / length(lightDistance), 0.0, 1.0);`,
+                    `vec3 lightDirection = normalize(lightDistance);`,
+                    `color += attenuation * calculateLight(${vColor}.rgb,lightDirection, ${pointLightColor}[i], ${pointLightAmbientStrength}[i], ${materialShininess}, cameraPosition, normal);`,
+                    '}',].join('\n')
+                    : '';
+            }
         }
     }
+
 
     static calculateLight = [
         'vec3 calculateLight(vec3 fragmentColor, vec3 lightDirection, vec3 lightColor, float ambientStrength, float shininess, vec3 cameraPosition, vec3 normal){',

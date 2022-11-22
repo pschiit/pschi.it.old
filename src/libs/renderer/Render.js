@@ -2,7 +2,7 @@ import Buffer from'../core/Buffer';
 import Node from'../core/Node';
 
 export default class  Render extends Node {
-    /** Create a Render readable by a Renderer
+    /** Create a Renderable Node for a Renderer
      */
     constructor() {
         super();

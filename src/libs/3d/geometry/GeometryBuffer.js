@@ -1,5 +1,4 @@
 import Buffer from'../../core/Buffer';
-import Render from'../../renderer/Render';
 
 export default class  GeometryBuffer extends Buffer {
     constructor(data = new Float32Array()) {

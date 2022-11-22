@@ -8,6 +8,7 @@ import Buffer from '../../core/Buffer';
 import Color from '../../core/Color';
 import Node from '../../core/Node';
 import PhongMaterial from '../../material/PhongMaterial';
+import MathArray from '../../math/MathArray';
 import Matrix4 from '../../math/Matrix4';
 import Render from '../Render';
 import WebGLBuffer from './WebGLBuffer';
@@ -157,7 +158,7 @@ export default class WebGLRenderer extends Node {
         let camera = null;
         if (node instanceof Camera) {
             camera = node;
-            this.clearColor(node.background);
+            this.clearColor(node.backgroundColor);
             if (node instanceof PerspectiveCamera) {
                 const aspectRatio = this.parent.aspectRatio;
                 if (aspectRatio != node.aspectRatio) {
@@ -166,30 +167,38 @@ export default class WebGLRenderer extends Node {
                 }
             }
         }
-        let vertexMatrix = Matrix4.identityMatrix();
-        const materials = [];
-        const lights = [];
         const renders = [];
         load(this, node.root);
+        const pointLightlength = PointLight.created.length;
+        const pointLightColors = new MathArray(pointLightlength * 3);
+        const pointLightPositions = new MathArray(pointLightlength * 3);
+        const pointLightAmbientStrengths = new MathArray(pointLightlength);
+        const pointLightIntensities = new MathArray(pointLightlength);
+        PointLight.created.forEach((l,i) =>{
+            const iv3 = i * 3;
+            pointLightColors[iv3] = l.color[0];
+            pointLightColors[iv3 + 1] = l.color[1];
+            pointLightColors[iv3 + 2] = l.color[2];
+            pointLightPositions[iv3] = l.position[0];
+            pointLightPositions[iv3 + 1] = l.position[1];
+            pointLightPositions[iv3 + 2] = l.position[2];
+            pointLightAmbientStrengths[i] = l.ambientStrength;
+            pointLightIntensities[i] = l.intensity;
+        });
+        this.programs.forEach(p => {
+            this.program = p;
+            p.setUniform(Camera.positionName, camera.position);
+            p.setUniform(Camera.backgroundColorName, camera.backgroundColor.rgb);
+            p.setUniform(Camera.fogDistanceName, camera.fog);
+            p.setUniform(Camera.projectionMatrixName, camera.projectionMatrix);
+            
+            p.setUniform(PointLight.colorName, pointLightColors);
+            p.setUniform(PointLight.positionName, pointLightPositions);
+            p.setUniform(PointLight.ambientStrengthName, pointLightAmbientStrengths);
+            p.setUniform(PointLight.intensityName, pointLightIntensities);
+        });
         this.clear();
         renders.forEach(r => {
-            if (camera) {
-                r.setParameter(Camera.positionName, camera.position);
-                r.setParameter(Camera.fogColorName, camera.background.rgb);
-                r.setParameter(Camera.fogDistanceName, camera.fog);
-                r.setParameter(Camera.projectionMatrixName, camera.projectionMatrix);
-            }
-            lights.forEach(l => {
-                if (l instanceof DirectionalLight) {
-                    r.setParameter(DirectionalLight.lightColorName, l.color.rgb);
-                    r.setParameter(DirectionalLight.lightDirectionName, l.direction);
-                } else if (l instanceof PointLight) {
-                    r.setParameter(PointLight.lightColorName, l.color.rgb);
-                    r.setParameter(PointLight.lightPositionName, l.position);
-                    r.setParameter(PointLight.pointLightAmbientStrengthName, l.ambientStrenght);
-                    r.setParameter(PointLight.pointLightIntensityName, l.intensity);
-                }
-            });
             draw(this, r);
         });
 
@@ -201,13 +210,7 @@ export default class WebGLRenderer extends Node {
          * @param {Node} node Node to load
          */
         function load(renderer, node) {
-            const previousVertexMatrix = vertexMatrix;
-            if (node instanceof Node3d) {
-                vertexMatrix = node.matrix;
-                if (node instanceof Light) {
-                    lights.push(node);
-                }
-            } else if (node instanceof Render) {
+            if (node instanceof Render && node.count > 0) {
                 for (const name in node.parameters) {
                     const parameter = node.parameters[name];
                     if (parameter instanceof Buffer) {
@@ -228,16 +231,17 @@ export default class WebGLRenderer extends Node {
                 if (!renderer[node.id]) {
                     const vertexArray = new WebGLVertexArray(renderer, node);
                 }
+                if (node instanceof Node3d) {
+                    node.setParameter(Node3d.vertexMatrixName, node.matrix);
+                    node.setParameter(Node3d.normalMatrixName, node.parameters[Node3d.vertexMatrixName].clone().invert().transpose());
+                }
                 node.setParameter(PhongMaterial.shininessName, node.material.shininess);
-                node.setParameter(Node3d.vertexMatrixName, vertexMatrix);
-                node.setParameter(Node3d.normalMatrixName, vertexMatrix.clone().invert().transpose());
                 renders.push(node);
             }
 
             node.childrens.forEach(c => {
                 load(renderer, c);
             });
-            vertexMatrix = previousVertexMatrix;
         }
 
         /** Draw a Render in a WebGLRenderer
@@ -249,9 +253,7 @@ export default class WebGLRenderer extends Node {
             renderer.program = renderer[render.material.id];
 
             for (const name in render.parameters) {
-                if (renderer.program.uniforms[name]) {
-                    renderer.program.uniforms[name](render.parameters[name]);
-                }
+                renderer.program.setUniform(name, render.parameters[name]);
             }
             if (render.index) {
                 renderer.elementArrayBuffer = renderer[render.index.id];

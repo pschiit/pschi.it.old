@@ -1,16 +1,14 @@
 import Color from '../../core/Color';
 import Matrix4 from '../../math/Matrix4';
 import Vector2 from '../../math/Vector2';
-import DirectionalLight from '../light/DirectionalLight';
-import PointLight from '../light/PointLight';
 import Node3d from '../Node3d';
 
 export default class Camera extends Node3d {
     constructor() {
         super();
         this.projectionMatrix = Matrix4.identityMatrix();
-        this._fog = null;
-        this.background = new Color(0, 0, 0, 1);
+        this.fog = [0,100];
+        this.backgroundColor = new Color(0, 0, 0, 1);
     }
 
     get fog() {
@@ -26,6 +24,6 @@ export default class Camera extends Node3d {
 
     static positionName = 'cameraPositionMatrix';
     static projectionMatrixName = 'cameraMatrix';
-    static fogColorName = 'fogColor';
+    static backgroundColorName = 'backgroundColor';
     static fogDistanceName = 'fogDistance';
 }
