@@ -7,7 +7,7 @@ import Node3d from '../../3d/Node3d';
 import Buffer from '../../core/Buffer';
 import Color from '../../core/Color';
 import Node from '../../core/Node';
-import PhongMaterial from '../../material/PhongMaterial';
+import PhongMaterial from '../../3d/material/PhongMaterial';
 import MathArray from '../../math/MathArray';
 import Matrix4 from '../../math/Matrix4';
 import Render from '../Render';

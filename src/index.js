@@ -5,7 +5,7 @@ import Node3d from './libs/3d/Node3d';
 import Color from './libs/core/Color';
 import HtmlNode from './libs/html/HtmlNode';
 import WebGLCanvas from './libs/html/WebGLCanvas';
-import PhongMaterial from './libs/material/PhongMaterial';
+import PhongMaterial from './libs/3d/material/PhongMaterial';
 import BoxGeometry from './libs/3d/geometry/BoxGeometry';
 import PlaneGeometry from './libs/3d/geometry/PlaneGeometry';
 import Vector3 from './libs/math/Vector3';
