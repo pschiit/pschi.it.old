@@ -15,7 +15,8 @@ export default class  OrthographicCamera extends Camera {
     }
 
     updateProjection() {
-        const perspectiveMatrix = Matrix4.orthographicMatrix(this.left, this.right, this.bottom, this.top, this.near, this.far);
-        this.projectionMatrix = perspectiveMatrix.multiply(this.matrix.clone());
+        const orthograpicMatrix = Matrix4.orthographicMatrix(this.left, this.right, this.bottom, this.top, this.near, this.far);
+        const lookAt = Matrix4.lookAtMatrix(this.position, this.target, this.up);
+        this.projectionMatrix = orthograpicMatrix.multiply(lookAt);
     }
 }

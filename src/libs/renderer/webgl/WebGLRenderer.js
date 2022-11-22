@@ -1,21 +1,21 @@
-import Camera from'../../3d/camera/Camera';
-import PerspectiveCamera from'../../3d/camera/PerspectiveCamera';
-import Fog from'../../3d/Fog';
-import DirectionalLight from'../../3d/light/DirectionalLight';
-import Light from'../../3d/light/Light';
-import PointLight from'../../3d/light/PointLight';
-import Node3d from'../../3d/Node3d';
-import Buffer from'../../core/Buffer';
-import Color from'../../core/Color';
-import Node from'../../core/Node';
-import Matrix4 from'../../math/Matrix4';
-import Render from'../Render';
-import WebGLBuffer from'./WebGLBuffer';
-import WebGLProgram from'./WebGLProgram';
-import WebGLShader from'./WebGLShader';
-import WebGLVertexArray from'./WebGLVertexArray';
+import Camera from '../../3d/camera/Camera';
+import PerspectiveCamera from '../../3d/camera/PerspectiveCamera';
+import DirectionalLight from '../../3d/light/DirectionalLight';
+import Light from '../../3d/light/Light';
+import PointLight from '../../3d/light/PointLight';
+import Node3d from '../../3d/Node3d';
+import Buffer from '../../core/Buffer';
+import Color from '../../core/Color';
+import Node from '../../core/Node';
+import PhongMaterial from '../../material/PhongMaterial';
+import Matrix4 from '../../math/Matrix4';
+import Render from '../Render';
+import WebGLBuffer from './WebGLBuffer';
+import WebGLProgram from './WebGLProgram';
+import WebGLShader from './WebGLShader';
+import WebGLVertexArray from './WebGLVertexArray';
 
-export default class  WebGLRenderer extends Node {
+export default class WebGLRenderer extends Node {
     /** Create a WebGLRenderer from a WebGLRenderingContext
      * @param {WebGLRenderingContext} gl the context of the renderer
      */
@@ -174,10 +174,10 @@ export default class  WebGLRenderer extends Node {
         this.clear();
         renders.forEach(r => {
             if (camera) {
-                r.setParameter(Fog.fogColorName, camera.fog.color.rgb);
-                r.setParameter(Fog.fogDistanceName, camera.fog.distance);
-                r.setParameter(Camera.ambientLightColorName, camera.ambientLight.rgb);
-                r.setParameter(Camera.cameraMatrixName, camera.projectionMatrix);
+                r.setParameter(Camera.positionName, camera.position);
+                r.setParameter(Camera.fogColorName, camera.background.rgb);
+                r.setParameter(Camera.fogDistanceName, camera.fog);
+                r.setParameter(Camera.projectionMatrixName, camera.projectionMatrix);
             }
             lights.forEach(l => {
                 if (l instanceof DirectionalLight) {
@@ -186,6 +186,8 @@ export default class  WebGLRenderer extends Node {
                 } else if (l instanceof PointLight) {
                     r.setParameter(PointLight.lightColorName, l.color.rgb);
                     r.setParameter(PointLight.lightPositionName, l.position);
+                    r.setParameter(PointLight.pointLightAmbientStrengthName, l.ambientStrenght);
+                    r.setParameter(PointLight.pointLightIntensityName, l.intensity);
                 }
             });
             draw(this, r);
@@ -226,6 +228,7 @@ export default class  WebGLRenderer extends Node {
                 if (!renderer[node.id]) {
                     const vertexArray = new WebGLVertexArray(renderer, node);
                 }
+                node.setParameter(PhongMaterial.shininessName, node.material.shininess);
                 node.setParameter(Node3d.vertexMatrixName, vertexMatrix);
                 node.setParameter(Node3d.normalMatrixName, vertexMatrix.clone().invert().transpose());
                 renders.push(node);
@@ -245,8 +248,8 @@ export default class  WebGLRenderer extends Node {
             renderer.vertexArray = renderer[render.id] || new WebGLVertexArray(renderer, render);
             renderer.program = renderer[render.material.id];
 
-            for (const name in renderer.program.uniforms) {
-                if (render.parameters[name]) {
+            for (const name in render.parameters) {
+                if (renderer.program.uniforms[name]) {
                     renderer.program.uniforms[name](render.parameters[name]);
                 }
             }

@@ -33,5 +33,6 @@ export default class  WebGLBuffer extends WebGLNode {
                 renderer.gl.bufferData(this.target, buffer.data, this.usage);
             };
         }
+        this.update(buffer);
     }
 }
