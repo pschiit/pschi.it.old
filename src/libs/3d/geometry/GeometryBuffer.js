@@ -1,10 +1,8 @@
 import Buffer from'../../core/Buffer';
-import Render from'../../renderer/Render';
 
 export default class  GeometryBuffer extends Buffer {
     constructor(data = new Float32Array()) {
         super(data, 0);
-        this._index = null;
         this.primitive = null;
 
         this.positionName = GeometryBuffer.positionName;
@@ -18,25 +16,6 @@ export default class  GeometryBuffer extends Buffer {
         this.uvLength = GeometryBuffer.uvLength;
     }
 
-    get index() {
-        return this._index;
-    }
-
-    set index(v) {
-        if (v) {
-            if (Array.isArray(v)) {
-                v = new Uint32Array(v);
-            }
-            if (this.index) {
-                this.index.data = v;
-            } else {
-                this._index = new Buffer(v);
-            }
-        } else {
-            this.index = null;
-        }
-    }
-
     get count() {
         return this.index ? this.index.length : super.count;
     }
@@ -46,7 +25,7 @@ export default class  GeometryBuffer extends Buffer {
     }
 
     set position(v) {
-        this.setParameter(this.positionName, v, this.positionLength);
+        this.setSubBuffer(this.positionName, v, this.positionLength);
     }
 
     get normal() {
@@ -54,7 +33,7 @@ export default class  GeometryBuffer extends Buffer {
     }
 
     set normal(v) {
-        this.setParameter(this.normalName, v, this.normalLength);
+        this.setSubBuffer(this.normalName, v, this.normalLength);
     }
 
     get color() {
@@ -62,7 +41,7 @@ export default class  GeometryBuffer extends Buffer {
     }
 
     set color(v) {
-        this.setParameter(this.colorName, v, this.colorLength);
+        this.setSubBuffer(this.colorName, v, this.colorLength);
     }
 
     get uv() {
@@ -70,7 +49,7 @@ export default class  GeometryBuffer extends Buffer {
     }
 
     set uv(v) {
-        this.setParameter(this.uvName, v, this.uvLength);
+        this.setSubBuffer(this.uvName, v, this.uvLength);
     }
 
     applyMatrix(matrix) {
@@ -82,21 +61,6 @@ export default class  GeometryBuffer extends Buffer {
         if (buffer) {
             buffer.normal.applyMatrix(matrix.clone().invertMatrix().transpose());
         }
-    }
-
-    createRender(material) {
-        const render = new Render();
-        render.material = material;
-        render.primitive = this.primitive;
-        render.index = this.index;
-        this.childrens.forEach(b => {
-            if (b.name) {
-                render.setParameter(b.name, b);
-            }
-        });
-        render.count = this.count;
-        render.offset = this.offset;
-        return render;
     }
 
     static positionName = 'vertexPosition';

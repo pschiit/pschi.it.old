@@ -14,7 +14,6 @@ export default class  WebGLVertexArray extends WebGLNode {
         renderer.arrayBuffer = null;
         renderer.elementArrayBuffer = null;
         this.location = renderer.gl.createVertexArray();
-        const previous = renderer.vertexArray;
         renderer.vertexArray = this;
         const program = renderer[render.material.id] || new WebGLProgram(renderer, render.material);
         if (render.index) {
@@ -25,6 +24,8 @@ export default class  WebGLVertexArray extends WebGLNode {
                 program.attributes[name](render.parameters[name]);
             }
         }
-        renderer.vertexArray = previous;
+        renderer.vertexArray = null;
+        renderer.arrayBuffer = null;
+        renderer.elementArrayBuffer = null;
     }
 }

@@ -13,7 +13,8 @@ export default class  PerspectiveCamera extends Camera {
     }
 
     updateProjection() {
-        const perspectiveMatrix = Matrix4.perspectiveMatrix(this.fovY, this.aspectRatio, this.near, this.far)
-        this.projectionMatrix = perspectiveMatrix.multiply(this.matrix.clone());
+        const perspective = Matrix4.perspectiveMatrix(this.fovY, this.aspectRatio, this.near, this.far);
+        const lookAt = Matrix4.lookAtMatrix(this.position, this.target, this.up);
+        this.projectionMatrix = perspective.multiply(lookAt);
     }
 }

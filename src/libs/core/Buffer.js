@@ -1,11 +1,12 @@
-import Vector2 from'../math/Vector2';
-import Vector3 from'../math/Vector3';
-import Vector4 from'../math/Vector4';
-import Node from'./Node';
+import Vector2 from '../math/Vector2';
+import Vector3 from '../math/Vector3';
+import Vector4 from '../math/Vector4';
+import Node from './Node';
 
-export default class  Buffer extends Node {
+export default class Buffer extends Node {
     constructor(data, step = 1) {
         super();
+        this._index = null;
         this.usage = Buffer.usage.static;
         this.data = data;
         this.step = step;
@@ -20,6 +21,25 @@ export default class  Buffer extends Node {
                 return;
             }
         });
+    }
+
+    get index() {
+        return this._index;
+    }
+
+    set index(v) {
+        if (v) {
+            if (Array.isArray(v)) {
+                v = new Uint32Array(v);
+            }
+            if (this.index) {
+                this.index.data = v;
+            } else {
+                this._index = new Buffer(v);
+            }
+        } else {
+            this.index = null;
+        }
     }
 
     get data() {
@@ -103,22 +123,29 @@ export default class  Buffer extends Node {
         return this.childrens.find(c => c.name == name);
     }
 
-    setParameter(name, v, step) {
+    setSubBuffer(name, v, step) {
         const buffer = this.getParameter(name);
         if (v) {
-            if (v.constructor != this.type) {
-                v = new this.type(v);
-            }
-            if (!buffer) {
-                const buffer = new Buffer(v, step);
-                buffer.name = name;
-                this.appendChild(buffer);
+            if (v instanceof Buffer) {
+                v.name = name;
+                this.appendChild(v);
             } else {
-                buffer.data = v;
+                if (v.constructor != this.type) {
+                    v = new this.type(v);
+                }
+                if (!buffer) {
+                    const buffer = new Buffer(v, step);
+                    buffer.name = name;
+                    this.appendChild(buffer);
+                } else {
+                    buffer.data = v;
+                }
             }
         } else if (buffer) {
             this.removeChild(buffer);
         }
+
+        return this;
     }
 
     removeParameter(name) {

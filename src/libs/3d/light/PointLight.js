@@ -5,6 +5,9 @@ export default class  PointLight extends Light {
         super(color);
         this.translate(position);
     }
-    static lightColorName = 'pointLightColor';
-    static lightPositionName = 'pointLightPosition';
+
+    static colorName = 'pointLightColor';
+    static positionName = 'pointLightPosition';
+    static ambientStrengthName = 'pointLightAmbientStrength';
+    static intensityName = 'pointLightIntensity';
 }

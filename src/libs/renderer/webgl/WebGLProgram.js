@@ -1,6 +1,6 @@
 import Buffer from'../../core/Buffer';
 import GLSLMaterial from'../shader/GLSL/GLSLMaterial';
-import Material from'../../material/Material';
+import Material from'../../3d/material/Material';
 import WebGLBuffer from'./WebGLBuffer';
 import WebGLNode from'./WebGLNode';
 import WebGLRenderer from'./WebGLRenderer';
@@ -41,6 +41,18 @@ export default class  WebGLProgram extends WebGLNode {
         for (let i = 0; i < attributesCount; i++) {
             const attribute = renderer.gl.getActiveAttrib(this.location, i);
             createAttribute(renderer, this, attribute);
+        }
+    }
+
+    setUniform(name,value){
+        if(this.uniforms[name]){
+            this.uniforms[name](value);
+        }
+    }
+
+    setAttribute(name,value){
+        if(this.attributes[name]){
+            this.attributes[name](value);
         }
     }
 }
@@ -90,96 +102,115 @@ function createAttribute(renderer, program, attribute) {
  */
 function createUniform(renderer, program, uniform) {
     const location = renderer.gl.getUniformLocation(program.location, uniform.name);
+    const name = uniform.name.replace('[0]','');
     switch (uniform.type) {
         case renderer.gl.FLOAT:
-            program.uniforms[uniform.name] = (v) => {
-                if (program.cache.uniforms[uniform.name] != v) {
-                    renderer.gl.uniform1f(location, v);
-                    program.cache.uniforms[uniform.name] = v;
-                }
-            };
+            if(uniform.size > 1){
+                program.uniforms[name] = (v) => {
+                    if (program.cache.uniforms[name] != v) {
+                        renderer.gl.uniform1fv(location, v);
+                        program.cache.uniforms[name] = v;
+                    }
+                };
+            }else{
+                program.uniforms[name] = (v) => {
+                    if (program.cache.uniforms[name] != v) {
+                        renderer.gl.uniform1f(location, v);
+                        program.cache.uniforms[name] = v;
+                    }
+                };
+            }
             break;
         case renderer.gl.FLOAT_VEC2:
-            program.uniforms[uniform.name] = (v) => {
-                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
+            program.uniforms[name] = (v) => {
+                if (!program.cache.uniforms[name]?.equals(v)) {
                     renderer.gl.uniform2fv(location, v);
-                    program.cache.uniforms[uniform.name] = v.clone();
+                    program.cache.uniforms[name] = v.clone();
                 }
             };
             break;
         case renderer.gl.FLOAT_VEC3:
-            program.uniforms[uniform.name] = (v) => {
-                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
+            program.uniforms[name] = (v) => {
+                if (!program.cache.uniforms[name]?.equals(v)) {
                     renderer.gl.uniform3fv(location, v);
-                    program.cache.uniforms[uniform.name] = v.clone();
+                    program.cache.uniforms[name] = v.clone();
                 }
             };
             break;
         case renderer.gl.FLOAT_VEC4:
-            program.uniforms[uniform.name] = (v) => {
-                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
+            program.uniforms[name] = (v) => {
+                if (!program.cache.uniforms[name]?.equals(v)) {
                     renderer.gl.uniform4fv(location, v);
-                    program.cache.uniforms[uniform.name] = v.clone();
+                    program.cache.uniforms[name] = v.clone();
                 }
             };
             break;
         case renderer.gl.BOOL:
         case renderer.gl.INT:
-            program.uniforms[uniform.name] = (v) => {
-                if (program.cache.uniforms[uniform.name] != v) {
-                    renderer.gl.uniform1i(location, v);
-                    program.cache.uniforms[uniform.name] = v;
-                }
-            };
+            if(uniform.size > 1){
+                program.uniforms[name] = (v) => {
+                    if (program.cache.uniforms[name] != v) {
+                        renderer.gl.uniform1iv(location, v);
+                        program.cache.uniforms[name] = v;
+                    }
+                };
+            }else{
+                program.uniforms[name] = (v) => {
+                    if (program.cache.uniforms[name] != v) {
+                        renderer.gl.uniform1i(location, v);
+                        program.cache.uniforms[name] = v;
+                    }
+                };
+            }
             break;
         case renderer.gl.BOOL_VEC2:
         case renderer.gl.INT_VEC2:
-            program.uniforms[uniform.name] = (v) => {
-                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
+            program.uniforms[name] = (v) => {
+                if (!program.cache.uniforms[name]?.equals(v)) {
                     renderer.gl.uniform2iv(location, v);
-                    program.cache.uniforms[uniform.name] = v.clone();
+                    program.cache.uniforms[name] = v.clone();
                 }
             };
             break;
         case renderer.gl.BOOL_VEC3:
         case renderer.gl.INT_VEC3:
-            program.uniforms[uniform.name] = (v) => {
-                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
+            program.uniforms[name] = (v) => {
+                if (!program.cache.uniforms[name]?.equals(v)) {
                     renderer.gl.uniform3iv(location, v);
-                    program.cache.uniforms[uniform.name] = v.clone();
+                    program.cache.uniforms[name] = v.clone();
                 }
             };
             break;
         case renderer.gl.BOOL_VEC4:
         case renderer.gl.INT_VEC4:
-            program.uniforms[uniform.name] = (v) => {
-                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
+            program.uniforms[name] = (v) => {
+                if (!program.cache.uniforms[name]?.equals(v)) {
                     renderer.gl.uniform4iv(location, v);
-                    program.cache.uniforms[uniform.name] = v.clone();
+                    program.cache.uniforms[name] = v.clone();
                 }
             };
             break;
         case renderer.gl.FLOAT_MAT2:
-            program.uniforms[uniform.name] = (v) => {
-                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
+            program.uniforms[name] = (v) => {
+                if (!program.cache.uniforms[name]?.equals(v)) {
                     renderer.gl.uniformMatrix2fv(location, false, v);
-                    program.cache.uniforms[uniform.name] = v.clone();
+                    program.cache.uniforms[name] = v.clone();
                 }
             };
             break;
         case renderer.gl.FLOAT_MAT3:
-            program.uniforms[uniform.name] = (v) => {
-                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
+            program.uniforms[name] = (v) => {
+                if (!program.cache.uniforms[name]?.equals(v)) {
                     renderer.gl.uniformMatrix3fv(location, false, v);
-                    program.cache.uniforms[uniform.name] = v.clone();
+                    program.cache.uniforms[name] = v.clone();
                 }
             };
             break;
         case renderer.gl.FLOAT_MAT4:
-            program.uniforms[uniform.name] = (v) => {
-                if (!program.cache.uniforms[uniform.name]?.equals(v)) {
+            program.uniforms[name] = (v) => {
+                if (!program.cache.uniforms[name]?.equals(v)) {
                     renderer.gl.uniformMatrix4fv(location, false, v);
-                    program.cache.uniforms[uniform.name] = v.clone();
+                    program.cache.uniforms[name] = v.clone();
                 }
             };
             break;
