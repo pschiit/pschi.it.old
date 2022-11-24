@@ -99,7 +99,7 @@ export default class Node3d extends Render {
 
     setBuffer(buffer){
         this.primitive = buffer.primitive;
-        this.index =  buffer.index;
+        this.indexBuffer =  buffer.index;
         buffer.childrens.forEach(b => {
             if (b.name) {
                 this.setParameter(b.name, b);

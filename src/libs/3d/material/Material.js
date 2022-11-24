@@ -5,5 +5,8 @@ export default class  Material extends Node {
     */
     constructor(){
         super();
+        this.texture = null;
     }
+
+    static textureName = 'texture';
 }

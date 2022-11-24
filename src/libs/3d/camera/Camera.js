@@ -22,7 +22,7 @@ export default class Camera extends Node3d {
         this._fog = v;
     }
 
-    static positionName = 'cameraPositionMatrix';
+    static positionName = 'cameraPosition';
     static projectionMatrixName = 'cameraMatrix';
     static backgroundColorName = 'backgroundColor';
     static fogDistanceName = 'fogDistance';

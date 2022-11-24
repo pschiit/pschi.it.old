@@ -8,7 +8,7 @@ export default class  Render extends Node {
         super();
         this.primitive = null;
         this.material = null;
-        this.index = null;
+        this.indexBuffer = null;
         this.parameters = {};
         this.count = 0;
         this.offset = 0;
@@ -19,10 +19,10 @@ export default class  Render extends Node {
             if (Array.isArray(values)) {
                 values = new Uint32Array(values);
             }
-            if (this.index) {
-                this.index.data = values;
+            if (this.indexBuffer) {
+                this.indexBuffer.data = values;
             } else {
-                this.index = new Buffer(values);
+                this.indexBuffer = new Buffer(values);
             }
         }
     }

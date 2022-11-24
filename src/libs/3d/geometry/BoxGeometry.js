@@ -1,8 +1,8 @@
-import Color from'../../core/Color';
-import Render from'../../renderer/Render';
-import GeometryBuffer from'./GeometryBuffer';
+import Color from '../../core/Color';
+import Render from '../../renderer/Render';
+import GeometryBuffer from './GeometryBuffer';
 
-export default class  BoxGeometry extends GeometryBuffer {
+export default class BoxGeometry extends GeometryBuffer {
     constructor(width = 1, height = 1, depth = 1, color = BoxGeometry.rainbowColor, primitive = Render.primitive.triangles) {
         super();
 
@@ -38,6 +38,38 @@ export default class  BoxGeometry extends GeometryBuffer {
             0, -1, 0,
             0, -1, 0,
         ];
+
+        this.uv = [
+            0, 0, //F
+            0, 1,
+            1, 1,
+            1, 0,
+
+            0, 0,//R
+            0, 1,
+            1, 1,
+            1, 0,
+
+            0, 0,//B
+            0, 1,
+            1, 1,
+            1, 0,
+
+            0, 0,//U
+            0, 1,
+            1, 1,
+            1, 0,
+
+            0, 0,//L
+            0, 1,
+            1, 1,
+            1, 0,
+
+            0, 0,//D
+            0, 1,
+            1, 1,
+            1, 0,
+        ]
 
         this.setColor(color);
         this.setPrimitive(primitive);

@@ -1,7 +1,7 @@
-import Material from'./Material';
+import Material from './Material';
 
-export default class  PhongMaterial extends Material {
-    constructor(){
+export default class PhongMaterial extends Material {
+    constructor() {
         super();
         this.shininess = 32;
         this.directionalLigthsCount = 0;

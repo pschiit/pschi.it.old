@@ -1,12 +1,14 @@
-import Buffer from'../../core/Buffer';
-import GLSLMaterial from'../shader/GLSL/GLSLMaterial';
-import Material from'../../3d/material/Material';
-import WebGLBuffer from'./WebGLBuffer';
-import WebGLNode from'./WebGLNode';
-import WebGLRenderer from'./WebGLRenderer';
-import WebGLShader from'./WebGLShader';
+import Buffer from '../../core/Buffer';
+import GLSLMaterial from '../shader/GLSL/GLSLMaterial';
+import Material from '../../3d/material/Material';
+import WebGLBuffer from './WebGLBuffer';
+import WebGLNode from './WebGLNode';
+import WebGLRenderer from './WebGLRenderer';
+import WebGLShader from './WebGLShader';
+import WebGLTexture from './WebGLTexture';
+import MathArray from '../../math/MathArray';
 
-export default class  WebGLProgram extends WebGLNode {
+export default class WebGLProgram extends WebGLNode {
     /** Create a WebGLProgram from a Material for a WebGLRenderingContext
      * @param {WebGLRenderer} renderer the context of the renderer
      * @param {Material} material  associated Material
@@ -44,14 +46,14 @@ export default class  WebGLProgram extends WebGLNode {
         }
     }
 
-    setUniform(name,value){
-        if(this.uniforms[name]){
+    setUniform(name, value) {
+        if (this.uniforms[name]) {
             this.uniforms[name](value);
         }
     }
 
-    setAttribute(name,value){
-        if(this.attributes[name]){
+    setAttribute(name, value) {
+        if (this.attributes[name]) {
             this.attributes[name](value);
         }
     }
@@ -102,17 +104,17 @@ function createAttribute(renderer, program, attribute) {
  */
 function createUniform(renderer, program, uniform) {
     const location = renderer.gl.getUniformLocation(program.location, uniform.name);
-    const name = uniform.name.replace('[0]','');
+    const name = uniform.name.replace('[0]', '');
     switch (uniform.type) {
         case renderer.gl.FLOAT:
-            if(uniform.size > 1){
+            if (uniform.size > 1) {
                 program.uniforms[name] = (v) => {
-                    if (program.cache.uniforms[name] != v) {
+                    if (!program.cache.uniforms[name]?.equals(v)) {
                         renderer.gl.uniform1fv(location, v);
-                        program.cache.uniforms[name] = v;
+                        program.cache.uniforms[name] = v.clone();
                     }
                 };
-            }else{
+            } else {
                 program.uniforms[name] = (v) => {
                     if (program.cache.uniforms[name] != v) {
                         renderer.gl.uniform1f(location, v);
@@ -147,14 +149,14 @@ function createUniform(renderer, program, uniform) {
             break;
         case renderer.gl.BOOL:
         case renderer.gl.INT:
-            if(uniform.size > 1){
+            if (uniform.size > 1) {
                 program.uniforms[name] = (v) => {
-                    if (program.cache.uniforms[name] != v) {
+                    if (!program.cache.uniforms[name]?.equals(v)) {
                         renderer.gl.uniform1iv(location, v);
-                        program.cache.uniforms[name] = v;
+                        program.cache.uniforms[name] = v.clone();
                     }
                 };
-            }else{
+            } else {
                 program.uniforms[name] = (v) => {
                     if (program.cache.uniforms[name] != v) {
                         renderer.gl.uniform1i(location, v);
@@ -216,6 +218,42 @@ function createUniform(renderer, program, uniform) {
             break;
         case renderer.gl.SAMPLER_2D:
         case renderer.gl.SAMPLER_CUBE:
+            if (uniform.size > 1) {
+                program.uniforms[name] = (v) => {
+                    if (v) {
+                        const textures = v.map(t => renderer[t.id] || new WebGLTexture(renderer, t));
+                        const units = textures.map(t => t.units);
+                        if (program.cache.uniforms[name] != units) {
+                            renderer.gl.uniform1iv(location, units);
+                            program.cache.uniforms[name] = units;
+                            textures.forEach(t => {
+                                renderer.gl.activeTexture(renderer.gl.TEXTURE0 + t.unit);
+                                renderer.texture2d = t;
+                            });
+                        }
+                    } else if (program.cache.uniforms[name]) {
+                        renderer.gl.uniform1iv(location, null);
+                        program.cache.uniforms[name] = null;
+                    };
+                }
+            } else {
+                program.uniforms[name] = (v) => {
+                    if (v) {
+                        var texture = renderer[v.id] || new WebGLTexture(renderer, v);
+                        if (program.cache.uniforms[name] != texture.unit) {
+                            renderer.gl.uniform1i(location, texture.unit);
+                            program.cache.uniforms[name] = texture.unit;
+                            renderer.gl.activeTexture(renderer.gl.TEXTURE0 + texture.unit);
+                            renderer.texture2d = texture;
+                        }
+                    } else if (program.cache.uniforms[name]) {
+                        renderer.gl.uniform1i(location, null);
+                        program.cache.uniforms[name] = null;
+                    };
+                }
+            }
+            break;
+        default:
             throw new Error(`${uniform.type} is missing createUniform implementation.`);
     }
 }
