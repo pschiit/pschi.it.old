@@ -31,16 +31,12 @@ canvas.fitParent();
 const cube = new BoxGeometry();
 const plane = new PlaneGeometry(10, 10);
 
-
-const textureElement = new Node3d();
-textureElement.material = new PhongMaterial();
-textureElement.setBuffer(cube);
+const world = new Node3d();
+const sun = new DirectionalLight(new Color(1, 1, 1, 1), new Vector3(10, 20, 10), new Vector3(0, 0, 0));
+world.appendChild(sun);
 
 const textureMaterial = new PhongMaterial();
-textureMaterial.texture = new Texture(textureElement, 512, 512);
-
-
-const world = new Node3d();
+textureMaterial.texture = new Texture(world, 1024, 1024);
 
 const floor = new Node3d();
 floor.material = textureMaterial;
@@ -82,6 +78,11 @@ whiteLight.material = textureMaterial;
 whiteLight.setBuffer(cube);
 world.appendChild(whiteLight);
 
+// redLight.on = false;
+// greenLight.on = false;
+// blueLight.on = false;
+// whiteLight.on = false;
+
 const camera = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
 //const camera = new OrthographicCamera(-5,5,-5,5,-50,50);
 camera.translate(5, 5, 5);
@@ -91,7 +92,6 @@ world.appendChild(camera);
 
 let then = 0;
 function draw(time) {
-    textureElement.rotate(0.01, 1, 1, 1);
     element.rotate(0.01, 1, 1, 1);
     camera.translate(0.1, 0, 0);
     camera.lookAt(camera.target);

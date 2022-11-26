@@ -143,7 +143,8 @@ export default class GLSLMaterial extends Material {
                     `vec3 lightDistance = ${pointLightPosition}[i] - ${vPosition};`,
                     `float attenuation = clamp(${pointLightIntensity}[i] / length(lightDistance), 0.0, 1.0);`,
                     `vec3 lightDirection = normalize(lightDistance);`,
-                    `color += attenuation * calculateLight(fragmentColor.rgb,lightDirection, ${pointLightColor}[i], ${pointLightAmbientStrength}[i], ${materialShininess}, cameraPosition, normal);`,
+                    `vec3 lightColor = calculateLight(fragmentColor.rgb,lightDirection, ${pointLightColor}[i], ${pointLightAmbientStrength}[i], ${materialShininess}, cameraPosition, normal);`,
+                    `color += attenuation * (lightColor + ${pointLightColor}[i]);`,
                     '}',].join('\n')
                     : '';
             }
@@ -159,7 +160,7 @@ export default class GLSLMaterial extends Material {
         'vec3 reflectionDirection = 2.0 * dot(normal,lightDirection) * normal - lightDirection;',
         'float spec = pow(max(dot(cameraPosition, reflectionDirection), 0.0), shininess);',
         'vec3 specular = spec * lightColor;',
-        'return (diffuse + specular + ambient + lightColor);',
+        'return (diffuse + specular + ambient);',
         '}',
     ].join('\n');
 

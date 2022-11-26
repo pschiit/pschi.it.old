@@ -231,7 +231,7 @@ function createUniform(renderer, program, uniform) {
                                 renderer.texture2d = t;
                             });
                         }
-                    } else if (program.cache.uniforms[name]) {
+                    } else if (program.cache.uniforms[name] = null) {
                         renderer.gl.uniform1iv(location, null);
                         program.cache.uniforms[name] = null;
                     };
@@ -246,7 +246,7 @@ function createUniform(renderer, program, uniform) {
                             renderer.gl.activeTexture(renderer.gl.TEXTURE0 + texture.unit);
                             renderer.texture2d = texture;
                         }
-                    } else if (program.cache.uniforms[name]) {
+                    } else if (program.cache.uniforms[name] != null) {
                         renderer.gl.uniform1i(location, null);
                         program.cache.uniforms[name] = null;
                     };

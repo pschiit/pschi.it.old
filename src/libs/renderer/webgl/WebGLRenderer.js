@@ -34,7 +34,7 @@ export default class WebGLRenderer extends Node {
         this.gl.enable(this.gl.DEPTH_TEST);
         this.textureUnit = 0;
         // gl.enable(gl.CULL_FACE);
-        // gl.cullFace(gl.FRONT);
+        // gl.cullFace(gl.BACK);
 
         this.clear();
         this._vertexArray = null;
@@ -44,6 +44,8 @@ export default class WebGLRenderer extends Node {
         this._texture2d = null;
         this._textureCubeMap = null;
         this._framebuffer = null;
+
+        this.renderTargets = null;
 
         this.addEventListener(Node.event.nodeInserted, (e) => {
             const child = e.inserted;
@@ -214,7 +216,6 @@ export default class WebGLRenderer extends Node {
             this._framebuffer = v;
         }
     }
-
     /** Render a Render in the current WebGLRenderer
      * @param {Render} node Node to render
      * @param {Texture} renderTarget Texture to render onto(optional)
@@ -222,12 +223,18 @@ export default class WebGLRenderer extends Node {
      */
     render(node, renderTarget = null) {
         if (renderTarget) {
+            this.renderTargets[renderTarget.id] = true;
             this.framebuffer = this['fb' + renderTarget.id] || new WebGLFramebuffer(this, renderTarget);
+            if(this.texture2d == this[renderTarget.id]){
+                this.texture2d = null;
+            }
             this.gl.viewport(renderTarget.x, renderTarget.y, renderTarget.width, renderTarget.height);
-        }
-        if (this.resized) {
-            this.gl.viewport(0, 0, this.gl.canvas.clientWidth, this.gl.canvas.clientHeight);
-            this.resized = false;
+        } else {
+            this.renderTargets = {};
+            if (this.resized) {
+                this.gl.viewport(0, 0, this.gl.canvas.clientWidth, this.gl.canvas.clientHeight);
+                this.resized = false;
+            }
         }
         let camera = null;
         const materials = {};
@@ -282,7 +289,13 @@ export default class WebGLRenderer extends Node {
             if (material instanceof PhongMaterial) {
                 this.program.setUniform(PhongMaterial.shininessName, material.shininess);
             }
-            this.program.setUniform(Material.textureName, material.texture);
+            if (material.texture) {
+                if (material.texture == renderTarget) {
+                    this.program.setUniform(Material.textureName, null);
+                } else {
+                    this.program.setUniform(Material.textureName, material.texture);
+                }
+            }
         }
         this.clear();
         renders.forEach(r => {
@@ -359,10 +372,10 @@ export default class WebGLRenderer extends Node {
                     node.setParameter(Node3d.vertexMatrixName, node.matrix);
                     node.setParameter(Node3d.normalMatrixName, node.parameters[Node3d.vertexMatrixName].clone().invert().transpose());
                 }
-                if (node.material.texture) {
-                    if(node.material.texture.data instanceof Render){
+                if (node.material.texture && !renderer.renderTargets[node.material.texture.id]) {
+                    if (node.material.texture.data instanceof Render) {
                         renderer.render(node.material.texture.data, node.material.texture);
-                    }else{
+                    } else {
                         renderer.texture2d = renderer[node.material.texture.id] || new WebGLTexture(renderer, node.material.texture);
                         if (node.material.texture.updated) {
                             renderer.texture2d.update(node.material.texture);

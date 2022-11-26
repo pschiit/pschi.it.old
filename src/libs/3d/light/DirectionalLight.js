@@ -8,7 +8,7 @@ export default class DirectionalLight extends Light {
     }
 
     get direction() {
-        return this.position.clone().substract(this.target);
+        return this.position.clone().substract(this.target).normalize();
     }
 
     static colorName = 'directionalLightColor';
