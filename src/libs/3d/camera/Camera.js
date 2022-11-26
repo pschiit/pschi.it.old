@@ -6,9 +6,9 @@ import Node3d from '../Node3d';
 export default class Camera extends Node3d {
     constructor() {
         super();
-        this.projectionMatrix = Matrix4.identityMatrix();
-        this.fog = [0,100];
+        this.fog = new Vector2(0,100);
         this.backgroundColor = new Color(0, 0, 0, 1);
+        this.projectionUpdated = true;
     }
 
     get fog() {
@@ -16,10 +16,19 @@ export default class Camera extends Node3d {
     }
 
     set fog(v) {
-        if (!(v instanceof Vector2)) {
-            v = new Vector2(v);
-        }
         this._fog = v;
+    }
+
+    get lookAtMatrix(){
+        const worldMatrix = this.worldMatrix;
+        return Matrix4.lookAtMatrix(worldMatrix.positionVector, this.target, this.up);
+    }
+
+    get projectionMatrix(){
+        if(this.projectionUpdated){
+            this._projectionMatrix = this.lookAtMatrix;
+        }
+        return this._projectionMatrix;
     }
 
     static positionName = 'cameraPosition';

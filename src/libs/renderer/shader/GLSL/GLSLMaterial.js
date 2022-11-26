@@ -117,7 +117,7 @@ export default class GLSLMaterial extends Material {
             return result;
 
             function createFragmentColor() {
-                return material.texture ? `vec4 fragmentColor = texture2D(${sampler2d}, ${vUV});`
+                return material.texture ? `vec4 fragmentColor = texture2D(${sampler2d}, ${vUV}) + ${vColor};`
                     : `vec4 fragmentColor = ${vColor};`;
             }
 
@@ -155,6 +155,9 @@ export default class GLSLMaterial extends Material {
         'vec3 calculateLight(vec3 fragmentColor, vec3 lightDirection, vec3 lightColor, float ambientStrength, float shininess, vec3 cameraPosition, vec3 normal){',
         'vec3 ambient = fragmentColor * lightColor * ambientStrength;',
         'float nDotL = max(dot(lightDirection, normal), 0.0);',
+        'if(nDotL == 0.0){',
+        'return ambient;',
+        '}',
         'vec3 diffuse = fragmentColor * lightColor * nDotL;',
         'vec3 reflectionDirection = 2.0 * dot(normal,lightDirection) * normal - lightDirection;',
         'float spec = pow(max(dot(cameraPosition, reflectionDirection), 0.0), shininess);',

@@ -3,7 +3,7 @@ import Render from '../../renderer/Render';
 import VertexBuffer from '../../renderer/VertexBuffer';
 
 export default class BoxBuffer extends VertexBuffer {
-    constructor(width = 1, height = 1, depth = 1, color = BoxBuffer.rainbowColor, primitive = Render.primitive.triangles) {
+    constructor(width = 1, height = 1, depth = 1, color = null, uv = null, primitive = Render.primitive.triangles) {
         super();
 
         this.setDimensions(width, height, depth);
@@ -39,39 +39,14 @@ export default class BoxBuffer extends VertexBuffer {
             0, -1, 0,
         ];
 
-        this.uv = [
-            0, 0, //F
-            0, 1,
-            1, 1,
-            1, 0,
+        if(color){
+            this.setColor(color);
+        }
 
-            0, 0,//R
-            0, 1,
-            1, 1,
-            1, 0,
+        if(uv){
+            this.uv = uv;
+        }
 
-            0, 0,//B
-            0, 1,
-            1, 1,
-            1, 0,
-
-            0, 0,//U
-            0, 1,
-            1, 1,
-            1, 0,
-
-            0, 0,//L
-            0, 1,
-            1, 1,
-            1, 0,
-
-            0, 0,//D
-            0, 1,
-            1, 1,
-            1, 0,
-        ]
-
-        this.setColor(color);
         this.setPrimitive(primitive);
     }
 

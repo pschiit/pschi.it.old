@@ -8,4 +8,12 @@ export default class Light extends Node3d {
         this.intensity = 1;
         this.on = true;
     }
+
+    off(){
+        this.on = false;
+    }
+
+    toggle(){
+        this.on = !this.on;
+    }
 }

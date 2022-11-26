@@ -1,4 +1,4 @@
-import Texture from '../../3d/texture/Texture';
+import Texture from '../Texture';
 import WebGLNode from './WebGLNode';
 import WebGLRenderer from './WebGLRenderer';
 import WebGLTexture from './WebGLTexture';

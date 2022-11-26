@@ -10,8 +10,9 @@ import BoxBuffer from './libs/3d/buffer/BoxBuffer';
 import PlaneBuffer from './libs/3d/buffer/PlaneBuffer';
 import Vector3 from './libs/math/Vector3';
 import Buffer from './libs/core/Buffer';
-import Texture from './libs/3d/texture/Texture';
+import Texture from './libs/renderer/Texture';
 import OrthographicCamera from './libs/3d/camera/OrthographicCamera';
+import Matrix4 from './libs/math/Matrix4';
 
 const defaultStyle = {
     width: '100%',
@@ -28,7 +29,45 @@ canvas.style = defaultStyle;
 canvas.fitParent();
 
 const cube = new BoxBuffer();
+cube.uv = [
+    0, 0, //F
+    0, 1,
+    1, 1,
+    1, 0,
+
+    0, 0,//R
+    0, 1,
+    1, 1,
+    1, 0,
+
+    0, 0,//B
+    0, 1,
+    1, 1,
+    1, 0,
+
+    0, 0,//U
+    0, 1,
+    1, 1,
+    1, 0,
+
+    0, 0,//L
+    0, 1,
+    1, 1,
+    1, 0,
+
+    0, 0,//D
+    0, 1,
+    1, 1,
+    1, 0,
+];
 const plane = new PlaneBuffer(10, 10);
+plane.position.transform(Matrix4.identityMatrix().rotate(Math.PI / 2, new Vector3(1, 0, 0)));
+plane.uv = [
+    0, 0,
+    0, 1,
+    1, 1,
+    1, 0,
+];
 
 const world = new Node3d();
 const sun = new DirectionalLight(new Color(1, 1, 1, 1), new Vector3(10, 20, 10), new Vector3(0, 0, 0));
@@ -40,7 +79,6 @@ textureMaterial.texture = new Texture(world, 1024, 1024);
 const floor = new Node3d();
 floor.material = textureMaterial;
 floor.vertexBuffer = plane;
-floor.rotate(Math.PI / 2, 1, 0, 0);
 world.appendChild(floor);
 
 const element = new Node3d();
@@ -54,7 +92,6 @@ const redLight = new PointLight(
     new Vector3(5, 3, -5));
 redLight.material = textureMaterial;
 redLight.vertexBuffer = cube;
-redLight.setParameter(BoxBuffer.colorName, new Color(1, 0, 0, 1));
 world.appendChild(redLight);
 
 const greenLight = new PointLight(
@@ -62,7 +99,6 @@ const greenLight = new PointLight(
     new Vector3(-5, 3, -5));
 greenLight.material = textureMaterial;
 greenLight.vertexBuffer = cube;
-greenLight.setParameter(BoxBuffer.colorName, new Color(0, 1, 0, 1));
 world.appendChild(greenLight);
 
 const blueLight = new PointLight(
@@ -70,7 +106,6 @@ const blueLight = new PointLight(
     new Vector3(-5, 3, 5));
 blueLight.material = textureMaterial;
 blueLight.vertexBuffer = cube;
-blueLight.setParameter(BoxBuffer.colorName, new Color(0, 0, 1, 1));
 world.appendChild(blueLight);
 
 const whiteLight = new PointLight(
@@ -78,28 +113,25 @@ const whiteLight = new PointLight(
     new Vector3(5, 3, 5));
 whiteLight.material = textureMaterial;
 whiteLight.vertexBuffer = cube;
-whiteLight.setParameter(BoxBuffer.colorName, new Color(1, 1, 1, 1));
 world.appendChild(whiteLight);
 
-// redLight.on = false;
-// greenLight.on = false;
-// blueLight.on = false;
-// whiteLight.on = false;
-// sun.on = false;
+// redLight.toggle();
+// greenLight.toggle();
+// blueLight.toggle();
+// whiteLight.toggle();
+// sun.toggle();
 
 const camera = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
-//const camera = new OrthographicCamera(-5,5,-5,5,-50,50);
 camera.translate(5, 5, 5);
-camera.lookAt(element);
-camera.updateProjection();
+camera.target = new Vector3(0,0,0);
+camera.projectionUpdated = true;
 world.appendChild(camera);
-
 let then = 0;
 function draw(time) {
     element.rotate(0.01, 1, 1, 1);
     camera.translate(0.1, 0, 0);
-    camera.lookAt(camera.target);
-    camera.updateProjection();
+    camera.target = camera.target;
+    camera.projectionUpdated = true;
     canvas.render(world);
     requestAnimationFrame(draw);
 }

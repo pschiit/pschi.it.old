@@ -52,7 +52,7 @@ export default class  VertexBuffer extends Buffer {
         this.setParameter(this.uvName, v, this.uvLength);
     }
 
-    applyMatrix(matrix) {
+    transform(matrix) {
         let buffer = this.position;
         if (buffer) {
             buffer.applyMatrix(matrix);

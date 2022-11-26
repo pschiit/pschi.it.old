@@ -1,7 +1,7 @@
 import Canvas from './Canvas';
 import Node from '../core/Node';
 import WebGLRenderer from '../renderer/webgl/WebGLRenderer';
-import Texture from '../3d/texture/Texture';
+import Texture from '../renderer/Texture';
 import Render from '../renderer/Render';
 
 export default class WebGLCanvas extends Canvas {

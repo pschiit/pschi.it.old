@@ -152,11 +152,11 @@ export default class Buffer extends Node {
         this.removeChild(this.getParameter(name));
     }
 
-    applyMatrix(matrix) {
+    transform(matrix) {
         let vector = this.step == 4 ? new Vector4()
             : this.step == 3 ? new Vector3() :
                 new Vector2();
-        for (let i = 0; i < this.count; i += this.step) {
+        for (let i = 0; i < this.length; i += vector.length) {
             for (let j = 0; j < vector.length; j++) {
                 vector[j] = this.data[i + j];
             }

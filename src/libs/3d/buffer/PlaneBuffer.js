@@ -3,7 +3,7 @@ import Render from '../../renderer/Render';
 import VertexBuffer from '../../renderer/VertexBuffer';
 
 export default class PlaneBuffer extends VertexBuffer {
-    constructor(width = 1, height = 1, color = PlaneBuffer.rainbowColor, primitive = Render.primitive.triangles) {
+    constructor(width = 1, height = 1, color = null, uv = null, primitive = Render.primitive.triangles) {
         super();
 
         this.setDimensions(width, height);
@@ -14,15 +14,12 @@ export default class PlaneBuffer extends VertexBuffer {
             0, 0, -1,
         ];
 
-
-        this.uv = [
-            0, 0,
-            0, 1,
-            1, 1,
-            1, 0,
-        ];
-
-        this.setColor(color);
+        if(uv){
+            this.uv = uv;
+        }
+        if(color){
+            this.setColor(color);
+        }
         this.setPrimitive(primitive);
     }
 

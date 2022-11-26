@@ -1,7 +1,7 @@
-import Buffer from'../core/Buffer';
-import Node from'../core/Node';
+import Buffer from '../core/Buffer';
+import Node from '../core/Node';
 
-export default class  Render extends Node {
+export default class Render extends Node {
     /** Create a Renderable Node for a Renderer
      */
     constructor() {
@@ -13,6 +13,11 @@ export default class  Render extends Node {
         this.index = null;
         this.count = 0;
         this.offset = 0;
+    }
+
+    get renderable() {
+        return this.material 
+            && (this.count > 0 || this.vertexBuffer?.count > 0);
     }
 
     setParameter(name, value) {
