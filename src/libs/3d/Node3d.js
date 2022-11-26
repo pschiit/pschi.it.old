@@ -97,20 +97,6 @@ export default class Node3d extends Render {
         return this;
     }
 
-    setBuffer(buffer){
-        this.primitive = buffer.primitive;
-        this.indexBuffer =  buffer.index;
-        buffer.childrens.forEach(b => {
-            if (b.name) {
-                this.setParameter(b.name, b);
-            }
-        });
-        this.count = buffer.count;
-        this.offset =  buffer.offset;
-
-        return this;
-    };
-
     static vertexMatrixName = 'vertexMatrix';
     static normalMatrixName = 'normalMatrix';
 }

@@ -1,9 +1,9 @@
 import Camera from '../../../3d/camera/Camera';
 import PointLight from '../../../3d/light/PointLight';
 import Node3d from '../../../3d/Node3d';
-import Material from '../../../3d/material/Material';
+import Material from '../../Material';
 import PhongMaterial from '../../../3d/material/PhongMaterial';
-import GeometryBuffer from '../../../3d/geometry/GeometryBuffer';
+import VertexBuffer from '../../VertexBuffer';
 import GLSLParameter from './GLSLParameter';
 import GLSLShader from './GLSLShader';
 import DirectionalLight from '../../../3d/light/DirectionalLight';
@@ -25,10 +25,10 @@ export default class GLSLMaterial extends Material {
     */
     static from(material) {
         if (material instanceof PhongMaterial) {
-            const position = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, GeometryBuffer.positionName);
-            const normal = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, GeometryBuffer.normalName);
-            const color = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, GeometryBuffer.colorName);
-            const uv = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec2, GeometryBuffer.uvName);
+            const position = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, VertexBuffer.positionName);
+            const normal = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, VertexBuffer.normalName);
+            const color = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, VertexBuffer.colorName);
+            const uv = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec2, VertexBuffer.uvName);
 
             const cameraPosition = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, Camera.positionName);
             const cameraMatrix = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.mat4, Camera.projectionMatrixName);
@@ -51,10 +51,10 @@ export default class GLSLMaterial extends Material {
 
             const sampler2d = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.sampler2D, Material.textureName);
 
-            const vPosition = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.vec3, 'v_' + GeometryBuffer.positionName);
-            const vColor = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.vec4, 'v_' + GeometryBuffer.colorName);
-            const vNormal = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.vec3, 'v_' + GeometryBuffer.normalName);
-            const vUV = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.vec2, 'v_' + GeometryBuffer.uvName);
+            const vPosition = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.vec3, 'v_' + VertexBuffer.positionName);
+            const vColor = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.vec4, 'v_' + VertexBuffer.colorName);
+            const vNormal = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.vec3, 'v_' + VertexBuffer.normalName);
+            const vUV = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.vec2, 'v_' + VertexBuffer.uvName);
             const vDistance = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.float, 'v_' + Camera.fogDistanceName);
 
             const vertexShader = new GLSLShader(GLSLShader.type.vertexShader, [
@@ -114,7 +114,6 @@ export default class GLSLMaterial extends Material {
             ].join('\n'), GLSLShader.precision.high);
             const result = new GLSLMaterial(vertexShader, fragmentShader);
             result.id = material.id;
-
             return result;
 
             function createFragmentColor() {

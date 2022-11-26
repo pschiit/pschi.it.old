@@ -1,4 +1,4 @@
-import Material from './Material';
+import Material from '../../renderer/Material';
 
 export default class PhongMaterial extends Material {
     constructor() {

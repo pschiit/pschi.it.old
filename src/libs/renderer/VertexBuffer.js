@@ -1,19 +1,19 @@
-import Buffer from'../../core/Buffer';
+import Buffer from'../core/Buffer';
 
-export default class  GeometryBuffer extends Buffer {
+export default class  VertexBuffer extends Buffer {
     constructor(data = new Float32Array()) {
         super(data, 0);
         this.primitive = null;
 
-        this.positionName = GeometryBuffer.positionName;
-        this.normalName = GeometryBuffer.normalName;
-        this.colorName = GeometryBuffer.colorName;
-        this.uvName = GeometryBuffer.uvName;
+        this.positionName = VertexBuffer.positionName;
+        this.normalName = VertexBuffer.normalName;
+        this.colorName = VertexBuffer.colorName;
+        this.uvName = VertexBuffer.uvName;
 
-        this.positionLength = GeometryBuffer.positionLength;
-        this.normalLength = GeometryBuffer.normalLength;
-        this.colorLength = GeometryBuffer.colorLength;
-        this.uvLength = GeometryBuffer.uvLength;
+        this.positionLength = VertexBuffer.positionLength;
+        this.normalLength = VertexBuffer.normalLength;
+        this.colorLength = VertexBuffer.colorLength;
+        this.uvLength = VertexBuffer.uvLength;
     }
 
     get count() {
@@ -25,7 +25,7 @@ export default class  GeometryBuffer extends Buffer {
     }
 
     set position(v) {
-        this.setSubBuffer(this.positionName, v, this.positionLength);
+        this.setParameter(this.positionName, v, this.positionLength);
     }
 
     get normal() {
@@ -33,7 +33,7 @@ export default class  GeometryBuffer extends Buffer {
     }
 
     set normal(v) {
-        this.setSubBuffer(this.normalName, v, this.normalLength);
+        this.setParameter(this.normalName, v, this.normalLength);
     }
 
     get color() {
@@ -41,7 +41,7 @@ export default class  GeometryBuffer extends Buffer {
     }
 
     set color(v) {
-        this.setSubBuffer(this.colorName, v, this.colorLength);
+        this.setParameter(this.colorName, v, this.colorLength);
     }
 
     get uv() {
@@ -49,7 +49,7 @@ export default class  GeometryBuffer extends Buffer {
     }
 
     set uv(v) {
-        this.setSubBuffer(this.uvName, v, this.uvLength);
+        this.setParameter(this.uvName, v, this.uvLength);
     }
 
     applyMatrix(matrix) {

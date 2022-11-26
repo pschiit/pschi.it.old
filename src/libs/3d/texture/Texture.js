@@ -9,6 +9,9 @@ export default class Texture extends Node {
         this.width = width;
         this.height = height;
         this.updated = true;
+        this.format = null;
+        this.type = null;
+        this.parameters = [];
     }
 
     get aspectRatio(){

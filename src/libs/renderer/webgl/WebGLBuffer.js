@@ -1,9 +1,9 @@
 
-import Buffer from'../../core/Buffer';
-import WebGLNode from'./WebGLNode';
-import WebGLRenderer from'./WebGLRenderer';
+import Buffer from '../../core/Buffer';
+import WebGLNode from './WebGLNode';
+import WebGLRenderer from './WebGLRenderer';
 
-export default class  WebGLBuffer extends WebGLNode {
+export default class WebGLBuffer extends WebGLNode {
     /** Create a WebGLBuffer from a Buffer for a WebGLRenderingContext
      * @param {WebGLRenderer} renderer the context of the renderer
      * @param {Buffer} buffer  Buffer
@@ -24,14 +24,21 @@ export default class  WebGLBuffer extends WebGLNode {
 
         if (target === renderer.gl.ELEMENT_ARRAY_BUFFER) {
             this.update = (buffer) => {
-                renderer.elementArrayBuffer = this;
-                renderer.gl.bufferData(this.target, buffer.data, this.usage);
+                if (buffer.updated) {
+                    renderer.elementArrayBuffer = this;
+                    renderer.gl.bufferData(this.target, buffer.data, this.usage);
+                    buffer.updated = false;
+                }
             };
         } else {
             this.update = (buffer) => {
-                renderer.arrayBuffer = this;
-                renderer.gl.bufferData(this.target, buffer.data, this.usage);
+                if (buffer.updated) {
+                    renderer.arrayBuffer = this;
+                    renderer.gl.bufferData(this.target, buffer.data, this.usage);
+                    buffer.updated = false;
+                }
             };
         }
+        this.update(buffer);
     }
 }

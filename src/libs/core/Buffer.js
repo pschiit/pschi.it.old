@@ -123,7 +123,7 @@ export default class Buffer extends Node {
         return this.childrens.find(c => c.name == name);
     }
 
-    setSubBuffer(name, v, step) {
+    setParameter(name, v, step) {
         const buffer = this.getParameter(name);
         if (v) {
             if (v instanceof Buffer) {
