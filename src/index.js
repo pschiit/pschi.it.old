@@ -110,7 +110,7 @@ plane.uv = [
 const world = new Node3d();
 
 const textureMaterial = new PhongMaterial();
-//textureMaterial.texture = new Texture(world, 1024, 1024);
+textureMaterial.texture = new Texture(world, 1024, 1024);
 
 const floor = new Node3d();
 floor.material = textureMaterial;
@@ -152,7 +152,7 @@ whiteLight.vertexBuffer = reverseCube;
 world.appendChild(whiteLight);
 
 const sun = new DirectionalLight(
-    Color.white.scale(0.2),
+    Color.white.scale(0.5),
     new Vector3(10, 20, 10),
     new Vector3(0, 0, 0));
 world.appendChild(sun);

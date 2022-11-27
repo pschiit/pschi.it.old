@@ -33,12 +33,12 @@ export default class WebGLRenderer extends Node {
         this.gl = gl;
         this.polyfillExtension();
         this.clearColor();
-        this.gl.enable(this.gl.DEPTH_TEST);
-        this.textureUnit = 0;
-        // gl.enable(gl.CULL_FACE);
-        // gl.cullFace(gl.BACK);
-
+        this.culling = null;
+        this.depth = null;
         this.clear();
+
+        this.textureUnit = 0;
+
         this._vertexArray = null;
         this._program = null;
         this._arrayBuffer = null;
@@ -222,6 +222,61 @@ export default class WebGLRenderer extends Node {
             this._framebuffer = v;
         }
     }
+
+    get depth() {
+        return this._depth;
+    }
+
+    set depth(v) {
+        if (this._depth != v) {
+            if (!this._depth) {
+                this.gl.enable(this.gl.DEPTH_TEST);
+                if (v == Material.depth.less) {
+                    this.gl.depthFunc(this.gl.LESS);
+                } else if (v == Material.depth.never) {
+                    this.gl.depthFunc(this.gl.NEVER);
+                } else if (v == Material.depth.always) {
+                    this.gl.depthFunc(this.gl.ALWAYS);
+                } else if (v == Material.depth.equal) {
+                    this.gl.depthFunc(this.gl.EQUAL);
+                } else if (v == Material.depth.notEqual) {
+                    this.gl.depthFunc(this.gl.NOTEQUAL);
+                } else if (v == Material.depth.greater) {
+                    this.gl.depthFunc(this.gl.GREATER);
+                } else if (v == Material.depth.lessEqual) {
+                    this.gl.depthFunc(this.gl.LEQUAL);
+                } else if (v == Material.depth.greaterEqual) {
+                    this.gl.depthFunc(this.gl.GEQUAL);
+                }
+            } else if (!v) {
+                this.gl.disable(this.gl.DEPTH_TEST);
+            }
+            this._depth = v;
+        }
+    }
+
+    get culling() {
+        return this._culling;
+    }
+
+    set culling(v) {
+        if (this._culling != v) {
+            if (!this._culling) {
+                this.gl.enable(this.gl.CULL_FACE);
+                if (v == Material.culling.front) {
+                    this.gl.cullFace(this.gl.FRONT);
+                } else if (v == Material.culling.back) {
+                    this.gl.cullFace(this.gl.BACK);
+                } else if (v == Material.culling.doubleside) {
+                    this.gl.cullFace(this.gl.FRONT_AND_BACK);
+                }
+            } else if (!v) {
+                this.gl.disable(this.gl.CULL_FACE);
+            }
+            this._culling = v;
+        }
+    }
+
     /** Render a Render in the current WebGLRenderer
      * @param {Render} node Node to render
      * @param {Texture} renderTarget Texture to render onto(optional)
@@ -315,6 +370,10 @@ export default class WebGLRenderer extends Node {
             }
             if (material instanceof PhongMaterial) {
                 this.program.setParameter(PhongMaterial.shininessName, material.shininess);
+                this.program.setParameter(PhongMaterial.ambientColorName, material.ambientColor.rgb);
+                this.program.setParameter(PhongMaterial.diffuseColorName, material.diffuseColor.rgb);
+                this.program.setParameter(PhongMaterial.specularColorName, material.specularColor.rgb);
+                this.program.setParameter(PhongMaterial.emissiveColorName, material.emissive.rgb);
             }
             if (material.texture) {
                 if (material.texture == renderTarget) {
@@ -377,7 +436,7 @@ export default class WebGLRenderer extends Node {
                         pointLightPositions.push(position[2]);
                         pointLightAmbientStrengths.push(node.ambientStrength);
                         pointLightIntensities.push(node.intensity);
-                    }else if (node instanceof SpotLight && node.on){
+                    } else if (node instanceof SpotLight && node.on) {
                         spotLightColors.push(node.color[0]);
                         spotLightColors.push(node.color[1]);
                         spotLightColors.push(node.color[2]);
@@ -433,32 +492,29 @@ export default class WebGLRenderer extends Node {
          * @param {Render} render Render to draw
          */
         function draw(render) {
+            let index = render.index;
+            let primitive = render.primitive;
+            let offset = render.offset;
+            let count = render.count;
             if (render.vertexBuffer) {
+                index = render.vertexBuffer.index;
+                primitive = render.vertexBuffer.primitive;
+                offset = render.vertexBuffer.offset;
+                count = render.vertexBuffer.count;
                 renderer.vertexArray = WebGLVertexArray.from(renderer, render.vertexBuffer, render.material);
-                renderer.program = WebGLProgram.from(renderer, render.material);
+            }
+            renderer.program = WebGLProgram.from(renderer, render.material);
+            renderer.culling = render.material.culling;
+            renderer.depth = render.material.depth;
 
-                for (const name in render.parameters) {
-                    renderer.program.setParameter(name, render.parameters[name]);
-                }
-                if (render.vertexBuffer.index) {
-                    const index = WebGLBuffer.from(renderer, render.vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
-                    renderer.gl.drawElements(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.count, index.type, render.vertexBuffer.offset);
-                } else {
-                    renderer.gl.drawArrays(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.offset, render.vertexBuffer.count);
-                }
+            for (const name in render.parameters) {
+                renderer.program.setParameter(name, render.parameters[name]);
+            }
+            if (index) {
+                const webGLIndex = WebGLBuffer.from(renderer, index, renderer.gl.ELEMENT_ARRAY_BUFFER);
+                renderer.gl.drawElements(renderer.gl[primitive], count, webGLIndex.type, offset);
             } else {
-                renderer.program = WebGLProgram.from(renderer, render.material);
-
-                for (const name in render.parameters) {
-                    renderer.program.setParameter(name, render.parameters[name]);
-                }
-                if (render.index) {
-                    const index = WebGLBuffer.from(renderer, render.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
-                    index.update(render.index);
-                    renderer.gl.drawElements(renderer.gl[render.primitive], render.count, index.type, render.offset);
-                } else {
-                    renderer.gl.drawArrays(renderer.gl[render.primitive], render.offset, render.count);
-                }
+                renderer.gl.drawArrays(renderer.gl[primitive], offset, count);
             }
         }
     }

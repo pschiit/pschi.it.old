@@ -1,5 +1,6 @@
 import Buffer from '../core/Buffer';
 import Node from '../core/Node';
+import Material from './Material';
 
 export default class Render extends Node {
     /** Create a Renderable Node for a Renderer
@@ -16,7 +17,7 @@ export default class Render extends Node {
     }
 
     get renderable() {
-        return this.material 
+        return this.material && this.material.culling != Material.culling.hidden 
             && (this.count > 0 || this.vertexBuffer?.count > 0);
     }
 
