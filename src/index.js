@@ -121,7 +121,7 @@ const element = new Node3d();
 element.material = textureMaterial;
 element.translate(0, 1, 0);
 element.vertexBuffer = cube;
-//world.appendChild(element);
+world.appendChild(element);
 
 const redLight = new PointLight(
     Color.red,
@@ -164,39 +164,7 @@ const spotLight = new SpotLight(
     new Vector3(0, 0, 0));
 spotLight.innerRadius = Math.cos(Angle.toRadian(40));
 spotLight.material = textureMaterial;
-spotLight.vertexBuffer = new BoxBuffer();
-spotLight.vertexBuffer.setColor(Color.white);
-spotLight.vertexBuffer.normal = [
-    0, 0, 1,//F
-    0, 0, 1,
-    0, 0, 1,
-    0, 0, 1,
-
-    1, 0, 0,//R
-    1, 0, 0,
-    1, 0, 0,
-    1, 0, 0,
-
-    0, 0, 1,//B
-    0, 0, 1,
-    0, 0, 1,
-    0, 0, 1,
-
-    0, 1, 0,//U
-    0, 1, 0,
-    0, 1, 0,
-    0, 1, 0,
-
-    -1, 0, 0,//L
-    -1, 0, 0,
-    -1, 0, 0,
-    -1, 0, 0,
-
-    0, -1, 0,//D
-    0, -1, 0,
-    0, -1, 0,
-    0, -1, 0,
-];
+spotLight.vertexBuffer = reverseCube;
 world.appendChild(spotLight);
 
 // redLight.toggle();

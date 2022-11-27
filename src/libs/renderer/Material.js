@@ -7,6 +7,7 @@ export default class  Material extends Node {
         super();
         this.texture = null;
         this.fog = true;
+        this.colorNormal = false;
         this.directionalLigthsCount = 0;
         this.pointLigthsCount = 0;
         this.spotLigthsCount = 0;

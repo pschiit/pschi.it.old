@@ -86,7 +86,7 @@ export default class GLSLMaterial extends Material {
                 `   ${vDistance} = gl_Position.w;`,
                 `   ${vNormal} = normalize(vec3(${normalMatrix} * ${normal}));`,
                 `   ${vPosition} = vec3(${vertexMatrix} * ${position});`,
-                `   ${vColor} = ${color};`,
+                material.colorNormal ? `   ${vColor} = vec4(${vNormal},1.0);` :`   ${vColor} = ${color};`,
                 `   ${vUV} = ${uv};`,
                 '}'
             ].join('\n'));
@@ -130,7 +130,6 @@ export default class GLSLMaterial extends Material {
                 '}'
             ].join('\n'), GLSLShader.precision.high);
             const result = new GLSLMaterial(vertexShader, fragmentShader);
-            console.log(fragmentShader.source);
             result.id = material.id;
             return result;
 
