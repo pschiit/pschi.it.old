@@ -7,7 +7,7 @@ export default class Camera extends Node3d {
     constructor() {
         super();
         this.fog = new Vector2(0,100);
-        this.backgroundColor = new Color(0, 0, 0, 1);
+        this.backgroundColor = Color.black;
         this.projectionUpdated = true;
     }
 
@@ -32,7 +32,7 @@ export default class Camera extends Node3d {
     }
 
     static positionName = 'cameraPosition';
-    static projectionMatrixName = 'cameraMatrix';
+    static projectionMatrixName = 'projectionMatrix';
     static backgroundColorName = 'backgroundColor';
     static fogDistanceName = 'fogDistance';
 }

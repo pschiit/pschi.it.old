@@ -15,9 +15,9 @@ export default class WebGLVertexArray extends WebGLNode {
         super(renderer, vertexBuffer.id + '_' + material.id);
         this.location = renderer.gl.createVertexArray();
         renderer.vertexArray = this;
-        const program = renderer[material.id] || new WebGLProgram(renderer, material);
+        const program = WebGLProgram.from(renderer, material);
         if (vertexBuffer.index) {
-            renderer.elementArrayBuffer = renderer[vertexBuffer.index.id] || new WebGLBuffer(renderer, vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
+            renderer.elementArrayBuffer = WebGLBuffer.from(renderer, vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
         }
         for (const name in program.parameters) {
             const buffer = vertexBuffer.getParameter(name);
@@ -28,5 +28,22 @@ export default class WebGLVertexArray extends WebGLNode {
         renderer.vertexArray = null;
         renderer.arrayBuffer = null;
         renderer.elementArrayBuffer = null;
+    }
+
+    /** Return whether or not this WebGLVertexArray has been created from the VertexBuffer and Material
+     * @param {VertexBuffer} vertexBuffer  vertex buffer to compare
+     * @param {Material} material  material to compare
+     */
+    is(vertexBuffer, material){
+        return this.name == vertexBuffer.id + '_' + material.id;
+    }
+
+    /** Get the VertexBuffer and Material corresponding WebGLVertexArray from a WebGLRenderingContext
+     * @param {WebGLRenderer} renderer the context of the renderer
+     * @param {VertexBuffer} vertexBuffer  vertex buffer
+     * @param {Material} material  material
+     */
+    static from(renderer, vertexBuffer, material) {
+        return renderer.nodes[vertexBuffer.id + '_' + material.id] || new WebGLVertexArray(renderer, vertexBuffer, material);
     }
 }

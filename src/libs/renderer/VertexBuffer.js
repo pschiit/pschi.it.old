@@ -52,14 +52,21 @@ export default class  VertexBuffer extends Buffer {
         this.setParameter(this.uvName, v, this.uvLength);
     }
 
+    reverseNormal() {
+        const normal = this.normal.data;
+        this.normal = normal.map(n => n > 0 ? -1 
+            : n < 0 ? 1 
+            : 0);
+    }
+
     transform(matrix) {
         let buffer = this.position;
         if (buffer) {
-            buffer.applyMatrix(matrix);
+            buffer.transform(matrix);
         }
         buffer = this.normal;
         if (buffer) {
-            buffer.normal.applyMatrix(matrix.clone().invertMatrix().transpose());
+            buffer.transform(matrix.clone().invert().transpose());
         }
     }
 

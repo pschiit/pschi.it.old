@@ -39,11 +39,11 @@ export default class BoxBuffer extends VertexBuffer {
             0, -1, 0,
         ];
 
-        if(color){
+        if (color) {
             this.setColor(color);
         }
 
-        if(uv){
+        if (uv) {
             this.uv = uv;
         }
 

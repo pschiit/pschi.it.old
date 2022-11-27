@@ -18,15 +18,15 @@ export default class WebGLProgram extends WebGLNode {
         this.parameters = {};
         this.parameters = {};
         this.cache = {
-            uniforms: {},
+            parameters: {},
         };
-        this.location = renderer.gl.createProgram();
         if (!(material instanceof GLSLMaterial)) {
             material = GLSLMaterial.from(material);
         }
-        this.vertexShader = renderer[material.vertexShader.id] || new WebGLShader(renderer, material.vertexShader);
+        this.location = renderer.gl.createProgram();
+        this.vertexShader = WebGLShader.from(renderer, material.vertexShader);
         renderer.gl.attachShader(this.location, this.vertexShader.location);
-        this.fragmentShader = renderer[material.fragmentShader.id] || new WebGLShader(renderer, material.fragmentShader);
+        this.fragmentShader = WebGLShader.from(renderer, material.fragmentShader);
         renderer.gl.attachShader(this.location, this.fragmentShader.location);
         renderer.gl.linkProgram(this.location);
         if (!renderer.gl.getProgramParameter(this.location, renderer.gl.LINK_STATUS)) {
@@ -46,10 +46,27 @@ export default class WebGLProgram extends WebGLNode {
         }
     }
 
+    /** Return whether or not this WebGLProgram has been created from the Material
+     * @param {Material} material  Material to compare
+     */
+    is(material) {
+        return this.name == material.id;
+    }
+
     setParameter(name, value) {
         if (this.parameters[name]) {
             this.parameters[name](value);
         }
+    }
+
+    /** Get the Material's WebGLProgram from a WebGLRenderingContext
+     * @param {WebGLRenderer} renderer the context of the renderer
+     * @param {Material} material  associated Material
+     * @param {Boolean} recompile  whether you wish to recompiled a program ( default = false)
+     */
+    static from(renderer, material, recompile = false) {
+        return recompile ? new WebGLProgram(renderer, material)
+            : renderer.nodes[material.id] || new WebGLProgram(renderer, material);
     }
 }
 
@@ -62,7 +79,7 @@ function createAttribute(renderer, program, attribute) {
     const location = renderer.gl.getAttribLocation(program.location, attribute.name);
     program.parameters[attribute.name] = (v) => {
         if (v instanceof Buffer) {
-            renderer.arrayBuffer = renderer[v.mainBuffer.id] || new WebGLBuffer(renderer, v.mainBuffer, renderer.gl.ARRAY_BUFFER);
+            renderer.arrayBuffer = WebGLBuffer.from(renderer, v.mainBuffer, renderer.gl.ARRAY_BUFFER);
             renderer.gl.enableVertexAttribArray(location);
             renderer.gl.vertexAttribPointer(location, v.step, renderer.arrayBuffer.type, v.normalize, v.BYTES_PER_PARENT_STEP, v.BYTES_PER_OFFSET);
         } else {
@@ -103,41 +120,44 @@ function createUniform(renderer, program, uniform) {
         case renderer.gl.FLOAT:
             if (uniform.size > 1) {
                 program.parameters[name] = (v) => {
-                    if (!program.cache.uniforms[name]?.equals(v)) {
+                    if (!program.cache.parameters[name]?.equals(v)) {
                         renderer.gl.uniform1fv(location, v);
-                        program.cache.uniforms[name] = v.clone();
+                        program.cache.parameters[name] = v.clone();
                     }
                 };
             } else {
                 program.parameters[name] = (v) => {
-                    if (program.cache.uniforms[name] != v) {
+                    if(v?.length == 1){
+                        v = v[0];
+                    }
+                    if (program.cache.parameters[name] != v) {
                         renderer.gl.uniform1f(location, v);
-                        program.cache.uniforms[name] = v;
+                        program.cache.parameters[name] = v;
                     }
                 };
             }
             break;
         case renderer.gl.FLOAT_VEC2:
             program.parameters[name] = (v) => {
-                if (!program.cache.uniforms[name]?.equals(v)) {
+                if (!program.cache.parameters[name]?.equals(v)) {
                     renderer.gl.uniform2fv(location, v);
-                    program.cache.uniforms[name] = v.clone();
+                    program.cache.parameters[name] = v.clone();
                 }
             };
             break;
         case renderer.gl.FLOAT_VEC3:
             program.parameters[name] = (v) => {
-                if (!program.cache.uniforms[name]?.equals(v)) {
+                if (!program.cache.parameters[name]?.equals(v)) {
                     renderer.gl.uniform3fv(location, v);
-                    program.cache.uniforms[name] = v.clone();
+                    program.cache.parameters[name] = v.clone();
                 }
             };
             break;
         case renderer.gl.FLOAT_VEC4:
             program.parameters[name] = (v) => {
-                if (!program.cache.uniforms[name]?.equals(v)) {
+                if (!program.cache.parameters[name]?.equals(v)) {
                     renderer.gl.uniform4fv(location, v);
-                    program.cache.uniforms[name] = v.clone();
+                    program.cache.parameters[name] = v.clone();
                 }
             };
             break;
@@ -145,16 +165,19 @@ function createUniform(renderer, program, uniform) {
         case renderer.gl.INT:
             if (uniform.size > 1) {
                 program.parameters[name] = (v) => {
-                    if (!program.cache.uniforms[name]?.equals(v)) {
+                    if (!program.cache.parameters[name]?.equals(v)) {
                         renderer.gl.uniform1iv(location, v);
-                        program.cache.uniforms[name] = v.clone();
+                        program.cache.parameters[name] = v.clone();
                     }
                 };
             } else {
                 program.parameters[name] = (v) => {
-                    if (program.cache.uniforms[name] != v) {
+                    if(v?.length == 1){
+                        v = v[0];
+                    }
+                    if (program.cache.parameters[name] != v) {
                         renderer.gl.uniform1i(location, v);
-                        program.cache.uniforms[name] = v;
+                        program.cache.parameters[name] = v;
                     }
                 };
             }
@@ -162,51 +185,51 @@ function createUniform(renderer, program, uniform) {
         case renderer.gl.BOOL_VEC2:
         case renderer.gl.INT_VEC2:
             program.parameters[name] = (v) => {
-                if (!program.cache.uniforms[name]?.equals(v)) {
+                if (!program.cache.parameters[name]?.equals(v)) {
                     renderer.gl.uniform2iv(location, v);
-                    program.cache.uniforms[name] = v.clone();
+                    program.cache.parameters[name] = v.clone();
                 }
             };
             break;
         case renderer.gl.BOOL_VEC3:
         case renderer.gl.INT_VEC3:
             program.parameters[name] = (v) => {
-                if (!program.cache.uniforms[name]?.equals(v)) {
+                if (!program.cache.parameters[name]?.equals(v)) {
                     renderer.gl.uniform3iv(location, v);
-                    program.cache.uniforms[name] = v.clone();
+                    program.cache.parameters[name] = v.clone();
                 }
             };
             break;
         case renderer.gl.BOOL_VEC4:
         case renderer.gl.INT_VEC4:
             program.parameters[name] = (v) => {
-                if (!program.cache.uniforms[name]?.equals(v)) {
+                if (!program.cache.parameters[name]?.equals(v)) {
                     renderer.gl.uniform4iv(location, v);
-                    program.cache.uniforms[name] = v.clone();
+                    program.cache.parameters[name] = v.clone();
                 }
             };
             break;
         case renderer.gl.FLOAT_MAT2:
             program.parameters[name] = (v) => {
-                if (!program.cache.uniforms[name]?.equals(v)) {
+                if (!program.cache.parameters[name]?.equals(v)) {
                     renderer.gl.uniformMatrix2fv(location, false, v);
-                    program.cache.uniforms[name] = v.clone();
+                    program.cache.parameters[name] = v.clone();
                 }
             };
             break;
         case renderer.gl.FLOAT_MAT3:
             program.parameters[name] = (v) => {
-                if (!program.cache.uniforms[name]?.equals(v)) {
+                if (!program.cache.parameters[name]?.equals(v)) {
                     renderer.gl.uniformMatrix3fv(location, false, v);
-                    program.cache.uniforms[name] = v.clone();
+                    program.cache.parameters[name] = v.clone();
                 }
             };
             break;
         case renderer.gl.FLOAT_MAT4:
             program.parameters[name] = (v) => {
-                if (!program.cache.uniforms[name]?.equals(v)) {
+                if (!program.cache.parameters[name]?.equals(v)) {
                     renderer.gl.uniformMatrix4fv(location, false, v);
-                    program.cache.uniforms[name] = v.clone();
+                    program.cache.parameters[name] = v.clone();
                 }
             };
             break;
@@ -215,34 +238,34 @@ function createUniform(renderer, program, uniform) {
             if (uniform.size > 1) {
                 program.parameters[name] = (v) => {
                     if (v) {
-                        const textures = v.map(t => renderer[t.id] || new WebGLTexture(renderer, t));
+                        const textures = v.map(t => WebGLTexture.from(renderer, t));
                         const units = textures.map(t => t.units);
-                        if (program.cache.uniforms[name] != units) {
+                        if (program.cache.parameters[name] != units) {
                             renderer.gl.uniform1iv(location, units);
-                            program.cache.uniforms[name] = units;
+                            program.cache.parameters[name] = units;
                             textures.forEach(t => {
                                 renderer.gl.activeTexture(renderer.gl.TEXTURE0 + t.unit);
                                 renderer.texture2d = t;
                             });
                         }
-                    } else if (program.cache.uniforms[name] = null) {
+                    } else if (program.cache.parameters[name] = null) {
                         renderer.gl.uniform1iv(location, null);
-                        program.cache.uniforms[name] = null;
+                        program.cache.parameters[name] = null;
                     };
                 }
             } else {
                 program.parameters[name] = (v) => {
                     if (v) {
-                        var texture = renderer[v.id] || new WebGLTexture(renderer, v);
-                        if (program.cache.uniforms[name] != texture.unit) {
+                        var texture = WebGLTexture.from(renderer, v);
+                        if (program.cache.parameters[name] != texture.unit) {
                             renderer.gl.uniform1i(location, texture.unit);
-                            program.cache.uniforms[name] = texture.unit;
+                            program.cache.parameters[name] = texture.unit;
                             renderer.gl.activeTexture(renderer.gl.TEXTURE0 + texture.unit);
                             renderer.texture2d = texture;
                         }
-                    } else if (program.cache.uniforms[name] != null) {
+                    } else if (program.cache.parameters[name] != null) {
                         renderer.gl.uniform1i(location, null);
-                        program.cache.uniforms[name] = null;
+                        program.cache.parameters[name] = null;
                     };
                 }
             }

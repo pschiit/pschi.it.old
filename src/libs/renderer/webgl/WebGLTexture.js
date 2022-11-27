@@ -39,4 +39,19 @@ export default class WebGLTexture extends WebGLNode {
             };
         }
     }
+
+    /** Return whether or not this WebGLTexture has been created from the Texture
+     * @param {Texture} texture  Texture to compare
+     */
+    is(texture){
+        return this.name == texture.id;
+    }
+
+    /** Get the Texture's WebGLTexture from a WebGLRenderingContext
+     * @param {WebGLRenderer} renderer the rendering context
+     * @param {Texture} texture the Texture
+     */
+    static from(renderer, texture){
+        return renderer.nodes[texture.id] || new WebGLTexture(renderer, texture);
+    }
 }

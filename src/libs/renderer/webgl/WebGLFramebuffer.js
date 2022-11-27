@@ -11,7 +11,7 @@ export default class WebGLFramebuffer extends WebGLNode {
     constructor(renderer, texture) {
         super(renderer, 'fb' + texture.id);
         this.location = renderer.gl.createFramebuffer();
-        this.texture2d = renderer[texture.id] || new WebGLTexture(renderer, texture);
+        this.texture2d = WebGLTexture.from(renderer, texture);
         this.texture2d.update(texture);
         texture.updated = false;
 
@@ -30,5 +30,20 @@ export default class WebGLFramebuffer extends WebGLNode {
         renderer.framebuffer = null;
         renderer.texture2d = null;
         renderer.gl.bindRenderbuffer(renderer.gl.RENDERBUFFER, null);
+    }
+
+    /** Return whether or not this WebGLFramebuffer has been created from the Texture
+     * @param {Texture} texture  Texture to compare
+     */
+    is(texture){
+        return this.name == 'fb' + texture.id;
+    }
+
+    /** Get the Texture's WebGLFramebuffer from a WebGLRenderingContext
+     * @param {WebGLRenderer} renderer the rendering context
+     * @param {Texture} texture the Texture
+     */
+    static from(renderer, texture){
+        return renderer.nodes['fb' + texture.id] || new WebGLFramebuffer(renderer, texture);
     }
 }

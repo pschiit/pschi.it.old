@@ -6,14 +6,15 @@ export default class Light extends Node3d {
         this.color = color;
         this.ambientStrength = 0.1;
         this.intensity = 1;
-        this.on = true;
     }
 
-    off(){
-        this.on = false;
+    get on(){
+        return this.intensity > 0;
     }
 
     toggle(){
-        this.on = !this.on;
+        const cache = this._intensity || 0;
+        this._intensity = this.intensity;
+        this.intensity = cache;
     }
 }

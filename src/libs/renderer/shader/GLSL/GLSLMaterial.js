@@ -7,6 +7,7 @@ import VertexBuffer from '../../VertexBuffer';
 import GLSLParameter from './GLSLParameter';
 import GLSLShader from './GLSLShader';
 import DirectionalLight from '../../../3d/light/DirectionalLight';
+import SpotLight from '../../../3d/light/SpotLight';
 
 export default class GLSLMaterial extends Material {
     /** Create a new GLSLMaterial from a vertex and fragment GLSLShader
@@ -49,6 +50,15 @@ export default class GLSLMaterial extends Material {
             const pointLightAmbientStrength = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, PointLight.ambientStrengthName, pointLightCount);
             const pointLightIntensity = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, PointLight.intensityName, pointLightCount);
 
+            let spotLightCount = material.spotLigthsCount;
+            const spotLightColor = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, SpotLight.colorName, spotLightCount);
+            const spotLightPosition = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, SpotLight.positionName, spotLightCount);
+            const spotLightDirection = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, SpotLight.directionName, spotLightCount);
+            const spotLightInnerRadius = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, SpotLight.innerRadiusName, spotLightCount);
+            const spotLightRadius = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, SpotLight.radiusName, spotLightCount);
+            const spotLightAmbientStrength = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, SpotLight.ambientStrengthName, spotLightCount);
+            const spotLightIntensity = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, SpotLight.intensityName, spotLightCount);
+
             const sampler2d = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.sampler2D, Material.textureName);
 
             const vPosition = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.vec3, 'v_' + VertexBuffer.positionName);
@@ -72,12 +82,12 @@ export default class GLSLMaterial extends Material {
                 vUV,
             ], [
                 'void main(){',
-                `gl_Position = ${cameraMatrix} * ${vertexMatrix} * ${position};`,
-                `${vDistance} = gl_Position.w;`,
-                `${vNormal} = normalize(vec3(${normalMatrix} * ${normal}));`,
-                `${vPosition} = vec3(${vertexMatrix} * ${position});`,
-                `${vColor} = ${color};`,
-                `${vUV} = ${uv};`,
+                `   gl_Position = ${cameraMatrix} * ${vertexMatrix} * ${position};`,
+                `   ${vDistance} = gl_Position.w;`,
+                `   ${vNormal} = normalize(vec3(${normalMatrix} * ${normal}));`,
+                `   ${vPosition} = vec3(${vertexMatrix} * ${position});`,
+                `   ${vColor} = ${color};`,
+                `   ${vUV} = ${uv};`,
                 '}'
             ].join('\n'));
 
@@ -89,10 +99,17 @@ export default class GLSLMaterial extends Material {
                 directionalLightColor,
                 directionalLightDirection,
                 directionalLightAmbientStrength,
-                pointLightAmbientStrength,
                 pointLightColor,
                 pointLightPosition,
+                pointLightAmbientStrength,
                 pointLightIntensity,
+                spotLightColor,
+                spotLightPosition,
+                spotLightDirection,
+                spotLightInnerRadius,
+                spotLightRadius,
+                spotLightAmbientStrength,
+                spotLightIntensity,
                 materialShininess,
                 vPosition,
                 vNormal,
@@ -103,48 +120,67 @@ export default class GLSLMaterial extends Material {
                 GLSLMaterial.calculateLight,
                 GLSLMaterial.calculateFog,
                 'void main(){',
-                `vec3 normal = normalize(${vNormal});`,
-                `vec3 cameraPosition = normalize(${cameraPosition} - ${vPosition});`,
+                `   vec3 normal = normalize(${vNormal});`,
+                `   vec3 cameraPosition = normalize(${cameraPosition} - ${vPosition});`,
                 createFragmentColor(),
-                'vec3 color = vec3(0.0);',
+                '   vec3 color = vec3(0.0);',
                 createLight(),
-                `color = calculateFog(${fogDistance}, ${fogColor}, ${vDistance}, color);`,
-                `gl_FragColor =  vec4(color, fragmentColor.a);`,
+                createFog(),
+                '   gl_FragColor =  vec4(color, fragmentColor.a);',
                 '}'
             ].join('\n'), GLSLShader.precision.high);
             const result = new GLSLMaterial(vertexShader, fragmentShader);
+            console.log(fragmentShader.source);
             result.id = material.id;
             return result;
 
             function createFragmentColor() {
-                return material.texture ? `vec4 fragmentColor = texture2D(${sampler2d}, ${vUV}) + ${vColor};`
-                    : `vec4 fragmentColor = ${vColor};`;
+                return material.texture ? `   vec4 fragmentColor = texture2D(${sampler2d}, ${vUV}) + ${vColor};`
+                    : `   vec4 fragmentColor = ${vColor};`;
             }
 
             function createLight() {
-                var result = createDirectionalLight() + createPointLight();
+                var result = createDirectionalLight() + createPointLight() + createSpotLight();
 
                 return result.length > 0 ? result
-                    : `color += fragmentColor.rgb;`;
+                    : `   color += fragmentColor.rgb;`;
+            }
+
+            function createFog() {
+                return material.fog ? `   color = calculateFog(${fogDistance}, ${fogColor}, ${vDistance}, color);`
+                    : '';
             }
 
             function createDirectionalLight() {
                 return directionalLightCount > 0 ? [
-                    `for(int i = 0; i < ${directionalLightCount}; i++){`,
-                    `color += calculateLight(fragmentColor.rgb,${directionalLightDirection}[i], ${directionalLightColor}[i], ${directionalLightAmbientStrength}[i], ${materialShininess}, cameraPosition, normal);`,
-                    '}',].join('\n')
+                    `   for(int i = 0; i < ${directionalLightCount}; i++){`,
+                    `      color += calculateLight(fragmentColor.rgb,${directionalLightDirection}[i], ${directionalLightColor}[i], ${directionalLightAmbientStrength}[i], ${materialShininess}, cameraPosition, normal);`,
+                    '   }\n',].join('\n')
                     : '';
             }
 
             function createPointLight() {
                 return pointLightCount > 0 ? [
-                    `for(int i = 0; i < ${pointLightCount}; i++){`,
-                    `vec3 lightDistance = ${pointLightPosition}[i] - ${vPosition};`,
-                    `float attenuation = clamp(${pointLightIntensity}[i] / length(lightDistance), 0.0, 1.0);`,
-                    `vec3 lightDirection = normalize(lightDistance);`,
-                    `vec3 lightColor = calculateLight(fragmentColor.rgb,lightDirection, ${pointLightColor}[i], ${pointLightAmbientStrength}[i], ${materialShininess}, cameraPosition, normal);`,
-                    `color += attenuation * (lightColor + ${pointLightColor}[i]);`,
-                    '}',].join('\n')
+                    `   for(int i = 0; i < ${pointLightCount}; i++){`,
+                    `      vec3 lightDistance = ${pointLightPosition}[i] - ${vPosition};`,
+                    `      vec3 lightDirection = normalize(lightDistance);`,
+                    `      float attenuation = clamp(${pointLightIntensity}[i] / length(lightDistance), 0.0, 1.0);`,
+                    `      vec3 lightColor = calculateLight(fragmentColor.rgb, lightDirection, ${pointLightColor}[i], ${pointLightAmbientStrength}[i], ${materialShininess}, cameraPosition, normal);`,
+                    `      color += attenuation * lightColor;`,
+                    '   }\n',].join('\n')
+                    : '';
+            }
+
+            function createSpotLight() {
+                return spotLightCount > 0 ? [
+                `       for(int i = 0; i < ${spotLightCount}; i++){`,
+                `           vec3 lightDistance = ${spotLightPosition}[i] - ${vPosition};`,
+                    `       float theta = dot(normalize(lightDistance), ${spotLightDirection}[i]);`,
+                    `       float smoothing = clamp((theta - ${spotLightRadius}[i]) / (${spotLightInnerRadius}[i] - ${spotLightRadius}[i]), 0.0, 1.0);`,
+                    `       float attenuation = clamp(${spotLightIntensity}[i] / length(lightDistance), 0.0, 1.0);`,
+                `           vec3 lightColor = calculateLight(fragmentColor.rgb, ${spotLightDirection}[i], ${spotLightColor}[i], ${spotLightAmbientStrength}[i], ${materialShininess}, cameraPosition, normal);`,
+                `           color +=  smoothing * attenuation * lightColor;`,
+                    '   }\n',].join('\n')
                     : '';
             }
         }
@@ -153,23 +189,23 @@ export default class GLSLMaterial extends Material {
 
     static calculateLight = [
         'vec3 calculateLight(vec3 fragmentColor, vec3 lightDirection, vec3 lightColor, float ambientStrength, float shininess, vec3 cameraPosition, vec3 normal){',
-        'vec3 ambient = fragmentColor * lightColor * ambientStrength;',
-        'float nDotL = max(dot(lightDirection, normal), 0.0);',
-        'if(nDotL == 0.0){',
-        'return ambient;',
-        '}',
-        'vec3 diffuse = fragmentColor * lightColor * nDotL;',
-        'vec3 reflectionDirection = 2.0 * dot(normal,lightDirection) * normal - lightDirection;',
-        'float spec = pow(max(dot(cameraPosition, reflectionDirection), 0.0), shininess);',
-        'vec3 specular = spec * lightColor;',
-        'return (diffuse + specular + ambient);',
-        '}',
+        '   vec3 ambient = fragmentColor * lightColor * ambientStrength;',
+        '   float nDotL = max(dot(lightDirection, normal), 0.0);',
+        '   if(nDotL == 0.0){',
+        '       return ambient;',
+        '   }',
+        '   vec3 diffuse = fragmentColor * lightColor * nDotL;',
+        '   vec3 reflectionDirection = 2.0 * dot(normal,lightDirection) * normal - lightDirection;',
+        '   float spec = pow(max(dot(cameraPosition, reflectionDirection), 0.0), shininess);',
+        '   vec3 specular = spec * lightColor;',
+        '   return (diffuse + specular + ambient);',
+        '}\n',
     ].join('\n');
 
     static calculateFog = [
         'vec3 calculateFog(vec2 fogDistance, vec3 fogColor, float distance, vec3 color){',
-        `float fogFactor = clamp((fogDistance.y - distance) / (fogDistance.y - fogDistance.x), 0.0, 1.0);`,
-        `return mix(fogColor, color, fogFactor);`,
+        `   float fogFactor = clamp((fogDistance.y - distance) / (fogDistance.y - fogDistance.x), 0.0, 1.0);`,
+        `   return mix(fogColor, color, fogFactor);`,
         '}',
     ].join('\n');
 }

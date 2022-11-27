@@ -6,6 +6,10 @@ export default class  Material extends Node {
     constructor(){
         super();
         this.texture = null;
+        this.fog = true;
+        this.directionalLigthsCount = 0;
+        this.pointLigthsCount = 0;
+        this.spotLigthsCount = 0;
     }
 
     static textureName = 'texture';
