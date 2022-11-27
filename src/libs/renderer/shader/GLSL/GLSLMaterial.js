@@ -195,8 +195,10 @@ export default class GLSLMaterial extends Material {
         '       return ambient;',
         '   }',
         '   vec3 diffuse = fragmentColor * lightColor * nDotL;',
-        '   vec3 reflectionDirection = 2.0 * dot(normal,lightDirection) * normal - lightDirection;',
-        '   float spec = pow(max(dot(cameraPosition, reflectionDirection), 0.0), shininess);',
+        // '   vec3 reflectionDirection = 2.0 * dot(normal,lightDirection) * normal - lightDirection;',//phong
+        // '   float spec = pow(max(dot(cameraPosition, reflectionDirection), 0.0), shininess);',
+        '   vec3 halfway = normalize(lightDirection + cameraPosition);',//blinn
+        '   float spec = pow(max(dot(normal, halfway), 0.0), shininess);',
         '   vec3 specular = spec * lightColor;',
         '   return (diffuse + specular + ambient);',
         '}\n',

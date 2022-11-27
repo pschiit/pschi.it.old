@@ -159,10 +159,10 @@ world.appendChild(sun);
 
 const spotLight = new SpotLight(
     Color.magenta,
-    Math.cos(Angle.toRadian(35)),
+    Math.cos(Angle.toRadian(50)),
     new Vector3(3, 2, 3),
     new Vector3(0, 0, 0));
-spotLight.innerRadius = Math.cos(Angle.toRadian(17.5));
+spotLight.innerRadius = Math.cos(Angle.toRadian(40));
 spotLight.material = textureMaterial;
 spotLight.vertexBuffer = new BoxBuffer();
 spotLight.vertexBuffer.setColor(Color.white);
