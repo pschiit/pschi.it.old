@@ -39,14 +39,6 @@ export default class WebGLRenderer extends Node {
 
         this.textureUnit = 0;
 
-        this._vertexArray = null;
-        this._program = null;
-        this._arrayBuffer = null;
-        this._elementArrayBuffer = null;
-        this._texture2d = null;
-        this._textureCubeMap = null;
-        this._framebuffer = null;
-
         this.renderTargets = null;
 
         this.nodes = {};
@@ -277,6 +269,23 @@ export default class WebGLRenderer extends Node {
         }
     }
 
+    get material() {
+        return this._material;
+    }
+
+    set material(v) {
+        if (this._material != v) {
+            this._material = v;
+            if (v) {
+                this.program = WebGLProgram.from(this, v);
+                this.culling = v.culling;
+                this.depth = v.depth;
+            } else {
+                this.program = null;
+            }
+        }
+    }
+
     /** Render a Render in the current WebGLRenderer
      * @param {Render} node Node to render
      * @param {Texture} renderTarget Texture to render onto(optional)
@@ -373,7 +382,35 @@ export default class WebGLRenderer extends Node {
                 this.program.setParameter(PhongMaterial.ambientColorName, material.ambientColor.rgb);
                 this.program.setParameter(PhongMaterial.diffuseColorName, material.diffuseColor.rgb);
                 this.program.setParameter(PhongMaterial.specularColorName, material.specularColor.rgb);
-                this.program.setParameter(PhongMaterial.emissiveColorName, material.emissive.rgb);
+                this.program.setParameter(PhongMaterial.emissiveColorName, material.emissiveColor.rgb);
+                if (material.ambientTexture) {
+                    if (material.ambientTexture == renderTarget) {
+                        this.program.setParameter(PhongMaterial.ambientTextureName, null);
+                    } else {
+                        this.program.setParameter(PhongMaterial.ambientTextureName, material.ambientTexture);
+                    }
+                }
+                if (material.diffuseTexture) {
+                    if (material.diffuseTexture == renderTarget) {
+                        this.program.setParameter(PhongMaterial.diffuseTextureName, null);
+                    } else {
+                        this.program.setParameter(PhongMaterial.diffuseTextureName, material.diffuseTexture);
+                    }
+                }
+                if (material.specularTexture) {
+                    if (material.specularTexture == renderTarget) {
+                        this.program.setParameter(PhongMaterial.specularTextureName, null);
+                    } else {
+                        this.program.setParameter(PhongMaterial.specularTextureName, material.specularTexture);
+                    }
+                }
+                if (material.emissiveTexture) {
+                    if (material.emissiveTexture == renderTarget) {
+                        this.program.setParameter(PhongMaterial.emissiveTextureName, null);
+                    } else {
+                        this.program.setParameter(PhongMaterial.emissiveTextureName, material.emissiveTexture);
+                    }
+                }
             }
             if (material.texture) {
                 if (material.texture == renderTarget) {
@@ -503,9 +540,7 @@ export default class WebGLRenderer extends Node {
                 count = render.vertexBuffer.count;
                 renderer.vertexArray = WebGLVertexArray.from(renderer, render.vertexBuffer, render.material);
             }
-            renderer.program = WebGLProgram.from(renderer, render.material);
-            renderer.culling = render.material.culling;
-            renderer.depth = render.material.depth;
+            renderer.material = render.material;
 
             for (const name in render.parameters) {
                 renderer.program.setParameter(name, render.parameters[name]);

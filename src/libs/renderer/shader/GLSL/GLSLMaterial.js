@@ -66,11 +66,16 @@ export default class GLSLMaterial extends Material {
         const vDistance = new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.float, 'v_' + Camera.fogDistanceName);
 
         if (material instanceof PhongMaterial) {
-
             const materialAmbientColor = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, PhongMaterial.ambientColorName);
             const materialDiffuseColor = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, PhongMaterial.diffuseColorName);
             const materialSpecularColor = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, PhongMaterial.specularColorName);
             const materialEmissiveColor = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, PhongMaterial.emissiveColorName);
+
+            const materialAmbientTexture = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.sampler2D, PhongMaterial.ambientTextureName);
+            const materialDiffuseTexture = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.sampler2D, PhongMaterial.diffuseTextureName);
+            const materialSpecularTexture = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.sampler2D, PhongMaterial.specularTextureName);
+            const materialEmissiveTexture = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.sampler2D, PhongMaterial.emissiveTextureName);
+
             const materialShininess = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, PhongMaterial.shininessName);
             const vertexShader = new GLSLShader(GLSLShader.type.vertexShader, [
                 position,
@@ -120,6 +125,10 @@ export default class GLSLMaterial extends Material {
                 materialDiffuseColor,
                 materialSpecularColor,
                 materialEmissiveColor,
+                materialAmbientTexture,
+                materialDiffuseTexture,
+                materialSpecularTexture,
+                materialEmissiveTexture,
                 vPosition,
                 vNormal,
                 vColor,
@@ -130,7 +139,7 @@ export default class GLSLMaterial extends Material {
                 'void main(){',
                 `   vec3 normal = normalize(${vNormal});`,
                 `   vec3 cameraPosition = normalize(${cameraPosition} - ${vPosition});`,
-                createFragmentColor(),
+                createColor(),
                 '   vec3 color = vec3(0.0);',
                 createLight(),
                 createFog(),
@@ -138,12 +147,22 @@ export default class GLSLMaterial extends Material {
                 '}'
             ].join('\n'), GLSLShader.precision.high);
             const result = new GLSLMaterial(vertexShader, fragmentShader);
+
+            console.log(fragmentShader.source);
             result.id = material.id;
             return result;
 
-            function createFragmentColor() {
-                return material.texture ? `   vec4 fragmentColor = texture2D(${sampler2d}, ${vUV}) + ${vColor};`
-                    : `   vec4 fragmentColor = ${vColor};`;
+            function createColor() {
+                const result = [
+                    material.texture ? `   vec4 fragmentColor = texture2D(${sampler2d}, ${vUV}) + ${vColor};` : `   vec4 fragmentColor = ${vColor};`,
+                ]
+                if (directionalLightCount > 0 || pointLightCount > 0 || spotLightCount > 0) {
+                    result.push(material.ambientTexture ? `   vec3 materialAmbient = texture2D(${materialAmbientTexture}, ${vUV}).stp + ${materialAmbientColor};` : `   vec3 materialAmbient = ${materialAmbientColor};`);
+                    result.push(material.diffuseTexture ? `   vec3 materialDiffuse = texture2D(${materialDiffuseTexture}, ${vUV}).stp + ${materialDiffuseColor};` : `   vec3 materialDiffuse = ${materialDiffuseColor};`);
+                    result.push(material.specularTexture ? `   vec3 materialSpecular = texture2D(${materialSpecularTexture}, ${vUV}).stp + ${materialSpecularColor};` : `   vec3 materialSpecular = ${materialSpecularColor};`);
+                    result.push(material.emissiveTexture ? `   vec3 materialEmissive = texture2D(${materialEmissiveTexture}, ${vUV}).stp + ${materialEmissiveColor};` : `   vec3 materialEmissive = ${materialEmissiveColor};`);
+                }
+                return result.join('\n');
             }
 
             function createLight() {
@@ -166,7 +185,7 @@ export default class GLSLMaterial extends Material {
             function createDirectionalLight() {
                 return directionalLightCount > 0 ? [
                     `   for(int i = 0; i < ${directionalLightCount}; i++){`,
-                    `      color += calculateLight(fragmentColor.rgb,${directionalLightDirection}[i], ${directionalLightColor}[i], ${directionalLightAmbientStrength}[i], ${materialShininess}, cameraPosition, normal);`,
+                    `      color += calculateLight(${directionalLightDirection}[i], ${directionalLightColor}[i], ${directionalLightAmbientStrength}[i], materialAmbient, materialDiffuse, materialSpecular, materialEmissive, ${materialShininess}, cameraPosition, normal);`,
                     '   }\n',].join('\n')
                     : '';
             }
@@ -177,44 +196,61 @@ export default class GLSLMaterial extends Material {
                     `      vec3 lightDistance = ${pointLightPosition}[i] - ${vPosition};`,
                     `      vec3 lightDirection = normalize(lightDistance);`,
                     `      float attenuation = clamp(${pointLightIntensity}[i] / length(lightDistance), 0.0, 1.0);`,
-                    `      vec3 lightColor = calculateLight(fragmentColor.rgb, lightDirection, ${pointLightColor}[i], ${pointLightAmbientStrength}[i], ${materialShininess}, cameraPosition, normal);`,
-                    `      color += attenuation * lightColor;`,
+                    `      color += attenuation * calculateLight(lightDirection, ${pointLightColor}[i], ${pointLightAmbientStrength}[i], materialAmbient, materialDiffuse, materialSpecular, materialEmissive, ${materialShininess}, cameraPosition, normal);`,
                     '   }\n',].join('\n')
                     : '';
             }
 
             function createSpotLight() {
                 return spotLightCount > 0 ? [
-                    `       for(int i = 0; i < ${spotLightCount}; i++){`,
-                    `           vec3 lightDistance = ${spotLightPosition}[i] - ${vPosition};`,
-                    `       float theta = dot(normalize(lightDistance), ${spotLightDirection}[i]);`,
-                    `       float smoothing = clamp((theta - ${spotLightRadius}[i]) / (${spotLightInnerRadius}[i] - ${spotLightRadius}[i]), 0.0, 1.0);`,
-                    `       float attenuation = clamp(${spotLightIntensity}[i] / length(lightDistance), 0.0, 1.0);`,
-                    `           vec3 lightColor = calculateLight(fragmentColor.rgb, ${spotLightDirection}[i], ${spotLightColor}[i], ${spotLightAmbientStrength}[i], ${materialShininess}, cameraPosition, normal);`,
-                    `           color +=  smoothing * attenuation * lightColor;`,
+                    `   for(int i = 0; i < ${spotLightCount}; i++){`,
+                    `      vec3 lightDistance = ${spotLightPosition}[i] - ${vPosition};`,
+                    `      float theta = dot(normalize(lightDistance), ${spotLightDirection}[i]);`,
+                    `      float smoothing = clamp((theta - ${spotLightRadius}[i]) / (${spotLightInnerRadius}[i] - ${spotLightRadius}[i]), 0.0, 1.0);`,
+                    `      float attenuation = clamp(${spotLightIntensity}[i] / length(lightDistance), 0.0, 1.0);`,
+                    `      color +=  smoothing * attenuation * calculateLight(${spotLightDirection}[i], ${spotLightColor}[i], ${spotLightAmbientStrength}[i], materialAmbient, materialDiffuse, materialSpecular, materialEmissive,${materialShininess}, cameraPosition, normal);`,
                     '   }\n',].join('\n')
                     : '';
             }
 
             function calculateLight() {
                 return directionalLightCount > 0 || pointLightCount > 0 || spotLightCount > 0 ? [
-                    'vec3 calculateLight(vec3 fragmentColor, vec3 lightDirection, vec3 lightColor, float ambientStrength, float shininess, vec3 cameraPosition, vec3 normal){',
-                    `   vec3 ambient = ${PhongMaterial.ambientColorName} * lightColor * ambientStrength;`,
+                    'vec3 calculateLight(vec3 lightDirection, vec3 lightColor, float ambientStrength, vec3 materialAmbient, vec3 materialDiffuse, vec3 materialSpecular, vec3 materialEmissive, float shininess, vec3 cameraPosition, vec3 normal){',
+                    `   vec3 ambient = materialAmbient * lightColor * ambientStrength;`,
                     '   float nDotL = max(dot(lightDirection, normal), 0.0);',
                     '   if(nDotL == 0.0){',
                     '       return ambient;',
                     '   }',
-                    `   vec3 diffuse = ${PhongMaterial.diffuseColorName} * lightColor * nDotL;`,
+                    `   vec3 diffuse = materialDiffuse * lightColor * nDotL;`,
                     // '   vec3 reflectionDirection = 2.0 * dot(normal,lightDirection) * normal - lightDirection;',//phong
                     // '   float spec = pow(max(dot(cameraPosition, reflectionDirection), 0.0), shininess);',
                     '   vec3 halfway = normalize(lightDirection + cameraPosition);',//blinn-phong
                     '   float spec = pow(max(dot(normal, halfway), 0.0), shininess);',
-                    `   vec3 specular = spec * lightColor * ${PhongMaterial.specularColorName};`,
-                    `   return (diffuse + specular + ambient + ${PhongMaterial.emissiveColorName});`,
+                    `   vec3 specular = spec * lightColor * materialSpecular;`,
+                    `   vec3 emissive = materialEmissive * lightColor;`,
+                    `   return (diffuse + specular + ambient + emissive);`,
                     '}\n',
                 ].join('\n')
                     : '';
             };
         }
+    }
+    static structure = {
+        material: [
+            'struct Material{',
+            '   vec3 ambientColor;',
+            '   vec3 diffuseColor;',
+            '   vec3 specularColor;',
+            '   vec3 emissiveColor;',
+            '   float shininess;',
+            '};',
+        ].join('\n'),
+        light: [
+            'struct Light{',
+            '   vec3 direction;',
+            '   vec3 color;',
+            '   vec3 ambientStrenght;',
+            '};',
+        ].join('\n'),
     }
 }

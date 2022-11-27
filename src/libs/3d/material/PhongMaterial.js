@@ -5,9 +5,13 @@ export default class PhongMaterial extends Material {
     constructor() {
         super();
         this.ambientColor = Color.white;
+        this.ambientTexture = null;
         this.diffuseColor = Color.white;
+        this.diffuseTexture = null;
         this.specularColor = Color.white;
-        this.emissive = Color.black;
+        this.specularTexture = null;
+        this.emissiveColor = Color.black;
+        this.emissiveTexture = null;
 
         this.shininess = 32;
     }
@@ -16,5 +20,11 @@ export default class PhongMaterial extends Material {
     static diffuseColorName = "materialDiffuseColor";
     static specularColorName = "materialSpecularColor";
     static emissiveColorName = "materialEmissiveColor";
+
+    static ambientTextureName = "materialAmbientTexture";
+    static diffuseTextureName = "materialDiffuseTexture";
+    static specularTextureName = "materialSpecularTexture";
+    static emissiveTextureName = "materialEmissiveTexture";
+    
     static shininessName = "materialShininess";
 }

@@ -111,7 +111,6 @@ const world = new Node3d();
 
 const textureMaterial = new PhongMaterial();
 textureMaterial.texture = new Texture(world, 1024, 1024);
-
 const floor = new Node3d();
 floor.material = textureMaterial;
 floor.vertexBuffer = plane;
