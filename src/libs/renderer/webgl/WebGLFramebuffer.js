@@ -13,7 +13,6 @@ export default class WebGLFramebuffer extends WebGLNode {
         this.location = renderer.gl.createFramebuffer();
         this.texture2d = WebGLTexture.from(renderer, texture);
         this.texture2d.update(texture);
-        texture.updated = false;
 
         this.renderBuffer = renderer.gl.createRenderbuffer();
         renderer.gl.bindRenderbuffer(renderer.gl.RENDERBUFFER, this.renderBuffer);
@@ -23,7 +22,7 @@ export default class WebGLFramebuffer extends WebGLNode {
         renderer.gl.framebufferRenderbuffer(renderer.gl.FRAMEBUFFER, renderer.gl.DEPTH_ATTACHMENT, renderer.gl.RENDERBUFFER, this.renderBuffer);
         var e = renderer.gl.checkFramebufferStatus(renderer.gl.FRAMEBUFFER);
         if (e !== renderer.gl.FRAMEBUFFER_COMPLETE) {
-            const error = new Error('Framebuffer object is incomplete: ' + e.toString());
+            const error = new Error('Framebuffer object is incomplete: ' + e);
             renderer.removeChild(this);
             throw error;
         }

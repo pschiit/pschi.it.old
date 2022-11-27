@@ -40,7 +40,6 @@ export default class WebGLBuffer extends WebGLNode {
                 }
             };
         }
-        this.update(buffer);
     }
 
     /** Return whether or not this WebGLBuffer has been created from the Buffer

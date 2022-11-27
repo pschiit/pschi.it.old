@@ -12,7 +12,15 @@ export default class Node3d extends Render {
         this._target = new Vector3();
     }
 
-    get worldMatrix(){
+    get vertexMatrix(){
+        return this.parameters[Node3d.vertexMatrixName];
+    }
+
+    get normalMatrix(){
+        return this.parameters[Node3d.normalMatrixName];
+    }
+
+    get worldMatrix() {
         return this.parent instanceof Node3d ? this.parent.worldMatrix.multiply(this.matrix)
             : this.matrix.clone();
     }
@@ -55,14 +63,14 @@ export default class Node3d extends Render {
     /** Return the Vector3 target direction of the current Node3d from the world perspective
      * @return {Vector3} node Vector3 target direction
     */
-    get target(){
+    get target() {
         return this._target;
     }
 
     /** Set the target direction of the current Node3d from the world perspective
      * @param {Vector3} v Vector3 target direction
     */
-    set target(v){
+    set target(v) {
         this._target = v;
         const worldMatrix = this.worldMatrix;
         this.matrix = Matrix4.targetMatrix(worldMatrix.positionVector, this.target, this.up);
@@ -111,6 +119,20 @@ export default class Node3d extends Render {
     */
     transform(matrix) {
         this.matrix.multiply(matrix);
+
+        return this;
+    }
+
+    updateParameters(scene) {
+        super.updateParameters(scene);
+        const vertexMatrix = this.parent?.parameters[Node3d.vertexMatrixName] instanceof Matrix4 ?
+            this.parent.parameters[Node3d.vertexMatrixName].clone().multiply(this.matrix)
+            : this.matrix.clone();
+
+        this.setParameter(Node3d.vertexMatrixName, vertexMatrix);
+        if (this.renderable) {
+            this.setParameter(Node3d.normalMatrixName, vertexMatrix.clone().invert().transpose());
+        }
 
         return this;
     }

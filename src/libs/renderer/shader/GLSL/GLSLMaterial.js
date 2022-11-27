@@ -146,9 +146,10 @@ export default class GLSLMaterial extends Material {
                 '   gl_FragColor =  vec4(color, fragmentColor.a);',
                 '}'
             ].join('\n'), GLSLShader.precision.high);
+            console.log(fragmentShader.source);
             const result = new GLSLMaterial(vertexShader, fragmentShader);
 
-            console.log(fragmentShader.source);
+            //console.log(fragmentShader.source);
             result.id = material.id;
             return result;
 
@@ -168,10 +169,9 @@ export default class GLSLMaterial extends Material {
             function createLight() {
                 var result = createDirectionalLight()
                     + createPointLight()
-                    + createSpotLight()
-                    + `     color *= fragmentColor.rgb;`;
+                    + createSpotLight();
 
-                return result.length > 0 ? result
+                return result.length > 0 ? result + `     color *= fragmentColor.rgb;`
                     : `   color += fragmentColor.rgb;`;
             }
 

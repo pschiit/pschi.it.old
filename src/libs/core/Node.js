@@ -8,6 +8,7 @@ export default class Node {
         this.childrens = [];
         this.listeners = {};
         this._visible = true;
+        this.parameters = {};
     }
 
     get visible() {

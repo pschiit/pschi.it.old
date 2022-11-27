@@ -170,13 +170,11 @@ world.appendChild(spotLight);
 // greenLight.toggle();
 // blueLight.toggle();
 // whiteLight.toggle();
-// sun.toggle();
-// spotLight.toggle();
+//sun.toggle();
 
 const camera = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
 camera.translate(5, 5, 5);
 camera.target = new Vector3(0,0,0);
-camera.projectionUpdated = true;
 world.appendChild(camera);
 
 let then = 0;

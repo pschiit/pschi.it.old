@@ -14,4 +14,14 @@ export default class MathArray extends Float32Array {
     clone() {
         return new this.constructor(this);
     }
+
+
+    concat(data) {
+        const result = new MathArray(this.length + data.length);
+
+        result.set(this);
+        result.set(data, this.length);
+
+        return result;
+    }
 }

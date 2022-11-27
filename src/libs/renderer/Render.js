@@ -7,18 +7,29 @@ export default class Render extends Node {
      */
     constructor() {
         super();
-        this.primitive = null;
         this.material = null;
         this.vertexBuffer = null;
-        this.parameters = {};
-        this.index = null;
-        this.count = 0;
-        this.offset = 0;
     }
 
     get renderable() {
-        return this.material && this.material.culling != Material.culling.hidden 
-            && (this.count > 0 || this.vertexBuffer?.count > 0);
+        return this.material && this.vertexBuffer?.count > 0;
+    }
+
+    updateParameters(scene) {
+        if(this.renderable){
+            if (!scene.buffers[this.vertexBuffer.id]) {
+                scene.buffers[this.vertexBuffer.id] = this.vertexBuffer;
+            }
+            if (this.vertexBuffer.index && !scene.indexes[this.vertexBuffer.index.id]) {
+                scene.indexes[this.vertexBuffer.index.id] = this.vertexBuffer.index;
+            }
+            if (!scene.materials[this.material.id]) {
+                scene.materials[this.material.id] = this.material;
+            }
+            scene.renders.push(this);
+        }
+
+        return this;
     }
 
     setParameter(name, value) {

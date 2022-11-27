@@ -6,32 +6,57 @@ import Node3d from '../Node3d';
 export default class Camera extends Node3d {
     constructor() {
         super();
-        this.fog = new Vector2(0,100);
+        this.cameraParameters = {};
+        this.renderTarget = null;
+        this.fog = new Vector2(0, 100);
         this.backgroundColor = Color.black;
         this.projectionUpdated = true;
+        this.active = true;
     }
 
     get fog() {
-        return this._fog;
+        return this.cameraParameters[Camera.fogDistanceName];
     }
 
     set fog(v) {
-        this._fog = v;
+        this.setCameraParameter(Camera.fogDistanceName, v);
     }
 
-    get lookAtMatrix(){
-        const worldMatrix = this.worldMatrix;
-        return Matrix4.lookAtMatrix(worldMatrix.positionVector, this.target, this.up);
+    get backgroundColor() {
+        return this.cameraParameters[Camera.backgroundColorName];
+    }
+
+    set backgroundColor(v) {
+        this.setCameraParameter(Camera.backgroundColorName, v);
+    }
+
+    get lookAtMatrix() {
+        return this.cameraParameters[Camera.lookAtMatrixName];
     }
 
     get projectionMatrix(){
-        if(this.projectionUpdated){
-            this._projectionMatrix = this.lookAtMatrix;
-        }
-        return this._projectionMatrix;
+        return this.cameraParameters[Camera.projectionMatrixName];
     }
 
-    static positionName = 'cameraPosition';
+    updateParameters(scene) {
+        super.updateParameters(scene);
+        if(this.active){
+            scene.cameras.push(this);
+            if(this.projectionUpdated){
+                this.setCameraParameter(Camera.lookAtMatrixName,  Matrix4.lookAtMatrix(this.vertexMatrix.positionVector, this.target, this.up));
+                this.setCameraParameter(Camera.positionName, this.worldPosition);
+            }
+        }
+
+        return this;
+    }
+
+    setCameraParameter(name, value) {
+        this.cameraParameters[name] = value;
+    }
+
+    static positionName = 'viewPosition';
+    static lookAtMatrixName = 'lookAtMatrix';
     static projectionMatrixName = 'projectionMatrix';
     static backgroundColorName = 'backgroundColor';
     static fogDistanceName = 'fogDistance';
