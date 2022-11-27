@@ -358,7 +358,6 @@ export default class  Matrix4 extends MathArray {
         const b11 = a22 * a33 - a23 * a32;
 
         let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-
         if (!det) {
             return null;
         }

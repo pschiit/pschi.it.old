@@ -1,7 +1,7 @@
-import Vector3 from'../math/Vector3';
-import Vector4 from'../math/Vector4';
+import Vector3 from '../math/Vector3';
+import Vector4 from '../math/Vector4';
 
-export default class  Color extends Vector4 {
+export default class Color extends Vector4 {
     /** Create a new Color from the RGBA value
      * @param {Number} r red value
      * @param {Number} g green value
@@ -97,4 +97,13 @@ export default class  Color extends Vector4 {
     set a(value) {
         this[3] = value;
     }
+
+    static white = new Color(1, 1, 1, 1);
+    static black = new Color(0, 0, 0, 1);
+    static red = new Color(1, 0, 0, 1);
+    static green = new Color(0, 1, 0, 1);
+    static blue = new Color(0, 0, 1, 1);
+    static cyan = new Color(0, 1, 1, 1);
+    static magenta = new Color(1, 0, 1, 1);
+    static yellow = new Color(1, 1, 0, 1);
 }

@@ -6,10 +6,15 @@ import Color from './libs/core/Color';
 import HtmlNode from './libs/html/HtmlNode';
 import WebGLCanvas from './libs/html/WebGLCanvas';
 import PhongMaterial from './libs/3d/material/PhongMaterial';
-import BoxGeometry from './libs/3d/geometry/BoxGeometry';
-import PlaneGeometry from './libs/3d/geometry/PlaneGeometry';
+import BoxBuffer from './libs/3d/buffer/BoxBuffer';
+import PlaneBuffer from './libs/3d/buffer/PlaneBuffer';
 import Vector3 from './libs/math/Vector3';
 import Buffer from './libs/core/Buffer';
+import Texture from './libs/renderer/Texture';
+import OrthographicCamera from './libs/3d/camera/OrthographicCamera';
+import Matrix4 from './libs/math/Matrix4';
+import SpotLight from './libs/3d/light/SpotLight';
+import Angle from './libs/math/Angle';
 
 const defaultStyle = {
     width: '100%',
@@ -25,101 +30,161 @@ body.appendChild(canvas);
 canvas.style = defaultStyle;
 canvas.fitParent();
 
-const material = new PhongMaterial();
-const cube = new BoxGeometry();
-cube.setColor(new Color(1, 1, 1, 1));
-const plane = new PlaneGeometry(10, 10, new Color(1, 1, 1, 1));
-const lightNormalBuffer = new Buffer(new Float32Array([
-    0, 0, 1,//F
-    0, 0, 1,
-    0, 0, 1,
-    0, 0, 1,
+const cube = new BoxBuffer();
+cube.setColor(Color.white);
+cube.uv = [
+    0, 0, //F
+    0, 1,
+    1, 1,
+    1, 0,
 
-    -1, 0, 0,//R
-    -1, 0, 0,
-    -1, 0, 0,
-    -1, 0, 0,
+    0, 0,//R
+    0, 1,
+    1, 1,
+    1, 0,
 
-    0, 0, -1,//B
-    0, 0, -1,
-    0, 0, -1,
-    0, 0, -1,
+    0, 0,//B
+    0, 1,
+    1, 1,
+    1, 0,
 
-    0, -1, 0,//U
-    0, -1, 0,
-    0, -1, 0,
-    0, -1, 0,
+    0, 0,//U
+    0, 1,
+    1, 1,
+    1, 0,
 
-    1, 0, 0,//L
-    1, 0, 0,
-    1, 0, 0,
-    1, 0, 0,
+    0, 0,//L
+    0, 1,
+    1, 1,
+    1, 0,
 
-    0, 1, 0,//D
-    0, 1, 0,
-    0, 1, 0,
-    0, 1, 0,
-]), 3);
+    0, 0,//D
+    0, 1,
+    1, 1,
+    1, 0,
+];
+const reverseCube = new BoxBuffer();
+reverseCube.reverseNormal();
+reverseCube.setColor(Color.white);
+reverseCube.uv = [
+    0, 0, //F
+    0, 1,
+    1, 1,
+    1, 0,
+
+    0, 0,//R
+    0, 1,
+    1, 1,
+    1, 0,
+
+    0, 0,//B
+    0, 1,
+    1, 1,
+    1, 0,
+
+    0, 0,//U
+    0, 1,
+    1, 1,
+    1, 0,
+
+    0, 0,//L
+    0, 1,
+    1, 1,
+    1, 0,
+
+    0, 0,//D
+    0, 1,
+    1, 1,
+    1, 0,
+];
+const plane = new PlaneBuffer(10, 10);
+plane.transform(Matrix4.identityMatrix().rotate(Math.PI / 2, new Vector3(1, 0, 0)));
+plane.setColor(Color.white);
+plane.uv = [
+    0, 0,
+    0, 1,
+    1, 1,
+    1, 0,
+];
 
 const world = new Node3d();
 
+const textureMaterial = new PhongMaterial();
+textureMaterial.texture = new Texture(world, 1024, 1024);
 const floor = new Node3d();
-floor.material = material;
-floor.setBuffer(plane);
-floor.rotate(Math.PI / 2, 1, 0, 0);
+floor.material = textureMaterial;
+floor.vertexBuffer = plane;
 world.appendChild(floor);
 
 const element = new Node3d();
-element.material = material;
+element.material = textureMaterial;
 element.translate(0, 1, 0);
-element.setBuffer(cube);
+element.vertexBuffer = cube;
 world.appendChild(element);
 
 const redLight = new PointLight(
-    new Color(1, 0, 0, 1),
+    Color.red,
     new Vector3(5, 3, -5));
-redLight.material = material;
-redLight.setBuffer(cube);
-redLight.setParameter(BoxGeometry.normalName, lightNormalBuffer);
+redLight.material = textureMaterial;
+redLight.vertexBuffer = reverseCube;
 world.appendChild(redLight);
 
 const greenLight = new PointLight(
-    new Color(0, 1, 0, 1),
+    Color.green,
     new Vector3(-5, 3, -5));
-greenLight.material = material;
-greenLight.setBuffer(cube);
-greenLight.setParameter(BoxGeometry.normalName, lightNormalBuffer);
+greenLight.material = textureMaterial;
+greenLight.vertexBuffer = reverseCube;
 world.appendChild(greenLight);
 
 const blueLight = new PointLight(
-    new Color(0, 0, 1, 1),
+    Color.blue,
     new Vector3(-5, 3, 5));
-blueLight.material = material;
-blueLight.setBuffer(cube);
-blueLight.setParameter(BoxGeometry.normalName, lightNormalBuffer);
+blueLight.material = textureMaterial;
+blueLight.vertexBuffer = reverseCube;
 world.appendChild(blueLight);
 
 const whiteLight = new PointLight(
-    new Color(1, 1, 1, 1),
+    Color.white,
     new Vector3(5, 3, 5));
-whiteLight.material = material;
-whiteLight.setBuffer(cube);
-whiteLight.setParameter(BoxGeometry.normalName, lightNormalBuffer);
+whiteLight.material = textureMaterial;
+whiteLight.vertexBuffer = reverseCube;
 world.appendChild(whiteLight);
 
+const sun = new DirectionalLight(
+    Color.white.scale(0.5),
+    new Vector3(10, 20, 10),
+    new Vector3(0, 0, 0));
+world.appendChild(sun);
+
+const spotLight = new SpotLight(
+    Color.magenta,
+    Math.cos(Angle.toRadian(50)),
+    new Vector3(3, 2, 3),
+    new Vector3(0, 0, 0));
+spotLight.innerRadius = Math.cos(Angle.toRadian(40));
+spotLight.material = textureMaterial;
+spotLight.vertexBuffer = reverseCube;
+world.appendChild(spotLight);
+
+// redLight.toggle();
+// greenLight.toggle();
+// blueLight.toggle();
+// whiteLight.toggle();
+// sun.toggle();
+// spotLight.toggle();
 
 const camera = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
-//const camera = new OrthographicCamera(-5,5,-5,5,-50,50);
 camera.translate(5, 5, 5);
-camera.lookAt(floor);
-camera.updateProjection();
+camera.target = new Vector3(0,0,0);
+camera.projectionUpdated = true;
 world.appendChild(camera);
 
-function draw() {
+let then = 0;
+function draw(time) {
     element.rotate(0.01, 1, 1, 1);
     camera.translate(0.1, 0, 0);
-    camera.lookAt(camera.target);
-    camera.updateProjection();
+    camera.target = camera.target;
+    camera.projectionUpdated = true;
     canvas.render(world);
     requestAnimationFrame(draw);
 }

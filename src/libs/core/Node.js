@@ -1,4 +1,4 @@
-export default class  Node {
+export default class Node {
     /** Create a new Node
     */
     constructor() {
@@ -7,7 +7,15 @@ export default class  Node {
         this.parent = null;
         this.childrens = [];
         this.listeners = {};
-        this.visible = true;
+        this._visible = true;
+    }
+
+    get visible() {
+        return this._visible;
+    }
+
+    set visible(v) {
+        this._visible = v;
     }
 
     get root() {

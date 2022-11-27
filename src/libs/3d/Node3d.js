@@ -8,17 +8,34 @@ export default class Node3d extends Render {
     constructor() {
         super();
         this.up = Vector3.yAxis.clone();
-        this._matrix = Matrix4.identityMatrix();
-        this.target = new Vector3();
+        this.matrix = Matrix4.identityMatrix();
+        this._target = new Vector3();
     }
 
-    get matrix() {
-        return this.parent instanceof Node3d ? this.parent.matrix.clone().multiply(this._matrix)
-            : this._matrix;
+    get worldMatrix(){
+        return this.parent instanceof Node3d ? this.parent.worldMatrix.multiply(this.matrix)
+            : this.matrix.clone();
     }
 
-    set matrix(v) {
-        this._matrix = v;
+    /** Return a Vector3 reflecting the up direction of the current Node3d from the world perspective
+     * @return {Vector3} node up direction vector
+    */
+    get worldUp() {
+        return this.up.transform(this.worldMatrix);
+    }
+
+    /** Return a Vector3 reflecting the world position of the current Node3d
+     * @return {Vector3} scale vector
+    */
+    get worldPosition() {
+        return this.worldMatrix.positionVector;
+    }
+
+    /** Return a Vector3 reflecting the world scale of the current Node3d
+     * @return {Vector3} scale vector
+    */
+    get worldScale() {
+        return this.worldMatrix.scaleVector;
     }
 
     /** Return a Vector3 reflecting the position of the current Node3d
@@ -32,7 +49,23 @@ export default class Node3d extends Render {
      * @return {Vector3} scale vector
     */
     get scale() {
-        return this.matrix.scale;
+        return this.matrix.scaleVector;
+    }
+
+    /** Return the Vector3 target direction of the current Node3d from the world perspective
+     * @return {Vector3} node Vector3 target direction
+    */
+    get target(){
+        return this._target;
+    }
+
+    /** Set the target direction of the current Node3d from the world perspective
+     * @param {Vector3} v Vector3 target direction
+    */
+    set target(v){
+        this._target = v;
+        const worldMatrix = this.worldMatrix;
+        this.matrix = Matrix4.targetMatrix(worldMatrix.positionVector, this.target, this.up);
     }
 
     /** Translate the Node3d by a Vector3 array
@@ -42,7 +75,7 @@ export default class Node3d extends Render {
      * @return the current Node3d
     */
     translate(x = 0, y = 0, z = 0) {
-        this._matrix.translate(x instanceof Vector3 ? x : new Vector3(x, y, z));
+        this.matrix.translate(x instanceof Vector3 ? x : new Vector3(x, y, z));
 
         return this;
     }
@@ -54,7 +87,7 @@ export default class Node3d extends Render {
      * @return the current Node3d
     */
     rescale(x = 0, y = 0, z = 0) {
-        this._matrix.scale(x instanceof Vector3 ? x : new Vector3(x, y, z));
+        this.matrix.scale(x instanceof Vector3 ? x : new Vector3(x, y, z));
 
         return this;
     }
@@ -67,7 +100,7 @@ export default class Node3d extends Render {
      * @return the current Node3d
     */
     rotate(radians, x = 0, y = 0, z = 0) {
-        this._matrix.rotate(radians, x instanceof Vector3 ? x : new Vector3(x, y, z));
+        this.matrix.rotate(radians, x instanceof Vector3 ? x : new Vector3(x, y, z));
 
         return this;
     }
@@ -77,39 +110,10 @@ export default class Node3d extends Render {
      * @return the current Node3d
     */
     transform(matrix) {
-        this._matrix.multiply(matrix);
+        this.matrix.multiply(matrix);
 
         return this;
     }
-
-    /** Look at the position of a Vector3 array
-     * @param {Number|Vector3|Node3d} x first coordinate of the  Vector3
-     * @param {Number} y second coordinate of the  Vector3
-     * @param {Number} z third coordinate of the  Vector3
-     * @return the current Node3d
-    */
-    lookAt(x = 0, y = 0, z = 0) {
-        this.target = x instanceof Node3d ? x.position
-            : x instanceof Vector3 ? x
-                : new Vector3(x, y, z);
-        this._matrix = Matrix4.targetMatrix(this.position, this.target, this.up);
-
-        return this;
-    }
-
-    setBuffer(buffer){
-        this.primitive = buffer.primitive;
-        this.index =  buffer.index;
-        buffer.childrens.forEach(b => {
-            if (b.name) {
-                this.setParameter(b.name, b);
-            }
-        });
-        this.count = buffer.count;
-        this.offset =  buffer.offset;
-
-        return this;
-    };
 
     static vertexMatrixName = 'vertexMatrix';
     static normalMatrixName = 'normalMatrix';

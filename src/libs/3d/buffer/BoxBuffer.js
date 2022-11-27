@@ -1,9 +1,9 @@
-import Color from'../../core/Color';
-import Render from'../../renderer/Render';
-import GeometryBuffer from'./GeometryBuffer';
+import Color from '../../core/Color';
+import Render from '../../renderer/Render';
+import VertexBuffer from '../../renderer/VertexBuffer';
 
-export default class  BoxGeometry extends GeometryBuffer {
-    constructor(width = 1, height = 1, depth = 1, color = BoxGeometry.rainbowColor, primitive = Render.primitive.triangles) {
+export default class BoxBuffer extends VertexBuffer {
+    constructor(width = 1, height = 1, depth = 1, color = null, uv = null, primitive = Render.primitive.triangles) {
         super();
 
         this.setDimensions(width, height, depth);
@@ -39,7 +39,14 @@ export default class  BoxGeometry extends GeometryBuffer {
             0, -1, 0,
         ];
 
-        this.setColor(color);
+        if (color) {
+            this.setColor(color);
+        }
+
+        if (uv) {
+            this.uv = uv;
+        }
+
         this.setPrimitive(primitive);
     }
 

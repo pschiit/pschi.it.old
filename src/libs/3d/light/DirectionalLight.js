@@ -4,11 +4,11 @@ export default class DirectionalLight extends Light {
     constructor(color, position, target) {
         super(color);
         this.translate(position);
-        this.lookAt(target);
+        this.target = target;
     }
 
     get direction() {
-        return this.position.clone().substract(this.target);
+        return this.worldPosition.substract(this.target).normalize();
     }
 
     static colorName = 'directionalLightColor';

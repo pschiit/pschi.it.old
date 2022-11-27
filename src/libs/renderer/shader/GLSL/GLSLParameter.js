@@ -1,13 +1,13 @@
-import Node from'../../../core/Node';
+import Node from '../../../core/Node';
 
-export default class  GLSLParameter extends Node {
+export default class GLSLParameter extends Node {
     /** Create a GLSL Parameter
      * @param {string} qualifier parameter qualifier
      * @param {string} type parameter type
      * @param {string} name parameter name
      * @param {Number} arrayLength parameter array length(uniform array)
      */
-    constructor(qualifier, type, name, arrayLength = 0) {
+    constructor(qualifier, type, name, arrayLength = null) {
         super();
         this.qualifier = qualifier
         this.type = type;
@@ -20,6 +20,9 @@ export default class  GLSLParameter extends Node {
      * @returns {string} the declaration 'qualifier type name;'
     */
     get declaration() {
+        if (this.arrayLength == 0) {
+            return '';
+        }
         return `${this.qualifier} ${this.type} ${this.name}${this.arrayLength > 0 ? `[${this.arrayLength}]` : ''};`
     }
 

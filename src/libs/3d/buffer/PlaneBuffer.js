@@ -1,9 +1,9 @@
-import Color from'../../core/Color';
-import Render from'../../renderer/Render';
-import GeometryBuffer from'./GeometryBuffer';
+import Color from '../../core/Color';
+import Render from '../../renderer/Render';
+import VertexBuffer from '../../renderer/VertexBuffer';
 
-export default class  PlaneGeometry extends GeometryBuffer {
-    constructor(width = 1, height = 1,color = PlaneGeometry.rainbowColor, primitive = Render.primitive.triangles) {
+export default class PlaneBuffer extends VertexBuffer {
+    constructor(width = 1, height = 1, color = null, uv = null, primitive = Render.primitive.triangles) {
         super();
 
         this.setDimensions(width, height);
@@ -14,7 +14,12 @@ export default class  PlaneGeometry extends GeometryBuffer {
             0, 0, -1,
         ];
 
-        this.setColor(color);
+        if(uv){
+            this.uv = uv;
+        }
+        if(color){
+            this.setColor(color);
+        }
         this.setPrimitive(primitive);
     }
 

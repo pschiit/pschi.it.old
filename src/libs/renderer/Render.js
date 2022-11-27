@@ -1,30 +1,24 @@
-import Buffer from'../core/Buffer';
-import Node from'../core/Node';
+import Buffer from '../core/Buffer';
+import Node from '../core/Node';
+import Material from './Material';
 
-export default class  Render extends Node {
+export default class Render extends Node {
     /** Create a Renderable Node for a Renderer
      */
     constructor() {
         super();
         this.primitive = null;
         this.material = null;
-        this.index = null;
+        this.vertexBuffer = null;
         this.parameters = {};
+        this.index = null;
         this.count = 0;
         this.offset = 0;
     }
 
-    setIndex(values) {
-        if (values) {
-            if (Array.isArray(values)) {
-                values = new Uint32Array(values);
-            }
-            if (this.index) {
-                this.index.data = values;
-            } else {
-                this.index = new Buffer(values);
-            }
-        }
+    get renderable() {
+        return this.material && this.material.culling != Material.culling.hidden 
+            && (this.count > 0 || this.vertexBuffer?.count > 0);
     }
 
     setParameter(name, value) {
