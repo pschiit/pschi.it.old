@@ -76,11 +76,22 @@ export default class WebGLProgram extends WebGLNode {
  */
 function createAttribute(renderer, program, attribute) {
     const location = renderer.gl.getAttribLocation(program.location, attribute.name);
-    program.parameters[attribute.name] = (v) => {
+    const divisor = attribute.type == renderer.gl.FLOAT_MAT4 ? 4
+        : attribute.type == renderer.gl.FLOAT_MAT3 ? 3
+            : attribute.type == renderer.gl.FLOAT_MAT2 ? 2
+                : 1;
+    program.parameters[attribute.name] = divisor > 1 ? (v) => {
         if (v instanceof Buffer) {
             renderer.arrayBuffer = WebGLBuffer.from(renderer, v.mainBuffer, renderer.gl.ARRAY_BUFFER);
-            renderer.gl.enableVertexAttribArray(location);
-            renderer.gl.vertexAttribPointer(location, v.step, renderer.arrayBuffer.type, v.normalize, v.BYTES_PER_PARENT_STEP, v.BYTES_PER_OFFSET);
+            let offset = v.BYTES_PER_OFFSET;
+            for (let i = 1; i <= divisor; i++) {
+                renderer.gl.enableVertexAttribArray(location + i);
+                renderer.gl.vertexAttribPointer(location + i, v.step / divisor, renderer.arrayBuffer.type, v.normalize, v.BYTES_PER_PARENT_STEP, offset);
+                offset += v.BYTES_PER_ELEMENT * divisor;
+                if (v.divisor) {
+                    renderer.gl.vertexAttribDivisor(location + i, v.divisor);
+                }
+            }
         } else {
             renderer.gl.disableVertexAttribArray(location);
             if (Number.isFinite(v)) {
@@ -100,7 +111,38 @@ function createAttribute(renderer, program, attribute) {
                         renderer.gl.vertexAttrib1fv(location, v);
                         break;
                     default:
-                        throw new Error('the length of a float constant value must be between 1 and 4!');
+                    //throw new Error('the length of a float constant value must be between 1 and 4!');
+                }
+            }
+        }
+    } : (v) => {
+        if (v instanceof Buffer) {
+            renderer.arrayBuffer = WebGLBuffer.from(renderer, v.mainBuffer, renderer.gl.ARRAY_BUFFER);
+            renderer.gl.enableVertexAttribArray(location);
+            renderer.gl.vertexAttribPointer(location, v.step, renderer.arrayBuffer.type, v.normalize, v.BYTES_PER_PARENT_STEP, v.BYTES_PER_OFFSET);
+            if (v.divisor) {
+                renderer.gl.vertexAttribDivisor(location, v.divisor);
+            }
+        } else {
+            renderer.gl.disableVertexAttribArray(location);
+            if (Number.isFinite(v)) {
+                renderer.gl.vertexAttrib1f(location, v);
+            } else {
+                switch (v.length) {
+                    case 4:
+                        renderer.gl.vertexAttrib4fv(location, v);
+                        break;
+                    case 3:
+                        renderer.gl.vertexAttrib3fv(location, v);
+                        break;
+                    case 2:
+                        renderer.gl.vertexAttrib2fv(location, v);
+                        break;
+                    case 1:
+                        renderer.gl.vertexAttrib1fv(location, v);
+                        break;
+                    default:
+                    //throw new Error('the length of a float constant value must be between 1 and 4!');
                 }
             }
         }

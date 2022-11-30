@@ -113,8 +113,8 @@ export default class Node3d extends Render {
         return this;
     }
 
-    /** Apply a Matrix4 to the Node3d
-     * @param {Matrix4} matrix translation vector
+    /** Transform the Node3d matrix with a Matrix4
+     * @param {Matrix4} matrix 
      * @return the current Node3d
     */
     transform(matrix) {

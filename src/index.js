@@ -9,12 +9,12 @@ import PhongMaterial from './libs/3d/material/PhongMaterial';
 import BoxBuffer from './libs/3d/buffer/BoxBuffer';
 import PlaneBuffer from './libs/3d/buffer/PlaneBuffer';
 import Vector3 from './libs/math/Vector3';
-import Buffer from './libs/core/Buffer';
 import Texture from './libs/renderer/Texture';
-import OrthographicCamera from './libs/3d/camera/OrthographicCamera';
 import Matrix4 from './libs/math/Matrix4';
 import SpotLight from './libs/3d/light/SpotLight';
 import Angle from './libs/math/Angle';
+import Buffer from './libs/core/Buffer';
+import MathArray from './libs/math/MathArray';
 
 const defaultStyle = {
     width: '100%',
@@ -166,6 +166,7 @@ spotLight.material = textureMaterial;
 spotLight.vertexBuffer = reverseCube;
 world.appendChild(spotLight);
 
+
 // redLight.toggle();
 // greenLight.toggle();
 // blueLight.toggle();
@@ -174,7 +175,7 @@ world.appendChild(spotLight);
 
 const camera = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
 camera.translate(5, 5, 5);
-camera.target = new Vector3(0,0,0);
+camera.target = new Vector3(0, 0, 0);
 world.appendChild(camera);
 
 let then = 0;
@@ -182,7 +183,7 @@ function draw(time) {
     element.rotate(0.01, 1, 1, 1);
     camera.translate(0.1, 0, 0);
     camera.target = camera.target;
-    camera.projectionUpdated = true;
+
     canvas.render(world);
     requestAnimationFrame(draw);
 }

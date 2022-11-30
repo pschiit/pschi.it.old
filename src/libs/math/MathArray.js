@@ -15,7 +15,6 @@ export default class MathArray extends Float32Array {
         return new this.constructor(this);
     }
 
-
     concat(data) {
         const result = new MathArray(this.length + data.length);
 

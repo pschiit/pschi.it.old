@@ -1,13 +1,9 @@
-import Camera from '../../3d/camera/Camera';
 import PerspectiveCamera from '../../3d/camera/PerspectiveCamera';
 import DirectionalLight from '../../3d/light/DirectionalLight';
-import Light from '../../3d/light/Light';
 import PointLight from '../../3d/light/PointLight';
 import SpotLight from '../../3d/light/SpotLight';
-import Node3d from '../../3d/Node3d';
 import Color from '../../core/Color';
 import Node from '../../core/Node';
-import MathArray from '../../math/MathArray';
 import Material from '../Material';
 import Render from '../Render';
 import Scene from '../Scene';
@@ -300,7 +296,7 @@ export default class WebGLRenderer extends Node {
             this.renderTargets = {};
         }
         const scene = new Scene();
-        updateParameters(node);
+        update(node);
         for (const id in scene.buffers) {
             const buffer = scene.buffers[id];
             const webGLBuffer = WebGLBuffer.from(this, buffer, renderer.gl.ARRAY_BUFFER);
@@ -372,7 +368,6 @@ export default class WebGLRenderer extends Node {
         });
         if (renderTarget) {
             this.framebuffer = null;
-            this.gl.viewport(0, 0, this.gl.canvas.clientWidth, this.gl.canvas.clientHeight);
         }
         this.vertexArray = null;
 
@@ -382,9 +377,9 @@ export default class WebGLRenderer extends Node {
         /** Load a Node in the current WebGLRenderer
          * @param {Render} node Node to load
          */
-        function updateParameters(node) {
+        function update(node) {
             node.updateParameters(scene);
-            node.childrens.forEach(updateParameters);
+            node.childrens.forEach(update);
         }
 
         /** Draw a Render in the current WebGLRenderer
@@ -397,9 +392,17 @@ export default class WebGLRenderer extends Node {
             for (const name in render.parameters) {
                 renderer.program.setParameter(name, render.parameters[name]);
             }
+            const divisorCount = render.vertexBuffer.divisorCount;
             if (render.vertexBuffer.index) {
                 const webGLIndex = WebGLBuffer.from(renderer, render.vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
-                renderer.gl.drawElements(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.count, webGLIndex.type, render.vertexBuffer.offset);
+                if (divisorCount) {
+                    console.log(divisorCount)
+                    renderer.gl.drawElementsInstanced(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.count, webGLIndex.type, render.vertexBuffer.offset, divisorCount);
+                } else {
+                    renderer.gl.drawElements(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.count, webGLIndex.type, render.vertexBuffer.offset);
+                }
+            } else if (divisorCount) {
+                renderer.gl.drawArraysInstanced(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.offset, render.vertexBuffer.count, divisorCount);
             } else {
                 renderer.gl.drawArrays(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.offset, render.vertexBuffer.count);
             }
@@ -426,58 +429,58 @@ export default class WebGLRenderer extends Node {
     polyfillExtension() {
         this.extensions = {};
         this.gl.getSupportedExtensions().forEach(e => this.extensions[e] = this.gl.getExtension(e))
-        let ext = this.getExtension('ANGLE_instanced_arrays');
+        const instancedArrays = this.getExtension('ANGLE_instanced_arrays');
         Object.defineProperties(this.gl, {
             VERTEX_ATTRIB_ARRAY_DIVISOR: {
-                value: ext.VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE,
+                value: instancedArrays.VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE,
                 writable: false
             },
             drawArraysInstanced: {
                 value: function (mode, first, count, primcount) {
-                    return ext.drawArraysInstancedANGLE(mode, first, count, primcount);
+                    return instancedArrays.drawArraysInstancedANGLE(mode, first, count, primcount);
                 },
                 writable: false
             },
             drawElementsInstanced: {
                 value: function (mode, count, type, offset, primcount) {
-                    return ext.drawElementsInstancedANGLE(mode, count, type, offset, primcount);
+                    return instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, primcount);
                 },
                 writable: false
             },
             vertexAttribDivisor: {
                 value: function (index, divisor) {
-                    return ext.vertexAttribDivisorANGLE(index, divisor);
+                    return instancedArrays.vertexAttribDivisorANGLE(index, divisor);
                 },
                 writable: false
             },
         });
-        ext = this.getExtension('OES_vertex_array_object');
+        const vertexArray = this.getExtension('OES_vertex_array_object');
         Object.defineProperties(this.gl, {
             VERTEX_ARRAY_BINDING: {
-                value: ext.VERTEX_ARRAY_BINDING_OES,
+                value: vertexArray.VERTEX_ARRAY_BINDING_OES,
                 writable: false
             },
             createVertexArray: {
                 value: function () {
-                    return ext.createVertexArrayOES();
+                    return vertexArray.createVertexArrayOES();
                 },
                 writable: false
             },
             deleteVertexArray: {
                 value: function (arrayObject) {
-                    return ext.deleteVertexArrayOES(arrayObject);
+                    return vertexArray.deleteVertexArrayOES(arrayObject);
                 },
                 writable: false
             },
             isVertexArray: {
                 value: function (arrayObject) {
-                    return ext.isVertexArray(arrayObject);
+                    return vertexArray.isVertexArray(arrayObject);
                 },
                 writable: false
             },
             bindVertexArray: {
                 value: function (arrayObject) {
-                    return ext.bindVertexArrayOES(arrayObject);
+                    return vertexArray.bindVertexArrayOES(arrayObject);
                 },
                 writable: false
             },

@@ -31,7 +31,7 @@ export default class Camera extends Node3d {
     }
 
     get lookAtMatrix() {
-        return this.cameraParameters[Camera.lookAtMatrixName];
+        return this.matrix.clone().invert();
     }
 
     get projectionMatrix(){
@@ -43,7 +43,6 @@ export default class Camera extends Node3d {
         if(this.active){
             scene.cameras.push(this);
             if(this.projectionUpdated){
-                this.setCameraParameter(Camera.lookAtMatrixName,  Matrix4.lookAtMatrix(this.vertexMatrix.positionVector, this.target, this.up));
                 this.setCameraParameter(Camera.positionName, this.worldPosition);
             }
         }

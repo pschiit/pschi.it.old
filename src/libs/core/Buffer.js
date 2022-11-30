@@ -4,12 +4,13 @@ import Vector4 from '../math/Vector4';
 import Node from './Node';
 
 export default class Buffer extends Node {
-    constructor(data, step = 1) {
+    constructor(data, step = 1, divisor = 0) {
         super();
         this._index = null;
         this.usage = Buffer.usage.static;
         this.data = data;
         this.step = step;
+        this.divisor = divisor;
         this.normalize = false;
         this.updated = true;
 
@@ -80,6 +81,13 @@ export default class Buffer extends Node {
         return this.length / this.step;
     }
 
+    get divisorCount() {
+        const child = this.childrens.find(b => b.divisor > 0);
+        return this.divisor > 0 ? this.count / this.divisor
+            : child ? child.divisorCount
+                : 0;
+    }
+
     get type() {
         if (this.childrens.length > 0) {
             return this.childrens[0].type;
@@ -123,18 +131,19 @@ export default class Buffer extends Node {
         return this.childrens.find(c => c.name == name);
     }
 
-    setParameter(name, v, step) {
-        const buffer = this.getParameter(name);
+    setParameter(name, v, step, divisor) {
+        let buffer = this.getParameter(name);
         if (v) {
             if (v instanceof Buffer) {
-                v.name = name;
+                buffer = v;
+                buffer.name = name;
                 this.appendChild(v);
             } else {
                 if (v.constructor != this.type) {
                     v = new this.type(v);
                 }
                 if (!buffer) {
-                    const buffer = new Buffer(v, step);
+                    buffer = new Buffer(v, step, divisor);
                     buffer.name = name;
                     this.appendChild(buffer);
                 } else {
@@ -143,9 +152,10 @@ export default class Buffer extends Node {
             }
         } else if (buffer) {
             this.removeChild(buffer);
+            buffer = null;
         }
 
-        return this;
+        return buffer;
     }
 
     removeParameter(name) {

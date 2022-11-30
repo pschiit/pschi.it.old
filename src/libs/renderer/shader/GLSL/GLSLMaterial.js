@@ -29,12 +29,13 @@ export default class GLSLMaterial extends Material {
         const normal = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, VertexBuffer.normalName);
         const color = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec4, VertexBuffer.colorName);
         const uv = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.vec2, VertexBuffer.uvName);
+        const vertexMatrix = new GLSLParameter(GLSLParameter.qualifier.attribute, GLSLParameter.type.mat4, Node3d.vertexMatrixName);
 
         const cameraPosition = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, Camera.positionName);
         const cameraMatrix = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.mat4, Camera.projectionMatrixName);
         const fogColor = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, Camera.backgroundColorName);
         const fogDistance = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec2, Camera.fogDistanceName);
-        const vertexMatrix = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.mat4, Node3d.vertexMatrixName);
+        //const vertexMatrix = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.mat4, Node3d.vertexMatrixName);
         const normalMatrix = new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.mat4, Node3d.normalMatrixName);
 
         let directionalLightCount = material.directionalLigthsCount;
@@ -146,10 +147,8 @@ export default class GLSLMaterial extends Material {
                 '   gl_FragColor =  vec4(color, fragmentColor.a);',
                 '}'
             ].join('\n'), GLSLShader.precision.high);
-            console.log(fragmentShader.source);
             const result = new GLSLMaterial(vertexShader, fragmentShader);
 
-            //console.log(fragmentShader.source);
             result.id = material.id;
             return result;
 
