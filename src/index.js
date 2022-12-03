@@ -15,6 +15,7 @@ import SpotLight from './libs/3d/light/SpotLight';
 import Angle from './libs/math/Angle';
 import Buffer from './libs/core/Buffer';
 import MathArray from './libs/math/MathArray';
+import RenderTarget from './libs/renderer/RenderTarget';
 
 const defaultStyle = {
     width: '100%',
@@ -177,6 +178,9 @@ const camera = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
 camera.translate(5, 5, 5);
 camera.target = new Vector3(0, 0, 0);
 world.appendChild(camera);
+
+camera.renderTargets.push(canvas.renderTarget);
+camera.renderTargets.push(textureMaterial.texture);
 
 let then = 0;
 function draw(time) {
