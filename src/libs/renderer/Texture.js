@@ -1,19 +1,11 @@
-import Node from '../core/Node';
+import RenderTarget from './RenderTarget';
 
-export default class Texture extends Node {
+export default class Texture extends RenderTarget {
     constructor(data, width = null, height = null) {
-        super();
+        super(0, 0, width, height);
         this.data = data;
-        this.x = 0;
-        this.y = 0;
-        this.width = width;
-        this.height = height;
         this.updated = true;
         this.format = null;
         this.type = null;
-    }
-
-    get aspectRatio(){
-        return this.width / this.height;
     }
 }

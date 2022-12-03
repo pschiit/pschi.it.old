@@ -1,7 +1,8 @@
-import Node from'../core/Node';
-import Vector2 from'../math/Vector2';
+import Node from '../core/Node';
+import Vector2 from '../math/Vector2';
+import RenderTarget from '../renderer/RenderTarget';
 
-export default class  HtmlNode extends Node {
+export default class HtmlNode extends Node {
     /** Create a new HtmlNode
      * @param {string} type the HTML tag of the new HtmlNode HTMLElement
     */
@@ -30,7 +31,7 @@ export default class  HtmlNode extends Node {
     /** Return the style applied to the current HtmlNode's HTMLElement
      * @return {Object} type the HTML tag of the new HtmlNode HTMLElement
     */
-    get style(){
+    get style() {
         return this._style;
     }
 
@@ -38,7 +39,7 @@ export default class  HtmlNode extends Node {
      * This only update the properties of style and do not remove missing properties
      * @param {Object} value the object representation of the style properties modifications
     */
-    set style(value){
+    set style(value) {
         for (const key in value) {
             if (Object.hasOwnProperty.call(value, key)) {
                 this.element.style[key] = value[key];
@@ -75,6 +76,20 @@ export default class  HtmlNode extends Node {
         this.element.height = value;
     }
 
+    /** Return the clientWidth of the current HtmlNode's HTMLElement
+     * @return {Number} clientWidth of the HTMLElement
+    */
+    get clientWidth() {
+        return this.element.clientWidth;
+    }
+
+    /** Return the clientHeight of the current HtmlNode's HTMLElement
+     * @return {Number} clientHeight of the HTMLElement
+    */
+    get clientHeight() {
+        return this.element.clientHeight;
+    }
+
     /** Return the aspect ratio of the current HtmlNode's HTMLElement
      * @return {Number} width / height of the HTMLElement
     */
@@ -94,7 +109,7 @@ export default class  HtmlNode extends Node {
 
         return this;
     }
-    
+
     /** Get the pointer position from an Pointer(or Mouse) Event,
      * assumes HTMLElement doesn't have padding or border
      * @param {PointerEvent} event Pointer event
@@ -107,13 +122,13 @@ export default class  HtmlNode extends Node {
             ((rect.bottom - event.clientY) * this.height / this.element.clientHeight)
         );
     }
-    
+
     /** Get the pointer webgl-relative position (-1, 1) from an Pointer(or Mouse) Event,
      * assumes HTMLElement doesn't have padding or border
      * @param {PointerEvent} event Pointer event
      * @return {Vector2} the pointer position as Vector2
     */
-     getMouseRelativePositon(event) {
+    getMouseRelativePositon(event) {
         const rect = this.element.getBoundingClientRect();
         return new Vector2(
             ((event.clientX - rect.left) * this.width / this.element.clientWidth) / this.width * 2 - 1,
@@ -124,7 +139,7 @@ export default class  HtmlNode extends Node {
     /** Return the HtmlNode singleton of the document
      * @return {HtmlNode} the document HtmlNode
     */
-    static get document(){
+    static get document() {
         if (!HtmlNode.documentNode) {
             HtmlNode.documentNode = new HtmlNode();
             HtmlNode.documentNode.element = document.documentElement;
@@ -135,7 +150,7 @@ export default class  HtmlNode extends Node {
     /** Return the HtmlNode singleton of the document.body
      * @return {HtmlNode} the document.body HtmlNode
     */
-    static get body(){
+    static get body() {
         if (!HtmlNode.bodyNode) {
             HtmlNode.bodyNode = new HtmlNode();
             HtmlNode.bodyNode.parent = HtmlNode.document;

@@ -1,13 +1,14 @@
 import Color from '../../core/Color';
 import Matrix4 from '../../math/Matrix4';
 import Vector2 from '../../math/Vector2';
+import RenderTarget from '../../renderer/RenderTarget';
 import Node3d from '../Node3d';
 
 export default class Camera extends Node3d {
     constructor() {
         super();
         this.cameraParameters = {};
-        this.renderTarget = null;
+        this.renderTargets = [];
         this.fog = new Vector2(0, 100);
         this.backgroundColor = Color.black;
         this.projectionUpdated = true;

@@ -6,6 +6,7 @@ import Color from '../../core/Color';
 import Node from '../../core/Node';
 import Material from '../Material';
 import Render from '../Render';
+import RenderTarget from '../RenderTarget';
 import Scene from '../Scene';
 import Texture from '../Texture';
 import WebGLBuffer from './WebGLBuffer';
@@ -338,33 +339,33 @@ export default class WebGLRenderer extends Node {
             scene.programs.push(this.program);
         }
         scene.cameras.forEach(c => {
-            let aspectRatio = 0;
-            if (renderTarget) {
-                aspectRatio = renderTarget.aspectRatio;
-                this.gl.viewport(renderTarget?.x, renderTarget?.y, renderTarget?.width, renderTarget?.height);
-
-            } else {
-                aspectRatio = renderer.parent.aspectRatio;
-                this.gl.viewport(0, 0, this.gl.canvas.clientWidth, this.gl.canvas.clientHeight);
-            }
-            if (c instanceof PerspectiveCamera) {
-                if (aspectRatio != c.aspectRatio) {
-                    c.aspectRatio = aspectRatio;
-                    c.projectionUpdated = true;
+            const renderTargets = c.renderTargets.length > 0 ? c.renderTargets
+                : [this.parent.renderTarget];
+            renderTargets.forEach(t => {
+                if ((t instanceof Texture || renderTarget) && renderTarget !== t) {
+                    return;
                 }
-            }
-            this.clearColor(c.backgroundColor);
-            this.clear();
-
-            c.updateParameters(scene);
-            scene.programs.forEach(p => {
-                this.program = p;
-                for (const name in c.cameraParameters) {
-                    this.program.setParameter(name, c.cameraParameters[name]);
+                let aspectRatio = 0;
+                aspectRatio = t.aspectRatio;
+                this.gl.viewport(t.x, t.y, t.width, t.height);
+                if (c instanceof PerspectiveCamera) {
+                    if (aspectRatio != c.aspectRatio) {
+                        c.aspectRatio = aspectRatio;
+                        c.projectionUpdated = true;
+                        c.updateParameters(scene);
+                    }
                 }
+                this.clearColor(c.backgroundColor);
+                this.clear();
+
+                scene.programs.forEach(p => {
+                    this.program = p;
+                    for (const name in c.cameraParameters) {
+                        this.program.setParameter(name, c.cameraParameters[name]);
+                    }
+                });
+                scene.renders.forEach(draw);
             });
-
-            scene.renders.forEach(draw);
         });
         if (renderTarget) {
             this.framebuffer = null;
@@ -396,7 +397,6 @@ export default class WebGLRenderer extends Node {
             if (render.vertexBuffer.index) {
                 const webGLIndex = WebGLBuffer.from(renderer, render.vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
                 if (divisorCount) {
-                    console.log(divisorCount)
                     renderer.gl.drawElementsInstanced(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.count, webGLIndex.type, render.vertexBuffer.offset, divisorCount);
                 } else {
                     renderer.gl.drawElements(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.count, webGLIndex.type, render.vertexBuffer.offset);

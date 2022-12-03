@@ -3,6 +3,7 @@ import Node from '../core/Node';
 import WebGLRenderer from '../renderer/webgl/WebGLRenderer';
 import Texture from '../renderer/Texture';
 import Render from '../renderer/Render';
+import RenderTarget from '../renderer/RenderTarget';
 
 export default class WebGLCanvas extends Canvas {
     /** Create a new WebGLCanvas HtmlNode
@@ -29,7 +30,6 @@ export default class WebGLCanvas extends Canvas {
 
         window.onresize = (e) => {
             this.fitParent();
-            this.context.resized = true;
         };
 
         function initContext(webGLCanvas, contextOptions) {
@@ -42,6 +42,17 @@ export default class WebGLCanvas extends Canvas {
         }
     }
 
+    /** Return the RenderTarget of the current HtmlNode's HTMLElement
+     * @return {RenderTarget} RenderTarget of the HTMLElement
+    */
+    get renderTarget() {
+        return new RenderTarget(0, 0, this.clientWidth, this.clientHeight);
+    }
+
+
+    /** Return the WebGLRenderer context of the current HtmlNode's HTMLElement
+     * @return {WebGLRenderer} WebGLRenderer of the HTMLElement
+    */
     get context() {
         if (this.childrens.length > 0) {
             return this.childrens[0];
@@ -49,13 +60,12 @@ export default class WebGLCanvas extends Canvas {
         return null;
     }
 
-    /** Render a Render in the WebGLCanvas
-     * @param {Render} node Render to render
-     * @param {Texture} renderTarget Texture to render onto(optional)
-     * @returns {WebGLCanvas} the WebGLCanvas to render in
+    /** Render a Render|Texture in the cWebGLCanvas
+     * @param {Render|Texture} node Node to render
+     * @returns {WebGLCanvas} the current WebGLCanvas
      */
-    render(node, renderTarget = null) {
-        this.context.render(node, renderTarget);
+    render(node) {
+        this.context.render(node);
 
         return this;
     }
