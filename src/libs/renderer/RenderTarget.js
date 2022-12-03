@@ -7,6 +7,7 @@ export default class RenderTarget extends Node {
         this.y = y;
         this.width = width;
         this.height = height;
+        this.scissor = false;
     }
 
     get aspectRatio() {

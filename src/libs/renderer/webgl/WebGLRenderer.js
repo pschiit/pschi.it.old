@@ -262,6 +262,21 @@ export default class WebGLRenderer extends Node {
         }
     }
 
+    get scissor() {
+        return this._scissor;
+    }
+
+    set scissor(v) {
+        if (this.scissor != v) {
+            if (v) {
+                this.gl.enable(this.gl.SCISSOR_TEST);
+            } else {
+                this.gl.disable(this.gl.SCISSOR_TEST)
+            }
+            this._scissor = v;
+        }
+    }
+
     get material() {
         return this._material;
     }
@@ -276,6 +291,21 @@ export default class WebGLRenderer extends Node {
             } else {
                 this.program = null;
             }
+        }
+    }
+
+    get renderTarget() {
+        return this._renderTarget;
+    }
+
+    set renderTarget(v) {
+        if (this.renderTarget != v) {
+            if(v.scissor){
+                this.scissor = true;
+                this.gl.scissor(v.x, v.y, v.width, v.height);
+            }
+            this.gl.viewport(v.x, v.y, v.width, v.height);
+            this._renderTarget = v;
         }
     }
 
@@ -345,9 +375,9 @@ export default class WebGLRenderer extends Node {
                 if ((t instanceof Texture || renderTarget) && renderTarget !== t) {
                     return;
                 }
+                this.renderTarget = t;
                 let aspectRatio = 0;
                 aspectRatio = t.aspectRatio;
-                this.gl.viewport(t.x, t.y, t.width, t.height);
                 if (c instanceof PerspectiveCamera) {
                     if (aspectRatio != c.aspectRatio) {
                         c.aspectRatio = aspectRatio;

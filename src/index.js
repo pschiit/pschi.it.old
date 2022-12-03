@@ -179,7 +179,13 @@ camera.translate(5, 5, 5);
 camera.target = new Vector3(0, 0, 0);
 world.appendChild(camera);
 
-camera.renderTargets.push(canvas.renderTarget);
+const leftTarget = canvas.renderTarget;
+leftTarget.scissor = true;
+leftTarget.width = leftTarget.width / 2;
+const rightTarget = new RenderTarget(leftTarget.width, 0, leftTarget.width, leftTarget.height);
+rightTarget.scissor = true;
+camera.renderTargets.push(leftTarget);
+camera.renderTargets.push(rightTarget);
 camera.renderTargets.push(textureMaterial.texture);
 
 let then = 0;
