@@ -6,14 +6,15 @@ export default class  PointLight extends Light {
         this.translate(position);
     }
 
-    updateParameters(scene) {
-        super.updateParameters(scene);
+    setScene(scene) {
+        super.setScene(scene);
         if(this.on){
-            this.setLightParameter(PointLight.colorName, this.color.rgb);
-            this.setLightParameter(PointLight.positionName, this.vertexMatrix.positionVector);
-            this.setLightParameter(PointLight.ambientStrengthName, this.ambientStrength);
-            this.setLightParameter(PointLight.intensityName, this.intensity);
-            scene.updateSceneParameters(this.lightParameters);
+            const parameters = {};
+            parameters[PointLight.colorName] = this.color.rgb;
+            parameters[PointLight.positionName] = this.vertexMatrix.positionVector;
+            parameters[PointLight.ambientStrengthName] = this.ambientStrength;
+            parameters[PointLight.intensityName] =  this.intensity;
+            scene.setParameter(parameters);
         }
 
         return this;

@@ -123,8 +123,8 @@ export default class Node3d extends Render {
         return this;
     }
 
-    updateParameters(scene) {
-        super.updateParameters(scene);
+    setScene(scene) {
+        super.setScene(scene);
         const vertexMatrix = this.parent?.parameters[Node3d.vertexMatrixName] instanceof Matrix4 ?
             this.parent.parameters[Node3d.vertexMatrixName].clone().multiply(this.matrix)
             : this.matrix.clone();

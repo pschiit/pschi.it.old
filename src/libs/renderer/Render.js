@@ -1,12 +1,13 @@
-import Buffer from '../core/Buffer';
+import Color from '../core/Color';
 import Node from '../core/Node';
-import Material from './Material';
+import Scene from './Scene';
 
 export default class Render extends Node {
     /** Create a Renderable Node for a Renderer
      */
     constructor() {
         super();
+        this.colorId = Color.unique();
         this.material = null;
         this.vertexBuffer = null;
     }
@@ -15,8 +16,22 @@ export default class Render extends Node {
         return this.material && this.vertexBuffer?.count > 0;
     }
 
-    updateParameters(scene) {
-        if(this.renderable){
+    get scene() {
+        const scene = new Scene();
+        update(this.root);
+
+        /** Load a Node in the current WebGLRenderer
+         * @param {Render} render Node to load
+         */
+        function update(render) {
+            render.setScene(scene);
+            render.childrens.forEach(update);
+        }
+        return scene;
+    }
+
+    setScene(scene) {
+        if (this.renderable) {
             if (!scene.buffers[this.vertexBuffer.id]) {
                 scene.buffers[this.vertexBuffer.id] = this.vertexBuffer;
             }
@@ -33,7 +48,9 @@ export default class Render extends Node {
     }
 
     setParameter(name, value) {
-        this.parameters[name] = value;
+        if (this.parameters[name] != value) {
+            this.parameters[name] = value;
+        }
     }
 
     static primitive = {

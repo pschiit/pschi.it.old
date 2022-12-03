@@ -19,13 +19,9 @@ export default class Light extends Node3d {
         this.intensity = cache;
     }
 
-    updateParameters(scene) {
-        super.updateParameters(scene);
+    setScene(scene) {
+        super.setScene(scene);
 
         return this;
-    }
-
-    setLightParameter(name, value) {
-        this.lightParameters[name] = value;
     }
 }

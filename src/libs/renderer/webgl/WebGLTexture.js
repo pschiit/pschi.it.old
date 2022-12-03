@@ -15,8 +15,13 @@ export default class WebGLTexture extends WebGLNode {
 
         this.unit = renderer.textureUnit++;
         this.level = 0;
-        this.format = renderer.gl.RGBA;
-        this.type = renderer.gl.UNSIGNED_BYTE;
+        this.format = texture.format === Texture.format.rgb ? renderer.gl.RGB
+            : texture.format === Texture.format.alpha ? renderer.gl.ALPHA
+                : renderer.gl.RGBA;
+        this.type = texture.data instanceof Float32Array ? renderer.gl.FLOAT
+            : texture.data instanceof Uint32Array ? renderer.gl.UNSIGNED_INT
+                : texture.data instanceof Uint16Array ? renderer.gl.UNSIGNED_SHORT
+                    : renderer.gl.UNSIGNED_BYTE;
         renderer.texture2d = this;
         // renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_WRAP_S, renderer.gl.CLAMP_TO_EDGE);
         // renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_WRAP_T, renderer.gl.CLAMP_TO_EDGE);
@@ -29,6 +34,10 @@ export default class WebGLTexture extends WebGLNode {
                     renderer.texture2d = this;
                     if (texture.width && texture.height) {
                         renderer.gl.texImage2D(this.target, this.level, this.format, texture.width, texture.height, 0, this.format, this.type, texture.data instanceof Render ? null : texture.data);
+                        if (texture.data instanceof Render) {
+                            texture.updated = false;
+                            renderer.render(texture);
+                        }
                     } else {
                         renderer.gl.texImage2D(this.target, this.level, this.format, this.format, this.type, texture.data);
                     }

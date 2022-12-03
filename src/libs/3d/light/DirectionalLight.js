@@ -12,13 +12,14 @@ export default class DirectionalLight extends Light {
     }
 
 
-    updateParameters(scene) {
-        super.updateParameters(scene);
+    setScene(scene) {
+        super.setScene(scene);
         if (this.on) {
-            this.setLightParameter(DirectionalLight.colorName, this.color.rgb);
-            this.setLightParameter(DirectionalLight.directionName, this.vertexMatrix.positionVector.substract(this.target).normalize());
-            this.setLightParameter(DirectionalLight.ambientStrengthName, this.ambientStrength);
-            scene.updateSceneParameters(this.lightParameters);
+            const parameters = {};
+            parameters[DirectionalLight.colorName] = this.color.rgb;
+            parameters[DirectionalLight.directionName] = this.vertexMatrix.positionVector.substract(this.target).normalize();
+            parameters[DirectionalLight.ambientStrengthName] = this.ambientStrength;
+            scene.setParameter(parameters);
         }
 
         return this;

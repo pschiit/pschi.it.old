@@ -61,7 +61,7 @@ export default class WebGLCanvas extends Canvas {
     }
 
     /** Render a Render|Texture in the cWebGLCanvas
-     * @param {Render|Texture} node Node to render
+     * @param {Render|RenderTarget} node Node to render
      * @returns {WebGLCanvas} the current WebGLCanvas
      */
     render(node) {

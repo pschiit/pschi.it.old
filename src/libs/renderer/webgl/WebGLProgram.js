@@ -1,13 +1,11 @@
 import Buffer from '../../core/Buffer';
-import GLSLMaterial from '../shader/GLSL/GLSLMaterial';
 import Material from '../Material';
+import GLSLMaterial from '../shader/GLSL/GLSLMaterial';
 import WebGLBuffer from './WebGLBuffer';
 import WebGLNode from './WebGLNode';
 import WebGLRenderer from './WebGLRenderer';
 import WebGLShader from './WebGLShader';
 import WebGLTexture from './WebGLTexture';
-import MathArray from '../../math/MathArray';
-import Render from '../Render';
 
 export default class WebGLProgram extends WebGLNode {
     /** Create a WebGLProgram from a Material for a WebGLRenderingContext
@@ -309,9 +307,6 @@ function createUniform(renderer, program, uniform) {
             } else {
                 program.parameters[name] = (v) => {
                     if (v && !renderer.framebuffer?.is(v)) {
-                        if (v.data instanceof Render && !renderer.renderedTextures[v.id]) {
-                            renderer.render(v);
-                        }
                         var texture = WebGLTexture.from(renderer, v);
                         texture.update(v);
                         if (program.cache[name] != texture.unit) {

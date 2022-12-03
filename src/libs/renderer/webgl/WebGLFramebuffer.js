@@ -18,6 +18,7 @@ export default class WebGLFramebuffer extends WebGLNode {
         renderer.gl.bindRenderbuffer(renderer.gl.RENDERBUFFER, this.renderBuffer);
         renderer.gl.renderbufferStorage(renderer.gl.RENDERBUFFER, renderer.gl.DEPTH_COMPONENT16, texture.width, texture.height);
         renderer.framebuffer = this;
+        console.log(renderer.framebuffer)
         renderer.gl.framebufferTexture2D(renderer.gl.FRAMEBUFFER, renderer.gl.COLOR_ATTACHMENT0, this.texture2d.target, this.texture2d.location, 0);
         renderer.gl.framebufferRenderbuffer(renderer.gl.FRAMEBUFFER, renderer.gl.DEPTH_ATTACHMENT, renderer.gl.RENDERBUFFER, this.renderBuffer);
         var e = renderer.gl.checkFramebufferStatus(renderer.gl.FRAMEBUFFER);

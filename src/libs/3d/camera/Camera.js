@@ -1,34 +1,18 @@
 import Color from '../../core/Color';
 import Matrix4 from '../../math/Matrix4';
 import Vector2 from '../../math/Vector2';
+import Render from '../../renderer/Render';
 import RenderTarget from '../../renderer/RenderTarget';
+import Scene from '../../renderer/Scene';
 import Node3d from '../Node3d';
 
 export default class Camera extends Node3d {
     constructor() {
         super();
-        this.cameraParameters = {};
-        this.renderTargets = [];
         this.fog = new Vector2(0, 100);
         this.backgroundColor = Color.black;
         this.projectionUpdated = true;
         this.active = true;
-    }
-
-    get fog() {
-        return this.cameraParameters[Camera.fogDistanceName];
-    }
-
-    set fog(v) {
-        this.setCameraParameter(Camera.fogDistanceName, v);
-    }
-
-    get backgroundColor() {
-        return this.cameraParameters[Camera.backgroundColorName];
-    }
-
-    set backgroundColor(v) {
-        this.setCameraParameter(Camera.backgroundColorName, v);
     }
 
     get lookAtMatrix() {
@@ -36,27 +20,26 @@ export default class Camera extends Node3d {
     }
 
     get projectionMatrix(){
-        return this.cameraParameters[Camera.projectionMatrixName];
+        return this.lookAtMatrix;
     }
 
-    updateParameters(scene) {
-        super.updateParameters(scene);
-        if(this.active){
-            scene.cameras.push(this);
-            if(this.projectionUpdated){
-                this.setCameraParameter(Camera.positionName, this.worldPosition);
-            }
-        }
+    get scene() {
+        const scene = super.scene;
+        scene.camera = this;
 
+        scene.setParameter(Camera.fogDistanceName, this.fog);
+        scene.setParameter(Camera.backgroundColorName, this.backgroundColor);
+        scene.setParameter(Camera.positionName, this.worldPosition);
+        scene.setParameter(Camera.projectionMatrixName, this.projectionMatrix);
+        return scene;
+    }
+
+    setScene(scene) {
+        super.setScene(scene);
         return this;
     }
 
-    setCameraParameter(name, value) {
-        this.cameraParameters[name] = value;
-    }
-
     static positionName = 'viewPosition';
-    static lookAtMatrixName = 'lookAtMatrix';
     static projectionMatrixName = 'projectionMatrix';
     static backgroundColorName = 'backgroundColor';
     static fogDistanceName = 'fogDistance';

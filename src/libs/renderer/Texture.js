@@ -5,7 +5,5 @@ export default class Texture extends RenderTarget {
         super(0, 0, width, height);
         this.data = data;
         this.updated = true;
-        this.format = null;
-        this.type = null;
     }
 }

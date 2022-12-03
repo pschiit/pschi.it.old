@@ -110,8 +110,14 @@ plane.uv = [
 
 const world = new Node3d();
 
+
+const cameraTexture = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
+cameraTexture.translate(5, 5, 5);
+cameraTexture.target = new Vector3(0, 0, 0);
+world.appendChild(cameraTexture);
+
 const textureMaterial = new PhongMaterial();
-textureMaterial.texture = new Texture(world, 1024, 1024);
+textureMaterial.texture = new Texture(cameraTexture, 1024, 1024);
 const floor = new Node3d();
 floor.material = textureMaterial;
 floor.vertexBuffer = plane;
@@ -172,18 +178,12 @@ world.appendChild(spotLight);
 // greenLight.toggle();
 // blueLight.toggle();
 // whiteLight.toggle();
-//sun.toggle();
-
-const cameraLeft = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
-cameraLeft.translate(5, 5, 5);
-cameraLeft.target = new Vector3(0, 0, 0);
-world.appendChild(cameraLeft);
+// sun.toggle();
 
 const leftTarget = canvas.renderTarget;
 leftTarget.scissor = true;
 leftTarget.width = leftTarget.width / 2;
-cameraLeft.renderTargets.push(leftTarget);
-cameraLeft.renderTargets.push(textureMaterial.texture);
+leftTarget.data = cameraTexture;
 
 
 const cameraRight = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
@@ -192,17 +192,21 @@ cameraRight.target = new Vector3(0, 0, 0);
 world.appendChild(cameraRight);
 const rightTarget = new RenderTarget(leftTarget.width, 0, leftTarget.width, leftTarget.height);
 rightTarget.scissor = true;
-cameraRight.renderTargets.push(rightTarget);
+rightTarget.data = cameraRight;
 
 let then = 0;
 function draw(time) {
+    textureMaterial.texture.updated = true;
     element.rotate(0.01, 1, 1, 1);
-    cameraLeft.translate(0.1, 0, 0);
-    cameraLeft.target = cameraLeft.target;
+    cameraTexture.translate(0.1, 0, 0);
+    cameraTexture.target = cameraTexture.target;
+    cameraTexture.projectionUpdated= true;
     cameraRight.translate(-0.1, 0, 0);
     cameraRight.target = cameraRight.target;
+    cameraRight.projectionUpdated= true;
 
-    canvas.render(world);
+    canvas.render(leftTarget);
+    canvas.render(rightTarget);
     requestAnimationFrame(draw);
 }
 requestAnimationFrame(draw);

@@ -53,19 +53,18 @@ export default class PerspectiveCamera extends Camera {
 
     get perspectiveMatrix() {
         if (this.perspectiveUpdated) {
-            this.setCameraParameter(PerspectiveCamera.perspectiveMatrixName, Matrix4.perspectiveMatrix(this.fovY, this.aspectRatio, this.near, this.far));
+            this._perspectiveMatrix =  Matrix4.perspectiveMatrix(this.fovY, this.aspectRatio, this.near, this.far);
             this.perspectiveUpdated = false;
         }
-        return this.cameraParameters[PerspectiveCamera.perspectiveMatrixName];
+        return this._perspectiveMatrix;
     }
 
-    updateParameters(scene) {
-        super.updateParameters(scene);
+    get projectionMatrix(){
         if (this.projectionUpdated) {
-            this.setCameraParameter(Camera.projectionMatrixName, this.perspectiveMatrix.clone().multiply(this.lookAtMatrix));
+            this._projectionMatrix =  this.perspectiveMatrix.clone().multiply(this.lookAtMatrix);
+            this.projectionUpdated = false;
         }
-
-        return this;
+        return this._projectionMatrix;
     }
 
     static perspectiveMatrixName = 'perspectiveMatrix';

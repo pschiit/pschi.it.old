@@ -75,23 +75,19 @@ export default class OrthographicCamera extends Camera {
 
     get orthograpicMatrix() {
         if (this.orthograpicUpdated) {
-            this.setCameraParameter(OrthographicCamera.orthograpicMatrixName, Matrix4.orthographicMatrix(this.left, this.right, this.bottom, this.top, this.near, this.far));
+            this._orthograpicMatrix =  Matrix4.orthographicMatrix(this.left, this.right, this.bottom, this.top, this.near, this.far);
             this.orthograpicUpdated = false;
         }
-        return this.cameraParameters[OrthographicCamera.orthograpicMatrixName];
+        return this._orthograpicMatrix;
     }
 
     get projectionMatrix(){
-        return this.cameraParameters[Camera.projectionMatrixName];
-    }
-
-    updateParameters(scene) {
-        super.updateParameters(scene);
         if (this.projectionUpdated) {
-            this.setCameraParameter(Camera.projectionMatrixName, this.orthograpicMatrix.clone().multiply(this.lookAtMatrix));
+            this._projectionMatrix =  this.orthograpicMatrix.clone().multiply(this.lookAtMatrix);
+            this.projectionUpdated = false;
         }
-
-        return this;
+        return this._projectionMatrix;
     }
+    
     static orthograpicMatrixName = 'orthograpicMatrix';
 }

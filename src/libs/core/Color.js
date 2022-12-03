@@ -12,6 +12,19 @@ export default class Color extends Vector4 {
         super(r, g, b, a);
     }
 
+    get hex() {
+        return Color.clamp(this.r * 255, 0, 255) << 16 ^ Color.clamp(this.g * 255, 0, 255) << 8 ^ Color.clamp(this.b * 255, 0, 255) << 0;
+    }
+
+    set hex(v) {
+        v = Math.floor(v);
+        v = Math.abs(v);
+
+        this.r = (v >> 16 & 255) / 255;
+        this.g = (v >> 8 & 255) / 255;
+        this.b = (v & 255) / 255;
+    }
+
     /** Return the rgba values of the current color
      * @return {Vector4} rgba Vector4
     */
@@ -98,6 +111,39 @@ export default class Color extends Vector4 {
         this[3] = value;
     }
 
+    toString() {
+        return this.hex.toString(16);
+    }
+
+    static fromHex(v) {
+        const color = new Color();
+        color.hex = v;
+        color.a = 1;
+
+        return color;
+    }
+
+    static fromHexa(v) {
+        const color = new Color();
+        color.hexa = v;
+
+        return color;
+    }
+
+    static random() {
+        return Color.fromHex(Math.floor(Math.random() * 16777215));
+    }
+
+    static unique() {
+        do {
+            const color = Color.random();
+            if (!cache[color]) {
+                cache[color] = true;
+                return color;
+            }
+        } while (true);
+    }
+
     static white = new Color(1, 1, 1, 1);
     static black = new Color(0, 0, 0, 1);
     static red = new Color(1, 0, 0, 1);
@@ -107,3 +153,5 @@ export default class Color extends Vector4 {
     static magenta = new Color(1, 0, 1, 1);
     static yellow = new Color(1, 1, 0, 1);
 }
+
+const cache = {}
