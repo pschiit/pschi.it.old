@@ -32,7 +32,7 @@ export default class WebGLRenderer extends Node {
 
         this.textureUnit = 0;
 
-        this.renderTargets = null;
+        this.renderedTextures = null;
 
         this.nodes = {};
         this.addEventListener(Node.event.nodeInserted, (e) => {
@@ -300,9 +300,11 @@ export default class WebGLRenderer extends Node {
 
     set renderTarget(v) {
         if (this.renderTarget != v) {
-            if(v.scissor){
+            if (v.scissor) {
                 this.scissor = true;
                 this.gl.scissor(v.x, v.y, v.width, v.height);
+            } else {
+                this.scissor = false;
             }
             this.gl.viewport(v.x, v.y, v.width, v.height);
             this._renderTarget = v;
@@ -315,16 +317,16 @@ export default class WebGLRenderer extends Node {
      */
     render(node) {
         const renderer = this;
-        const renderTarget = node instanceof Texture ? node : null;
-        if (renderTarget) {
-            node = renderTarget.data;
-            this.renderTargets[renderTarget.id] = true;
-            this.framebuffer = WebGLFramebuffer.from(this, renderTarget);
-            if (this.texture2d?.is(renderTarget)) {
+        const textureToRender = node instanceof Texture ? node : null;
+        if (textureToRender) {
+            node = textureToRender.data;
+            this.renderedTextures[textureToRender.id] = true;
+            this.framebuffer = WebGLFramebuffer.from(this, textureToRender);
+            if (this.texture2d?.is(textureToRender)) {
                 this.texture2d = null;
             }
         } else {
-            this.renderTargets = {};
+            this.renderedTextures = {};
         }
         const scene = new Scene();
         update(node);
@@ -372,7 +374,7 @@ export default class WebGLRenderer extends Node {
             const renderTargets = c.renderTargets.length > 0 ? c.renderTargets
                 : [this.parent.renderTarget];
             renderTargets.forEach(t => {
-                if ((t instanceof Texture || renderTarget) && renderTarget !== t) {
+                if ((t instanceof Texture || textureToRender) && textureToRender !== t) {
                     return;
                 }
                 this.renderTarget = t;
@@ -397,7 +399,7 @@ export default class WebGLRenderer extends Node {
                 scene.renders.forEach(draw);
             });
         });
-        if (renderTarget) {
+        if (textureToRender) {
             this.framebuffer = null;
         }
         this.vertexArray = null;

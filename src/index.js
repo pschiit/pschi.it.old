@@ -174,25 +174,33 @@ world.appendChild(spotLight);
 // whiteLight.toggle();
 //sun.toggle();
 
-const camera = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
-camera.translate(5, 5, 5);
-camera.target = new Vector3(0, 0, 0);
-world.appendChild(camera);
+const cameraLeft = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
+cameraLeft.translate(5, 5, 5);
+cameraLeft.target = new Vector3(0, 0, 0);
+world.appendChild(cameraLeft);
 
 const leftTarget = canvas.renderTarget;
 leftTarget.scissor = true;
 leftTarget.width = leftTarget.width / 2;
+cameraLeft.renderTargets.push(leftTarget);
+cameraLeft.renderTargets.push(textureMaterial.texture);
+
+
+const cameraRight = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
+cameraRight.translate(5, 5, 5);
+cameraRight.target = new Vector3(0, 0, 0);
+world.appendChild(cameraRight);
 const rightTarget = new RenderTarget(leftTarget.width, 0, leftTarget.width, leftTarget.height);
 rightTarget.scissor = true;
-camera.renderTargets.push(leftTarget);
-camera.renderTargets.push(rightTarget);
-camera.renderTargets.push(textureMaterial.texture);
+cameraRight.renderTargets.push(rightTarget);
 
 let then = 0;
 function draw(time) {
     element.rotate(0.01, 1, 1, 1);
-    camera.translate(0.1, 0, 0);
-    camera.target = camera.target;
+    cameraLeft.translate(0.1, 0, 0);
+    cameraLeft.target = cameraLeft.target;
+    cameraRight.translate(-0.1, 0, 0);
+    cameraRight.target = cameraRight.target;
 
     canvas.render(world);
     requestAnimationFrame(draw);

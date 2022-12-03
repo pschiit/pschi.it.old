@@ -309,7 +309,7 @@ function createUniform(renderer, program, uniform) {
             } else {
                 program.parameters[name] = (v) => {
                     if (v && !renderer.framebuffer?.is(v)) {
-                        if (v.data instanceof Render && !renderer.renderTargets[v.id]) {
+                        if (v.data instanceof Render && !renderer.renderedTextures[v.id]) {
                             renderer.render(v);
                         }
                         var texture = WebGLTexture.from(renderer, v);
