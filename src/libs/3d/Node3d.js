@@ -12,6 +12,10 @@ export default class Node3d extends Render {
         this._target = new Vector3();
     }
 
+    get invertMatrix() {
+        return this.matrix.clone().invert();
+    }
+
     get vertexMatrix(){
         return this.parameters[Node3d.vertexMatrixName];
     }

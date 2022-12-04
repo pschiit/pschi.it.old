@@ -126,9 +126,9 @@ export default class PhongMaterial extends Material {
 
     setScene(scene) {
         super.setScene(scene);
-        this.pointLightsCount = scene.parameters[PointLight.ambientStrengthName]?.length;
-        this.directionalLigthsCount = scene.parameters[DirectionalLight.ambientStrengthName]?.length;
-        this.spotLigthsCount = scene.parameters[SpotLight.ambientStrengthName]?.length;
+        this.pointLightsCount = scene.parameters[PointLight.intensityName]?.length || 0;
+        this.directionalLigthsCount = scene.parameters[DirectionalLight.ambientStrengthName]?.length || 0;
+        this.spotLigthsCount = scene.parameters[SpotLight.intensityName]?.length || 0;
     }
 
     static ambientColorName = "materialAmbientColor";

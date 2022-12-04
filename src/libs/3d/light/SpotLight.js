@@ -8,25 +8,19 @@ export default class SpotLight extends Light {
         this.innerRadius = radius;
         this.target = target;
     }
-
-    get direction() {
-        return this.worldPosition.substract(this.target).normalize();
-    }
-
+    
     setScene(scene) {
         super.setScene(scene);
-        if(this.on){
-            const parameters = {};
-            const position = this.vertexMatrix.positionVector;
-            parameters[SpotLight.colorName] = this.color.rgb;
-            parameters[SpotLight.positionName]=  position;
-            parameters[SpotLight.directionName]= position.clone().substract(this.target).normalize();
-            parameters[SpotLight.innerRadiusName]= this.innerRadius;
-            parameters[SpotLight.radiusName]= this.radius;
-            parameters[SpotLight.ambientStrengthName]= this.ambientStrength;
-            parameters[SpotLight.intensityName]= this.intensity;
-            scene.setParameter(parameters);
-        }
+        const parameters = {};
+        const position = this.vertexMatrix.positionVector;
+        parameters[SpotLight.colorName] = this.color.rgb;
+        parameters[SpotLight.positionName]=  position;
+        parameters[SpotLight.directionName]= position.clone().substract(this.target).normalize();
+        parameters[SpotLight.innerRadiusName]= this.innerRadius;
+        parameters[SpotLight.radiusName]= this.radius;
+        parameters[SpotLight.ambientStrengthName]= this.ambientStrength;
+        parameters[SpotLight.intensityName]= this.intensity;
+        scene.setParameter(parameters);
 
         return this;
     }

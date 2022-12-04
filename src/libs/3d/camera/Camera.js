@@ -11,12 +11,8 @@ export default class Camera extends Node3d {
         this.active = true;
     }
 
-    get lookAtMatrix() {
-        return this.matrix.clone().invert();
-    }
-
     get projectionMatrix(){
-        return this.lookAtMatrix;
+        return this.invertMatrix;
     }
 
     get scene() {

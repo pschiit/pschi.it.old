@@ -331,9 +331,9 @@ export default class WebGLRenderer extends Node {
         } else if (node instanceof RenderTarget) {
             this.renderTarget = node;
             render(this, node.data.scene);
-            if (node.output instanceof RenderBuffer) {
-                this.gl.readPixels(node.output.x, node.output.y, node.output.width, node.output.height, WebGLRenderer.formatFrom(this, node.output.format), WebGLRenderer.typeFrom(this, node.output.data), node.output.data);
-            }
+        }
+        if ( this.renderTarget.output instanceof RenderBuffer) {
+            this.gl.readPixels( this.renderTarget.output.x,  this.renderTarget.output.y,  this.renderTarget.output.width,  this.renderTarget.output.height, WebGLRenderer.formatFrom(this,  this.renderTarget.output.format), WebGLRenderer.typeFrom(this,  this.renderTarget.output.data),  this.renderTarget.output.data);
         }
         this.renderTarget = previous;
 

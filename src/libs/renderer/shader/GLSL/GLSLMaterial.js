@@ -204,10 +204,12 @@ export default class GLSLMaterial extends Material {
             function createPointLight() {
                 return material.pointLightsCount > 0 ? [
                     `   for(int i = 0; i < ${material.pointLightsCount}; i++){`,
-                    `      vec3 lightDistance = ${pointLightPosition}[i] - ${vPosition};`,
-                    `      vec3 lightDirection = normalize(lightDistance);`,
-                    `      float attenuation = clamp(${pointLightIntensity}[i] / length(lightDistance), 0.0, 1.0);`,
-                    `      color += attenuation * calculateLight(lightDirection, ${pointLightColor}[i], ${pointLightAmbientStrength}[i], materialAmbient, materialDiffuse, materialSpecular, materialEmissive, ${materialShininess}, cameraPosition, normal);`,
+                    `       if(${pointLightIntensity}[i] > 0.0){`,
+                    `           vec3 lightDistance = ${pointLightPosition}[i] - ${vPosition};`,
+                    `           vec3 lightDirection = normalize(lightDistance);`,
+                    `           float attenuation = clamp(${pointLightIntensity}[i] / length(lightDistance), 0.0, 1.0);`,
+                    `           color += attenuation * calculateLight(lightDirection, ${pointLightColor}[i], ${pointLightAmbientStrength}[i], materialAmbient, materialDiffuse, materialSpecular, materialEmissive, ${materialShininess}, cameraPosition, normal);`,
+                    '       }',
                     '   }\n',].join('\n')
                     : '';
             }
@@ -215,11 +217,13 @@ export default class GLSLMaterial extends Material {
             function createSpotLight() {
                 return material.spotLigthsCount > 0 ? [
                     `   for(int i = 0; i < ${material.spotLigthsCount}; i++){`,
-                    `      vec3 lightDistance = ${spotLightPosition}[i] - ${vPosition};`,
-                    `      float theta = dot(normalize(lightDistance), ${spotLightDirection}[i]);`,
-                    `      float smoothing = clamp((theta - ${spotLightRadius}[i]) / (${spotLightInnerRadius}[i] - ${spotLightRadius}[i]), 0.0, 1.0);`,
-                    `      float attenuation = clamp(${spotLightIntensity}[i] / length(lightDistance), 0.0, 1.0);`,
-                    `      color +=  smoothing * attenuation * calculateLight(${spotLightDirection}[i], ${spotLightColor}[i], ${spotLightAmbientStrength}[i], materialAmbient, materialDiffuse, materialSpecular, materialEmissive,${materialShininess}, cameraPosition, normal);`,
+                    `       if(${spotLightIntensity}[i] > 0.0){`,
+                    `           vec3 lightDistance = ${spotLightPosition}[i] - ${vPosition};`,
+                    `           float theta = dot(normalize(lightDistance), ${spotLightDirection}[i]);`,
+                    `           float smoothing = clamp((theta - ${spotLightRadius}[i]) / (${spotLightInnerRadius}[i] - ${spotLightRadius}[i]), 0.0, 1.0);`,
+                    `           float attenuation = clamp(${spotLightIntensity}[i] / length(lightDistance), 0.0, 1.0);`,
+                    `           color +=  smoothing * attenuation * calculateLight(${spotLightDirection}[i], ${spotLightColor}[i], ${spotLightAmbientStrength}[i], materialAmbient, materialDiffuse, materialSpecular, materialEmissive,${materialShininess}, cameraPosition, normal);`,
+                    '       }',
                     '   }\n',].join('\n')
                     : '';
             }
@@ -227,19 +231,21 @@ export default class GLSLMaterial extends Material {
             function calculateLight() {
                 return material.directionalLigthsCount > 0 || material.pointLightsCount > 0 || material.spotLigthsCount > 0 ? [
                     'vec3 calculateLight(vec3 lightDirection, vec3 lightColor, float ambientStrength, vec3 materialAmbient, vec3 materialDiffuse, vec3 materialSpecular, vec3 materialEmissive, float shininess, vec3 cameraPosition, vec3 normal){',
-                    `   vec3 ambient = materialAmbient * lightColor * ambientStrength;`,
-                    '   float nDotL = max(dot(lightDirection, normal), 0.0);',
-                    '   if(nDotL == 0.0){',
-                    '       return ambient;',
+                    '   if(lightColor != vec3(0.0)){',
+                    '       vec3 ambient = materialAmbient * lightColor * ambientStrength;',
+                    '       float nDotL = max(dot(lightDirection, normal), 0.0);',
+                    '       if(nDotL == 0.0){',
+                    '           return ambient;',
+                    '       }',
+                    '       vec3 diffuse = materialDiffuse * lightColor * nDotL;',
+                    // '        vec3 reflectionDirection = 2.0 * dot(normal,lightDirection) * normal - lightDirection;',//phong
+                    // '        float spec = pow(max(dot(cameraPosition, reflectionDirection), 0.0), shininess);',
+                    '       vec3 halfway = normalize(lightDirection + cameraPosition);',//blinn-phong
+                    '       float spec = pow(max(dot(normal, halfway), 0.0), shininess);',
+                    '       vec3 specular = spec * lightColor * materialSpecular;',
+                    '       vec3 emissive = materialEmissive * lightColor;',
+                    '       return (diffuse + specular + ambient + emissive);',
                     '   }',
-                    `   vec3 diffuse = materialDiffuse * lightColor * nDotL;`,
-                    // '   vec3 reflectionDirection = 2.0 * dot(normal,lightDirection) * normal - lightDirection;',//phong
-                    // '   float spec = pow(max(dot(cameraPosition, reflectionDirection), 0.0), shininess);',
-                    '   vec3 halfway = normalize(lightDirection + cameraPosition);',//blinn-phong
-                    '   float spec = pow(max(dot(normal, halfway), 0.0), shininess);',
-                    `   vec3 specular = spec * lightColor * materialSpecular;`,
-                    `   vec3 emissive = materialEmissive * lightColor;`,
-                    `   return (diffuse + specular + ambient + emissive);`,
                     '}\n',
                 ].join('\n')
                     : '';

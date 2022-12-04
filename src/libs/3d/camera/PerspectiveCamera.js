@@ -61,7 +61,7 @@ export default class PerspectiveCamera extends Camera {
 
     get projectionMatrix(){
         if (this.projectionUpdated) {
-            this._projectionMatrix =  this.perspectiveMatrix.clone().multiply(this.lookAtMatrix);
+            this._projectionMatrix =  this.perspectiveMatrix.clone().multiply(this.invertMatrix);
             this.projectionUpdated = false;
         }
         return this._projectionMatrix;

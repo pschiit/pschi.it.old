@@ -113,14 +113,14 @@ plane.uv = [
 const world = new Node3d();
 
 
-const cameraTexture = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
-cameraTexture.translate(5, 5, 5);
-cameraTexture.target = new Vector3(0, 0, 0);
-world.appendChild(cameraTexture);
+const camera = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
+camera.translate(5, 5, 5);
+camera.target = new Vector3(0, 0, 0);
+world.appendChild(camera);
 
 const pickingMaterial = new PickingMaterial();
 const textureMaterial = new PhongMaterial();
-textureMaterial.texture = new Texture(cameraTexture, 1024, 1024);
+textureMaterial.texture = new Texture(camera, 1024, 1024);
 const floor = new Node3d();
 floor.material = textureMaterial;
 floor.vertexBuffer = plane;
@@ -202,48 +202,25 @@ spotLight.addEventListener('onclick', (e) => {
     spotLight.toggle();
 });
 
-const leftTarget = new RenderTarget(0, 0, 0, 0);
-leftTarget.scissor = true;
-leftTarget.data = cameraTexture;
-
-
-const cameraRight = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
-cameraRight.translate(5, 5, 5);
-cameraRight.target = new Vector3(0, 0, 0);
-world.appendChild(cameraRight);
-const rightTarget = new RenderTarget(0, 0, 0, 0);
-rightTarget.scissor = true;
-rightTarget.data = cameraRight;
-
 let then = 0;
 let request = requestAnimationFrame(draw);
 function draw(time) {
-    const renderTarget = canvas.renderTarget;
-    leftTarget.width = renderTarget.width / 2;
-    leftTarget.height = renderTarget.height;
-    rightTarget.x = leftTarget.width;
-    rightTarget.width = leftTarget.width;
-    rightTarget.height = leftTarget.height;
-
     textureMaterial.texture.updated = true;
     element.rotate(0.01, 1, 1, 1);
-    cameraTexture.translate(0.1, 0, 0);
-    cameraTexture.target = cameraTexture.target;
-    cameraTexture.projectionUpdated = true;
-    cameraRight.translate(-0.1, 0, 0);
-    cameraRight.target = cameraRight.target;
-    cameraRight.projectionUpdated = true;
+    camera.translate(0.1, 0, 0);
+    camera.target = camera.target;
+    camera.projectionUpdated = true;
 
-    canvas.render(leftTarget, rightTarget);
+    canvas.render(camera);
     request = requestAnimationFrame(draw);
 }
 
 canvas.element.onpointerdown = (e) => {
     const mousePosition = canvas.getPointerPosition(e);
-    const renderTarget = mousePosition[0] > leftTarget.width ? rightTarget : leftTarget;
+    const renderTarget = canvas.renderTarget;
     renderTarget.material = pickingMaterial;
     renderTarget.output = new RenderBuffer(mousePosition[0], mousePosition[1]);
-    canvas.render(renderTarget);
+    canvas.render(camera);
     const color = new Color(renderTarget.output.data);
     color.normalize();
     const node = Node3d.search(color);
