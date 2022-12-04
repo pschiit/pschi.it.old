@@ -5,14 +5,26 @@ export default class Material extends Node {
     */
     constructor(){
         super();
+
         this.culling = Material.culling.back;
         this.depth = Material.depth.less;
-        this.texture = null;
         this.fog = true;
+        this.compiled = false;
+    }
 
-        this.directionalLigthsCount = 0;
-        this.pointLigthsCount = 0;
-        this.spotLigthsCount = 0;
+    get texture() {
+        return this.parameters[Material.textureName];
+    }
+
+    set texture(v) {
+        this.setParameter(Material.textureName, v);
+    }
+
+    setParameter(name, value) {
+        this.parameters[name] = value;
+    }
+
+    setScene(scene){
     }
 
     static textureName = 'texture';

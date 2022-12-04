@@ -1,9 +1,10 @@
-import Matrix2 from'./Matrix2';
-import Matrix3 from'./Matrix3';
-import MathArray from'./MathArray';
-import Vector3 from'./Vector3';
+import Matrix2 from './Matrix2';
+import Matrix3 from './Matrix3';
+import MathArray from './MathArray';
+import Vector3 from './Vector3';
+import Vector4 from './Vector4';
 
-export default class  Matrix4 extends MathArray {
+export default class Matrix4 extends MathArray {
     /** Create a new Matrix3 from an array of number
      * @param {Number[]} values values of the matrix 
     */
@@ -21,14 +22,77 @@ export default class  Matrix4 extends MathArray {
         return new Vector3(this[12], this[13], this[14]);
     }
 
+    /** Set the Matrix4 position component 
+     * @return {Vector3} position vector
+    */
+    set positionVector(v) {
+        this[12] = v[0];
+        this[13] = v[1];
+        this[14] = v[2];
+    }
+
     /** Return a Vector3 reflecting the scale from the current Matrix
      * @return {Vector3} scale vector
     */
     get scaleVector() {
         return new Vector3(
-            Math.hypot(this[0], this[1], this[2]), 
-            Math.hypot(this[4], this[5], this[6]), 
+            Math.hypot(this[0], this[1], this[2]),
+            Math.hypot(this[4], this[5], this[6]),
             Math.hypot(this[8], this[9], this[10]));
+    }
+
+    /** Set the Matrix4 position component 
+     * @return {Vector3} position vector
+    */
+    set scaleVector(v) {
+        this[0] = v[0];
+        this[5] = v[1];
+        this[10] = v[2];
+    }
+
+    get rotationVector() {
+        const out = new Vector4();
+        let scaling = this.scaleVector;
+        let is1 = 1 / scaling[0];
+        let is2 = 1 / scaling[1];
+        let is3 = 1 / scaling[2];
+        let sm11 = this[0] * is1;
+        let sm12 = this[1] * is2;
+        let sm13 = this[2] * is3;
+        let sm21 = this[4] * is1;
+        let sm22 = this[5] * is2;
+        let sm23 = this[6] * is3;
+        let sm31 = this[8] * is1;
+        let sm32 = this[9] * is2;
+        let sm33 = this[10] * is3;
+        let trace = sm11 + sm22 + sm33;
+        let S = 0;
+        if (trace > 0) {
+            S = Math.sqrt(trace + 1.0) * 2;
+            out[3] = 0.25 * S;
+            out[0] = (sm23 - sm32) / S;
+            out[1] = (sm31 - sm13) / S;
+            out[2] = (sm12 - sm21) / S;
+        } else if (sm11 > sm22 && sm11 > sm33) {
+            S = Math.sqrt(1.0 + sm11 - sm22 - sm33) * 2;
+            out[3] = (sm23 - sm32) / S;
+            out[0] = 0.25 * S;
+            out[1] = (sm12 + sm21) / S;
+            out[2] = (sm31 + sm13) / S;
+        } else if (sm22 > sm33) {
+            S = Math.sqrt(1.0 + sm22 - sm11 - sm33) * 2;
+            out[3] = (sm31 - sm13) / S;
+            out[0] = (sm12 + sm21) / S;
+            out[1] = 0.25 * S;
+            out[2] = (sm23 + sm32) / S;
+        } else {
+            S = Math.sqrt(1.0 + sm33 - sm11 - sm22) * 2;
+            out[3] = (sm12 - sm21) / S;
+            out[0] = (sm31 + sm13) / S;
+            out[1] = (sm23 + sm32) / S;
+            out[2] = 0.25 * S;
+        }
+        return out;
     }
 
     /** Return whether or not a Matrix4 array is equals the current Matrix4
@@ -518,42 +582,39 @@ export default class  Matrix4 extends MathArray {
     static targetMatrix(eye, target, up) {
         const result = new Matrix4();
         let z0 = eye[0] - target[0],
-          z1 = eye[1] - target[1],
-          z2 = eye[2] - target[2];
+            z1 = eye[1] - target[1],
+            z2 = eye[2] - target[2];
         let len = z0 * z0 + z1 * z1 + z2 * z2;
         if (len > 0) {
-          len = 1 / Math.sqrt(len);
-          z0 *= len;
-          z1 *= len;
-          z2 *= len;
+            len = 1 / Math.sqrt(len);
+            z0 *= len;
+            z1 *= len;
+            z2 *= len;
         }
         let x0 = up[1] * z2 - up[2] * z1,
-          x1 = up[2] * z0 - up[0] * z2,
-          x2 = up[0] * z1 - up[1] * z0;
+            x1 = up[2] * z0 - up[0] * z2,
+            x2 = up[0] * z1 - up[1] * z0;
         len = x0 * x0 + x1 * x1 + x2 * x2;
         if (len > 0) {
-          len = 1 / Math.sqrt(len);
-          x0 *= len;
-          x1 *= len;
-          x2 *= len;
+            len = 1 / Math.sqrt(len);
+            x0 *= len;
+            x1 *= len;
+            x2 *= len;
         }
         result[0] = x0;
         result[1] = x1;
         result[2] = x2;
-        result[3] = 0;
         result[4] = z1 * x2 - z2 * x1;
         result[5] = z2 * x0 - z0 * x2;
         result[6] = z0 * x1 - z1 * x0;
-        result[7] = 0;
         result[8] = z0;
         result[9] = z1;
         result[10] = z2;
-        result[11] = 0;
         result[12] = eye[0];
         result[13] = eye[1];
         result[14] = eye[2];
         result[15] = 1;
-        
+
         return result;
     }
 

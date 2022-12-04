@@ -31,11 +31,13 @@ export default class WebGLVertexArray extends WebGLNode {
     }
 
     /** Return whether or not this WebGLVertexArray has been created from the VertexBuffer and Material
-     * @param {VertexBuffer} vertexBuffer  vertex buffer to compare
+     * @param {VertexBuffer|Material} vertexBuffer  vertex buffer to compare
      * @param {Material} material  material to compare
      */
-    is(vertexBuffer, material){
-        return this.name == vertexBuffer.id + '_' + material.id;
+    is(vertexBuffer, material = null) {
+        const values = this.name.split('_');
+        return vertexBuffer && (values[0] == vertexBuffer.id || values[1] == vertexBuffer.id)
+            && (!material || values[1] == material.id);
     }
 
     /** Get the VertexBuffer and Material corresponding WebGLVertexArray from a WebGLRenderingContext

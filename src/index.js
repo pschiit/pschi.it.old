@@ -9,12 +9,15 @@ import PhongMaterial from './libs/3d/material/PhongMaterial';
 import BoxBuffer from './libs/3d/buffer/BoxBuffer';
 import PlaneBuffer from './libs/3d/buffer/PlaneBuffer';
 import Vector3 from './libs/math/Vector3';
-import Buffer from './libs/core/Buffer';
 import Texture from './libs/renderer/Texture';
-import OrthographicCamera from './libs/3d/camera/OrthographicCamera';
 import Matrix4 from './libs/math/Matrix4';
 import SpotLight from './libs/3d/light/SpotLight';
 import Angle from './libs/math/Angle';
+import Buffer from './libs/core/Buffer';
+import MathArray from './libs/math/MathArray';
+import RenderTarget from './libs/renderer/RenderTarget';
+import PickingMaterial from './libs/3d/material/PickingMaterial';
+import RenderBuffer from './libs/renderer/RenderBuffer';
 
 const defaultStyle = {
     width: '100%',
@@ -109,8 +112,15 @@ plane.uv = [
 
 const world = new Node3d();
 
+
+const camera = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
+camera.translate(5, 5, 5);
+camera.target = new Vector3(0, 0, 0);
+world.appendChild(camera);
+
+const pickingMaterial = new PickingMaterial();
 const textureMaterial = new PhongMaterial();
-textureMaterial.texture = new Texture(world, 1024, 1024);
+textureMaterial.texture = new Texture(camera, 1024, 1024);
 const floor = new Node3d();
 floor.material = textureMaterial;
 floor.vertexBuffer = plane;
@@ -166,26 +176,57 @@ spotLight.material = textureMaterial;
 spotLight.vertexBuffer = reverseCube;
 world.appendChild(spotLight);
 
-// redLight.toggle();
-// greenLight.toggle();
-// blueLight.toggle();
-// whiteLight.toggle();
-// sun.toggle();
-// spotLight.toggle();
 
-const camera = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
-camera.translate(5, 5, 5);
-camera.target = new Vector3(0,0,0);
-camera.projectionUpdated = true;
-world.appendChild(camera);
+element.addEventListener('onclick', (e) => {
+    console.log('toggle sun');
+    sun.toggle();
+});
+redLight.addEventListener('onclick', (e) => {
+    console.log('toggle red');
+    redLight.toggle();
+});
+greenLight.addEventListener('onclick', (e) => {
+    console.log('toggle green');
+    greenLight.toggle();
+});
+blueLight.addEventListener('onclick', (e) => {
+    console.log('toggle blue');
+    blueLight.toggle();
+});
+whiteLight.addEventListener('onclick', (e) => {
+    console.log('toggle white');
+    whiteLight.toggle();
+});
+spotLight.addEventListener('onclick', (e) => {
+    console.log('toggle spot');
+    spotLight.toggle();
+});
 
 let then = 0;
+let request = requestAnimationFrame(draw);
 function draw(time) {
+    textureMaterial.texture.updated = true;
     element.rotate(0.01, 1, 1, 1);
     camera.translate(0.1, 0, 0);
     camera.target = camera.target;
     camera.projectionUpdated = true;
-    canvas.render(world);
-    requestAnimationFrame(draw);
+
+    canvas.render(camera);
+    request = requestAnimationFrame(draw);
 }
-requestAnimationFrame(draw);
+
+canvas.element.onpointerdown = (e) => {
+    const mousePosition = canvas.getPointerPosition(e);
+    const renderTarget = canvas.renderTarget;
+    renderTarget.material = pickingMaterial;
+    renderTarget.output = new RenderBuffer(mousePosition[0], mousePosition[1]);
+    canvas.render(camera);
+    const color = new Color(renderTarget.output.data);
+    color.normalize();
+    const node = Node3d.search(color);
+    if (node) {
+        node.dispatchEvent({ type: 'onclick' });
+    }
+    renderTarget.material = null;
+    renderTarget.output = null;
+}

@@ -12,7 +12,19 @@ export default class Node3d extends Render {
         this._target = new Vector3();
     }
 
-    get worldMatrix(){
+    get invertMatrix() {
+        return this.matrix.clone().invert();
+    }
+
+    get vertexMatrix(){
+        return this.parameters[Node3d.vertexMatrixName];
+    }
+
+    get normalMatrix(){
+        return this.parameters[Node3d.normalMatrixName];
+    }
+
+    get worldMatrix() {
         return this.parent instanceof Node3d ? this.parent.worldMatrix.multiply(this.matrix)
             : this.matrix.clone();
     }
@@ -55,14 +67,14 @@ export default class Node3d extends Render {
     /** Return the Vector3 target direction of the current Node3d from the world perspective
      * @return {Vector3} node Vector3 target direction
     */
-    get target(){
+    get target() {
         return this._target;
     }
 
     /** Set the target direction of the current Node3d from the world perspective
      * @param {Vector3} v Vector3 target direction
     */
-    set target(v){
+    set target(v) {
         this._target = v;
         const worldMatrix = this.worldMatrix;
         this.matrix = Matrix4.targetMatrix(worldMatrix.positionVector, this.target, this.up);
@@ -105,12 +117,26 @@ export default class Node3d extends Render {
         return this;
     }
 
-    /** Apply a Matrix4 to the Node3d
-     * @param {Matrix4} matrix translation vector
+    /** Transform the Node3d matrix with a Matrix4
+     * @param {Matrix4} matrix 
      * @return the current Node3d
     */
     transform(matrix) {
         this.matrix.multiply(matrix);
+
+        return this;
+    }
+
+    setScene(scene) {
+        super.setScene(scene);
+        const vertexMatrix = this.parent?.parameters[Node3d.vertexMatrixName] instanceof Matrix4 ?
+            this.parent.parameters[Node3d.vertexMatrixName].clone().multiply(this.matrix)
+            : this.matrix.clone();
+
+        this.setParameter(Node3d.vertexMatrixName, vertexMatrix);
+        if (this.renderable) {
+            this.setParameter(Node3d.normalMatrixName, vertexMatrix.clone().invert().transpose());
+        }
 
         return this;
     }

@@ -20,6 +20,7 @@ export default class OrthographicCamera extends Camera {
     set left(v) {
         this._left = v;
         this.orthograpicUpdated = true;
+        this.projectionUpdated = true;
     }
 
     get right() {
@@ -29,6 +30,7 @@ export default class OrthographicCamera extends Camera {
     set right(v) {
         this._right = v;
         this.orthograpicUpdated = true;
+        this.projectionUpdated = true;
     }
 
     get bottom() {
@@ -38,6 +40,7 @@ export default class OrthographicCamera extends Camera {
     set bottom(v) {
         this._bottom = v;
         this.orthograpicUpdated = true;
+        this.projectionUpdated = true;
     }
 
     get top() {
@@ -47,6 +50,7 @@ export default class OrthographicCamera extends Camera {
     set top(v) {
         this._top = v;
         this.orthograpicUpdated = true;
+        this.projectionUpdated = true;
     }
 
     get near() {
@@ -56,6 +60,7 @@ export default class OrthographicCamera extends Camera {
     set near(v) {
         this._near = v;
         this.orthograpicUpdated = true;
+        this.projectionUpdated = true;
     }
 
     get far() {
@@ -65,20 +70,24 @@ export default class OrthographicCamera extends Camera {
     set far(v) {
         this._far = v;
         this.orthograpicUpdated = true;
+        this.projectionUpdated = true;
     }
 
     get orthograpicMatrix() {
         if (this.orthograpicUpdated) {
-            this._orthgraphicMatrix = Matrix4.orthographicMatrix(this.left, this.right, this.bottom, this.top, this.near, this.far);
+            this._orthograpicMatrix =  Matrix4.orthographicMatrix(this.left, this.right, this.bottom, this.top, this.near, this.far);
             this.orthograpicUpdated = false;
         }
-        return this._orthgraphicMatrix;
+        return this._orthograpicMatrix;
     }
 
     get projectionMatrix(){
-        if(this.projectionUpdated){
-            this._projectionMatrix =  this.orthograpicMatrix.multiply(this.lookAtMatrix);
+        if (this.projectionUpdated) {
+            this._projectionMatrix =  this.orthograpicMatrix.clone().multiply(this.invertMatrix);
+            this.projectionUpdated = false;
         }
         return this._projectionMatrix;
     }
+    
+    static orthograpicMatrixName = 'orthograpicMatrix';
 }

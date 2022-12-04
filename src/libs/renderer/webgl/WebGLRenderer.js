@@ -1,27 +1,18 @@
-import Camera from '../../3d/camera/Camera';
 import PerspectiveCamera from '../../3d/camera/PerspectiveCamera';
-import DirectionalLight from '../../3d/light/DirectionalLight';
-import PointLight from '../../3d/light/PointLight';
-import Node3d from '../../3d/Node3d';
-import Buffer from '../../core/Buffer';
 import Color from '../../core/Color';
 import Node from '../../core/Node';
-import PhongMaterial from '../../3d/material/PhongMaterial';
-import MathArray from '../../math/MathArray';
+import Material from '../Material';
 import Render from '../Render';
+import RenderBuffer from '../RenderBuffer';
+import RenderTarget from '../RenderTarget';
+import Scene from '../Scene';
+import Texture from '../Texture';
 import WebGLBuffer from './WebGLBuffer';
 import WebGLFramebuffer from './WebGLFramebuffer';
 import WebGLProgram from './WebGLProgram';
 import WebGLShader from './WebGLShader';
-import WebGLVertexArray from './WebGLVertexArray';
-import Texture from '../Texture';
 import WebGLTexture from './WebGLTexture';
-import Material from '../Material';
-import Vector2 from '../../math/Vector2';
-import Matrix4 from '../../math/Matrix4';
-import Vector3 from '../../math/Vector3';
-import VertexBuffer from '../VertexBuffer';
-import SpotLight from '../../3d/light/SpotLight';
+import WebGLVertexArray from './WebGLVertexArray';
 
 export default class WebGLRenderer extends Node {
     /** Create a WebGLRenderer from a WebGLRenderingContext
@@ -38,8 +29,6 @@ export default class WebGLRenderer extends Node {
         this.clear();
 
         this.textureUnit = 0;
-
-        this.renderTargets = null;
 
         this.nodes = {};
         this.addEventListener(Node.event.nodeInserted, (e) => {
@@ -269,6 +258,21 @@ export default class WebGLRenderer extends Node {
         }
     }
 
+    get scissor() {
+        return this._scissor;
+    }
+
+    set scissor(v) {
+        if (this.scissor != v) {
+            if (v) {
+                this.gl.enable(this.gl.SCISSOR_TEST);
+            } else {
+                this.gl.disable(this.gl.SCISSOR_TEST)
+            }
+            this._scissor = v;
+        }
+    }
+
     get material() {
         return this._material;
     }
@@ -286,272 +290,59 @@ export default class WebGLRenderer extends Node {
         }
     }
 
-    /** Render a Render in the current WebGLRenderer
-     * @param {Render} node Node to render
-     * @param {Texture} renderTarget Texture to render onto(optional)
+    get renderTarget() {
+        return this._renderTarget;
+    }
+
+    set renderTarget(v) {
+        if (this.renderTarget != v) {
+            if (v) {
+                if (v instanceof Texture) {
+                    this.framebuffer = WebGLFramebuffer.from(this, v);
+                    if (this.texture2d?.is(v)) {
+                        this.texture2d = null;
+                    }
+                } else {
+                    this.framebuffer = null;
+                }
+                if (v.scissor) {
+                    this.scissor = true;
+                    this.gl.scissor(v.x, v.y, v.width, v.height);
+                } else {
+                    this.scissor = false;
+                }
+                this.gl.viewport(v.x, v.y, v.width, v.height);
+                this._renderTarget = v;
+            } else {
+                this._renderTarget = null;
+            }
+        }
+    }
+
+    /** Render a Render|Texture in the current WebGLRenderer
+     * @param {Render|RenderTarget} node Node to render
      * @returns {WebGLRenderer} the current WebGLRenderer
      */
-    render(node, renderTarget = null) {
-        const renderer = this;
-        if (renderTarget) {
-            this.renderTargets[renderTarget.id] = true;
-            this.framebuffer = WebGLFramebuffer.from(this, renderTarget);
-            if (this.texture2d?.is(renderTarget)) {
-                this.texture2d = null;
-            }
-            this.gl.viewport(renderTarget.x, renderTarget.y, renderTarget.width, renderTarget.height);
-        } else {
-            this.renderTargets = {};
-            if (this.resized) {
-                this.gl.viewport(0, 0, this.gl.canvas.clientWidth, this.gl.canvas.clientHeight);
-                this.resized = false;
-            }
+    render(node) {
+        const previous = this.renderTarget;
+        if (node instanceof Render) {
+            this.renderTarget = this.parent.renderTarget;
+            render(this, node.scene);
+        } else if (node instanceof RenderTarget) {
+            this.renderTarget = node;
+            render(this, node.data.scene);
         }
-        let camera = null;
-        const materials = {};
-
-        const pointLightColors = [];
-        const pointLightPositions = [];
-        const pointLightAmbientStrengths = [];
-        const pointLightIntensities = [];
-
-        const directionalLightColors = [];
-        const directionalLightDirections = [];
-        const directionalLightAmbientStrengths = [];
-
-        const spotLightColors = [];
-        const spotLightPositions = [];
-        const spotLightDirections = [];
-        const spotLightInnerRadius = [];
-        const spotLightRadius = [];
-        const spotLightAmbientStrengths = [];
-        const spotLightIntensities = []
-
-        let parentMatrix = Matrix4.identityMatrix();
-        const renders = [];
-        load(node);
-        for (const id in materials) {
-            const material = materials[id];
-            let recompile = false;
-            if (material.pointLigthsCount != pointLightAmbientStrengths.length) {
-                material.pointLigthsCount = pointLightAmbientStrengths.length;
-                recompile = true;
-            }
-            if (material.directionalLigthsCount != directionalLightAmbientStrengths.length) {
-                material.directionalLigthsCount = directionalLightAmbientStrengths.length;
-                recompile = true;
-            }
-            if (material.spotLigthsCount != spotLightAmbientStrengths.length) {
-                material.spotLigthsCount = spotLightAmbientStrengths.length;
-                recompile = true;
-            }
-            this.program = WebGLProgram.from(this, material, recompile);
-            if (camera) {
-                this.program.setParameter(Camera.positionName, camera.position);
-                this.program.setParameter(Camera.backgroundColorName, camera.backgroundColor.rgb);
-                this.program.setParameter(Camera.fogDistanceName, camera.fog);
-                this.program.setParameter(Camera.projectionMatrixName, camera.projectionMatrix);
-            } else {
-                this.program.setParameter(Camera.positionName, new Vector3(0, 0, 0));
-                this.program.setParameter(Camera.backgroundColorName, new Vector3(0, 0, 0));
-                this.program.setParameter(Camera.fogDistanceName, new Vector2(0, 1000));
-                this.program.setParameter(Camera.projectionMatrixName, Matrix4.identityMatrix());
-            }
-            if (pointLightAmbientStrengths.length > 0) {
-                this.program.setParameter(PointLight.colorName, new MathArray(pointLightColors));
-                this.program.setParameter(PointLight.positionName, new MathArray(pointLightPositions));
-                this.program.setParameter(PointLight.ambientStrengthName, new MathArray(pointLightAmbientStrengths));
-                this.program.setParameter(PointLight.intensityName, new MathArray(pointLightIntensities));
-            }
-            if (directionalLightAmbientStrengths.length > 0) {
-                this.program.setParameter(DirectionalLight.colorName, new MathArray(directionalLightColors));
-                this.program.setParameter(DirectionalLight.directionName, new MathArray(directionalLightDirections));
-                this.program.setParameter(DirectionalLight.ambientStrengthName, new MathArray(directionalLightAmbientStrengths));
-            }
-            if (spotLightAmbientStrengths.length > 0) {
-                this.program.setParameter(SpotLight.colorName, new MathArray(spotLightColors));
-                this.program.setParameter(SpotLight.positionName, new MathArray(spotLightPositions));
-                this.program.setParameter(SpotLight.directionName, new MathArray(spotLightDirections));
-                this.program.setParameter(SpotLight.innerRadiusName, new MathArray(spotLightInnerRadius));
-                this.program.setParameter(SpotLight.radiusName, new MathArray(spotLightRadius));
-                this.program.setParameter(SpotLight.ambientStrengthName, new MathArray(spotLightAmbientStrengths));
-                this.program.setParameter(SpotLight.intensityName, new MathArray(spotLightIntensities));
-            }
-            if (material instanceof PhongMaterial) {
-                this.program.setParameter(PhongMaterial.shininessName, material.shininess);
-                this.program.setParameter(PhongMaterial.ambientColorName, material.ambientColor.rgb);
-                this.program.setParameter(PhongMaterial.diffuseColorName, material.diffuseColor.rgb);
-                this.program.setParameter(PhongMaterial.specularColorName, material.specularColor.rgb);
-                this.program.setParameter(PhongMaterial.emissiveColorName, material.emissiveColor.rgb);
-                if (material.ambientTexture) {
-                    if (material.ambientTexture == renderTarget) {
-                        this.program.setParameter(PhongMaterial.ambientTextureName, null);
-                    } else {
-                        this.program.setParameter(PhongMaterial.ambientTextureName, material.ambientTexture);
-                    }
-                }
-                if (material.diffuseTexture) {
-                    if (material.diffuseTexture == renderTarget) {
-                        this.program.setParameter(PhongMaterial.diffuseTextureName, null);
-                    } else {
-                        this.program.setParameter(PhongMaterial.diffuseTextureName, material.diffuseTexture);
-                    }
-                }
-                if (material.specularTexture) {
-                    if (material.specularTexture == renderTarget) {
-                        this.program.setParameter(PhongMaterial.specularTextureName, null);
-                    } else {
-                        this.program.setParameter(PhongMaterial.specularTextureName, material.specularTexture);
-                    }
-                }
-                if (material.emissiveTexture) {
-                    if (material.emissiveTexture == renderTarget) {
-                        this.program.setParameter(PhongMaterial.emissiveTextureName, null);
-                    } else {
-                        this.program.setParameter(PhongMaterial.emissiveTextureName, material.emissiveTexture);
-                    }
-                }
-            }
-            if (material.texture) {
-                if (material.texture == renderTarget) {
-                    this.program.setParameter(Material.textureName, null);
-                } else {
-                    this.program.setParameter(Material.textureName, material.texture);
-                }
-            }
+        if ( this.renderTarget.output instanceof RenderBuffer) {
+            this.gl.readPixels( this.renderTarget.output.x,  this.renderTarget.output.y,  this.renderTarget.output.width,  this.renderTarget.output.height, WebGLRenderer.formatFrom(this,  this.renderTarget.output.format), WebGLRenderer.typeFrom(this,  this.renderTarget.output.data),  this.renderTarget.output.data);
         }
-        this.clear();
-        renders.forEach(draw);
-        if (renderTarget) {
-            this.framebuffer = null;
-            this.gl.viewport(0, 0, this.gl.canvas.clientWidth, this.gl.canvas.clientHeight);
-            this.resized = false;
-        }
-        this.vertexArray = null;
+        this.renderTarget = previous;
 
         return this;
+    }
 
-
-        /** Load a Node in the current WebGLRenderer
-         * @param {Node} node Node to load
-         */
-        function load(node) {
-            if (node.visible) {
-                const previousParentMatrix = parentMatrix;
-                if (node instanceof Node3d) {
-                    const matrix = node.matrix.clone().multiply(parentMatrix);
-                    parentMatrix = matrix;
-                    node.setParameter(Node3d.vertexMatrixName, matrix);
-                    node.setParameter(Node3d.normalMatrixName, matrix.clone().invert().transpose());
-                    if (node instanceof Camera) {
-                        camera = node;
-                        renderer.clearColor(node.backgroundColor);
-                        if (node instanceof PerspectiveCamera) {
-                            const aspectRatio = renderTarget ? renderTarget.aspectRatio
-                                : renderer.parent.aspectRatio;
-                            if (aspectRatio != node.aspectRatio) {
-                                node.aspectRatio = aspectRatio;
-                                node.projectionUpdated = true;
-                            }
-                        }
-                    } else if (node instanceof DirectionalLight && node.on) {
-                        directionalLightColors.push(node.color[0]);
-                        directionalLightColors.push(node.color[1]);
-                        directionalLightColors.push(node.color[2]);
-                        const direction = matrix.positionVector.substract(node.target).normalize();
-                        directionalLightDirections.push(direction[0]);
-                        directionalLightDirections.push(direction[1]);
-                        directionalLightDirections.push(direction[2]);
-                        directionalLightAmbientStrengths.push(node.ambientStrength);
-                    } else if (node instanceof PointLight && node.on) {
-                        pointLightColors.push(node.color[0]);
-                        pointLightColors.push(node.color[1]);
-                        pointLightColors.push(node.color[2]);
-                        const position = matrix.positionVector;
-                        pointLightPositions.push(position[0]);
-                        pointLightPositions.push(position[1]);
-                        pointLightPositions.push(position[2]);
-                        pointLightAmbientStrengths.push(node.ambientStrength);
-                        pointLightIntensities.push(node.intensity);
-                    } else if (node instanceof SpotLight && node.on) {
-                        spotLightColors.push(node.color[0]);
-                        spotLightColors.push(node.color[1]);
-                        spotLightColors.push(node.color[2]);
-                        const position = matrix.positionVector;
-                        spotLightPositions.push(position[0]);
-                        spotLightPositions.push(position[1]);
-                        spotLightPositions.push(position[2]);
-                        const direction = position.substract(node.target).normalize();
-                        spotLightDirections.push(direction[0]);
-                        spotLightDirections.push(direction[1]);
-                        spotLightDirections.push(direction[2]);
-                        spotLightRadius.push(node.radius);
-                        spotLightInnerRadius.push(node.innerRadius);
-                        spotLightAmbientStrengths.push(node.ambientStrength);
-                        spotLightIntensities.push(node.intensity);
-                    }
-                }
-                if (node instanceof Render && node.renderable) {
-                    if (node.vertexBuffer) {
-                        const buffer = WebGLBuffer.from(renderer, node.vertexBuffer, renderer.gl.ARRAY_BUFFER);
-                        if (node.vertexBuffer.updated) {
-                            buffer.update(node.vertexBuffer);
-                        }
-                        if (node.vertexBuffer.index) {
-                            const index = WebGLBuffer.from(renderer, node.vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
-                            if (node.vertexBuffer.index.updated) {
-                                index.update(node.vertexBuffer.index);
-                            }
-                        }
-                    }
-                    if (node.material.texture && !renderer.renderTargets[node.material.texture.id]) {
-                        if (node.material.texture.data instanceof Render) {
-                            renderer.render(node.material.texture.data, node.material.texture);
-                        } else {
-                            renderer.texture2d = WebGLTexture.from(renderer, node.material.texture);
-                            if (node.material.texture.updated) {
-                                renderer.texture2d.update(node.material.texture);
-                                node.material.texture.updated = false;
-                            }
-                        }
-                    }
-                    if (!materials[node.material.id]) {
-                        materials[node.material.id] = node.material;
-                    }
-                    renders.push(node);
-                }
-                node.childrens.forEach(load);
-                parentMatrix = previousParentMatrix;
-            }
-        }
-
-        /** Draw a Render in the current WebGLRenderer
-         * @param {Render} render Render to draw
-         */
-        function draw(render) {
-            let index = render.index;
-            let primitive = render.primitive;
-            let offset = render.offset;
-            let count = render.count;
-            if (render.vertexBuffer) {
-                index = render.vertexBuffer.index;
-                primitive = render.vertexBuffer.primitive;
-                offset = render.vertexBuffer.offset;
-                count = render.vertexBuffer.count;
-                renderer.vertexArray = WebGLVertexArray.from(renderer, render.vertexBuffer, render.material);
-            }
-            renderer.material = render.material;
-
-            for (const name in render.parameters) {
-                renderer.program.setParameter(name, render.parameters[name]);
-            }
-            if (index) {
-                const webGLIndex = WebGLBuffer.from(renderer, index, renderer.gl.ELEMENT_ARRAY_BUFFER);
-                renderer.gl.drawElements(renderer.gl[primitive], count, webGLIndex.type, offset);
-            } else {
-                renderer.gl.drawArrays(renderer.gl[primitive], offset, count);
-            }
-        }
+    remove(node) {
+        const toRemove = this.childrens.filter(c => c.is(node));
+        toRemove.forEach(this.removeChild.bind(this));
     }
 
     clearColor(color = Color.black) {
@@ -574,58 +365,58 @@ export default class WebGLRenderer extends Node {
     polyfillExtension() {
         this.extensions = {};
         this.gl.getSupportedExtensions().forEach(e => this.extensions[e] = this.gl.getExtension(e))
-        let ext = this.getExtension('ANGLE_instanced_arrays');
+        const instancedArrays = this.getExtension('ANGLE_instanced_arrays');
         Object.defineProperties(this.gl, {
             VERTEX_ATTRIB_ARRAY_DIVISOR: {
-                value: ext.VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE,
+                value: instancedArrays.VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE,
                 writable: false
             },
             drawArraysInstanced: {
                 value: function (mode, first, count, primcount) {
-                    return ext.drawArraysInstancedANGLE(mode, first, count, primcount);
+                    return instancedArrays.drawArraysInstancedANGLE(mode, first, count, primcount);
                 },
                 writable: false
             },
             drawElementsInstanced: {
                 value: function (mode, count, type, offset, primcount) {
-                    return ext.drawElementsInstancedANGLE(mode, count, type, offset, primcount);
+                    return instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, primcount);
                 },
                 writable: false
             },
             vertexAttribDivisor: {
                 value: function (index, divisor) {
-                    return ext.vertexAttribDivisorANGLE(index, divisor);
+                    return instancedArrays.vertexAttribDivisorANGLE(index, divisor);
                 },
                 writable: false
             },
         });
-        ext = this.getExtension('OES_vertex_array_object');
+        const vertexArray = this.getExtension('OES_vertex_array_object');
         Object.defineProperties(this.gl, {
             VERTEX_ARRAY_BINDING: {
-                value: ext.VERTEX_ARRAY_BINDING_OES,
+                value: vertexArray.VERTEX_ARRAY_BINDING_OES,
                 writable: false
             },
             createVertexArray: {
                 value: function () {
-                    return ext.createVertexArrayOES();
+                    return vertexArray.createVertexArrayOES();
                 },
                 writable: false
             },
             deleteVertexArray: {
                 value: function (arrayObject) {
-                    return ext.deleteVertexArrayOES(arrayObject);
+                    return vertexArray.deleteVertexArrayOES(arrayObject);
                 },
                 writable: false
             },
             isVertexArray: {
                 value: function (arrayObject) {
-                    return ext.isVertexArray(arrayObject);
+                    return vertexArray.isVertexArray(arrayObject);
                 },
                 writable: false
             },
             bindVertexArray: {
                 value: function (arrayObject) {
-                    return ext.bindVertexArrayOES(arrayObject);
+                    return vertexArray.bindVertexArrayOES(arrayObject);
                 },
                 writable: false
             },
@@ -639,15 +430,103 @@ export default class WebGLRenderer extends Node {
             || this.extensions['WEBKIT_' + name];
     }
 
-    static capability = {
-        blend: 'BLEND',
-        cullFace: 'CULL_FACE',
-        depth: 'DEPTH_TEST',
-        dither: 'DITHER',
-        polygonOffsetFill: 'POLYGON_OFFSET_FILL',
-        sampleAlphaToCoverage: 'SAMPLE_ALPHA_TO_COVERAGE',
-        sampleCoverage: 'SAMPLE_COVERAGE',
-        scissor: 'SCISSOR_TEST',
-        stencil: 'STENCIL_TEST',
-    };
+    static formatFrom(renderer, format) {
+        return format === RenderTarget.format.rgba ? renderer.gl.RGBA
+            : format === RenderTarget.format.rbg ? renderer.gl.RGB
+                : renderer.gl.ALPHA;
+    }
+
+    static typeFrom(renderer, typeArray) {
+        return typeArray instanceof Float32Array ? renderer.gl.FLOAT
+            : typeArray instanceof Uint32Array ? renderer.gl.UNSIGNED_INT
+                : typeArray instanceof Uint16Array ? renderer.gl.UNSIGNED_SHORT
+                    : typeArray instanceof Uint8Array ? renderer.gl.UNSIGNED_BYTE
+                        : renderer.gl.FLOAT;
+    }
+}
+
+/** Render a Scene in a WebGLRenderer
+ * @param {WebGLRenderer} renderer drawing context
+ * @param {Scene} scene to render
+ */
+function render(renderer, scene) {
+    if (scene.camera) {
+        const camera = scene.camera;
+        let aspectRatio = 0;
+        aspectRatio = renderer.renderTarget.aspectRatio;
+        if (camera instanceof PerspectiveCamera) {
+            if (aspectRatio != camera.aspectRatio) {
+                camera.aspectRatio = aspectRatio;
+                camera.projectionUpdated = true;
+                scene.setParameter(PerspectiveCamera.projectionMatrixName, camera.projectionMatrix);
+            }
+        }
+        renderer.clearColor(camera.backgroundColor);
+    } else {
+        renderer.clearColor();
+    }
+    for (const id in scene.buffers) {
+        const buffer = scene.buffers[id];
+        const webGLBuffer = WebGLBuffer.from(renderer, buffer, renderer.gl.ARRAY_BUFFER);
+        webGLBuffer.update(buffer);
+    }
+    for (const id in scene.indexes) {
+        const buffer = scene.indexes[id];
+        const webGLBuffer = WebGLBuffer.from(renderer, buffer, renderer.gl.ELEMENT_ARRAY_BUFFER);
+        webGLBuffer.update(buffer);
+    }
+    if (renderer.renderTarget?.material) {
+        scene.materials = {};
+        scene.materials[renderer.renderTarget.material.id] = renderer.renderTarget?.material
+    }
+    for (const id in scene.materials) {
+        const material = scene.materials[id];
+        renderer.program = WebGLProgram.from(renderer, material);
+        for (const name in material.parameters) {
+            renderer.program.setParameter(name, material.parameters[name]);
+        }
+        for (const name in scene.parameters) {
+            if (renderer.program.parameters[name]) {
+                const param = scene.parameters[name];
+                renderer.program.setParameter(name, param);
+            }
+        }
+        scene.programs.push(renderer.program);
+    }
+    renderer.clear();
+    scene.renders.forEach(r => {
+        if (renderer.renderTarget?.material) {
+            draw(r, renderer.renderTarget.material);
+        } else {
+            draw(r, r.material);
+        }
+    });
+    renderer.vertexArray = null;
+
+
+    /** Draw a Render in a WebGLRenderer
+     * @param {Render} render to use
+     * @param {Material} material to use
+     */
+    function draw(render, material) {
+        renderer.vertexArray = WebGLVertexArray.from(renderer, render.vertexBuffer, material);
+        renderer.material = material;
+
+        for (const name in render.parameters) {
+            renderer.program.setParameter(name, render.parameters[name]);
+        }
+        const divisorCount = render.vertexBuffer.divisorCount;
+        if (render.vertexBuffer.index) {
+            const webGLIndex = WebGLBuffer.from(renderer, render.vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
+            if (divisorCount) {
+                renderer.gl.drawElementsInstanced(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.count, webGLIndex.type, render.vertexBuffer.offset, divisorCount);
+            } else {
+                renderer.gl.drawElements(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.count, webGLIndex.type, render.vertexBuffer.offset);
+            }
+        } else if (divisorCount) {
+            renderer.gl.drawArraysInstanced(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.offset, render.vertexBuffer.count, divisorCount);
+        } else {
+            renderer.gl.drawArrays(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.offset, render.vertexBuffer.count);
+        }
+    }
 }

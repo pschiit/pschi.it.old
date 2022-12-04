@@ -17,11 +17,7 @@ export default class WebGLBuffer extends WebGLNode {
             : buffer.usage === Buffer.usage.stream ? renderer.gl.STREAM_DRAW
                 : renderer.gl.STATIC_DRAW;
 
-        this.type = buffer.data instanceof Float32Array ? renderer.gl.FLOAT
-            : buffer.data instanceof Uint32Array ? renderer.gl.UNSIGNED_INT
-                : buffer.data instanceof Uint16Array ? renderer.gl.UNSIGNED_SHORT
-                    : buffer.data instanceof Uint8Array ? renderer.gl.UNSIGNED_BYTE
-                        : null;
+        this.type = WebGLRenderer.typeFrom(renderer, buffer.data);
 
         if (webGLTarget === renderer.gl.ELEMENT_ARRAY_BUFFER) {
             this.update = (buffer) => {
@@ -40,13 +36,12 @@ export default class WebGLBuffer extends WebGLNode {
                 }
             };
         }
-        this.update(buffer);
     }
 
     /** Return whether or not this WebGLBuffer has been created from the Buffer
      * @param {Buffer} buffer  Buffer to compare
      */
-    is(buffer){
+    is(buffer) {
         return this.name == buffer.id;
     }
 

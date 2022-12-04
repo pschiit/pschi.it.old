@@ -1,7 +1,7 @@
-import Matrix4 from'../../math/Matrix4';
-import Camera from'./Camera';
+import Matrix4 from '../../math/Matrix4';
+import Camera from './Camera';
 
-export default class  PerspectiveCamera extends Camera {
+export default class PerspectiveCamera extends Camera {
     constructor(fovY, aspectRatio, near, far) {
         super();
         this._fovY = fovY;
@@ -9,7 +9,6 @@ export default class  PerspectiveCamera extends Camera {
         this._near = near;
         this._far = far;
         this.perspectiveUpdated = true;
-        this.projectionUpdated = true;
     }
 
     get fovY() {
@@ -19,6 +18,7 @@ export default class  PerspectiveCamera extends Camera {
     set fovY(v) {
         this._fovY = v;
         this.perspectiveUpdated = true;
+        this.projectionUpdated = true;
     }
 
     get aspectRatio() {
@@ -28,6 +28,7 @@ export default class  PerspectiveCamera extends Camera {
     set aspectRatio(v) {
         this._aspectRatio = v;
         this.perspectiveUpdated = true;
+        this.projectionUpdated = true;
     }
 
     get near() {
@@ -37,6 +38,7 @@ export default class  PerspectiveCamera extends Camera {
     set near(v) {
         this._near = v;
         this.perspectiveUpdated = true;
+        this.projectionUpdated = true;
     }
 
     get far() {
@@ -46,21 +48,24 @@ export default class  PerspectiveCamera extends Camera {
     set far(v) {
         this._far = v;
         this.perspectiveUpdated = true;
+        this.projectionUpdated = true;
     }
 
-    get perspectiveMatrix(){
+    get perspectiveMatrix() {
         if (this.perspectiveUpdated) {
-            this._perspectiveMatrix = Matrix4.perspectiveMatrix(this.fovY, this.aspectRatio, this.near, this.far);
+            this._perspectiveMatrix =  Matrix4.perspectiveMatrix(this.fovY, this.aspectRatio, this.near, this.far);
             this.perspectiveUpdated = false;
         }
         return this._perspectiveMatrix;
     }
 
     get projectionMatrix(){
-        if(this.projectionUpdated){
-            this._projectionMatrix =  this.perspectiveMatrix.clone().multiply(this.lookAtMatrix);
+        if (this.projectionUpdated) {
+            this._projectionMatrix =  this.perspectiveMatrix.clone().multiply(this.invertMatrix);
             this.projectionUpdated = false;
         }
         return this._projectionMatrix;
     }
+
+    static perspectiveMatrixName = 'perspectiveMatrix';
 }

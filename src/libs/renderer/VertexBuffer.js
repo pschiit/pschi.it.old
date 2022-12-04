@@ -1,8 +1,8 @@
 import Buffer from'../core/Buffer';
 
 export default class  VertexBuffer extends Buffer {
-    constructor(data = new Float32Array()) {
-        super(data, 0);
+    constructor() {
+        super(new Float32Array(), 0);
         this.primitive = null;
 
         this.positionName = VertexBuffer.positionName;

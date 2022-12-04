@@ -3,6 +3,8 @@ import Node from '../core/Node';
 import WebGLRenderer from '../renderer/webgl/WebGLRenderer';
 import Texture from '../renderer/Texture';
 import Render from '../renderer/Render';
+import RenderTarget from '../renderer/RenderTarget';
+import Vector2 from '../math/Vector2';
 
 export default class WebGLCanvas extends Canvas {
     /** Create a new WebGLCanvas HtmlNode
@@ -10,6 +12,7 @@ export default class WebGLCanvas extends Canvas {
     */
     constructor(contextOptions) {
         super();
+        this._renderTarget = new RenderTarget(0, 0, this.clientWidth, this.clientHeight);
         initContext(this, contextOptions);
 
         this.element.addEventListener('webglcontextlost', (e) => {
@@ -29,7 +32,6 @@ export default class WebGLCanvas extends Canvas {
 
         window.onresize = (e) => {
             this.fitParent();
-            this.context.resized = true;
         };
 
         function initContext(webGLCanvas, contextOptions) {
@@ -42,6 +44,20 @@ export default class WebGLCanvas extends Canvas {
         }
     }
 
+    /** Return the RenderTarget of the current HtmlNode's HTMLElement
+     * @return {RenderTarget} RenderTarget of the HTMLElement
+    */
+    get renderTarget() {
+        this._renderTarget.width = this.clientWidth;
+        this._renderTarget.height = this.clientHeight;
+
+        return this._renderTarget;
+    }
+
+
+    /** Return the WebGLRenderer context of the current HtmlNode's HTMLElement
+     * @return {WebGLRenderer} WebGLRenderer of the HTMLElement
+    */
     get context() {
         if (this.childrens.length > 0) {
             return this.childrens[0];
@@ -49,14 +65,31 @@ export default class WebGLCanvas extends Canvas {
         return null;
     }
 
-    /** Render a Render in the WebGLCanvas
-     * @param {Render} node Render to render
-     * @param {Texture} renderTarget Texture to render onto(optional)
-     * @returns {WebGLCanvas} the WebGLCanvas to render in
+    /** Render a Render|Texture in the cWebGLCanvas
+     * @param {Render|RenderTarget} node Node to render
+     * @returns {WebGLCanvas} the current WebGLCanvas
      */
-    render(node, renderTarget = null) {
-        this.context.render(node, renderTarget);
+    render(node) {
+        if (arguments.length > 1) {
+            WebGLCanvas.repeatFunction(arguments, this.render.bind(this));
+        } else {
+            this.context.render(node);
+        }
 
         return this;
+    }
+
+    /** Get the pointer webgl-relative position (-1, 1) from an Pointer(or Mouse) Event,
+     * assumes HTMLElement doesn't have padding or border
+     * @param {PointerEvent} event Pointer event
+     * @return {Vector2} the pointer position as Vector2
+    */
+    getPointerRelativePositon(event) {
+        const rect = this.element.getBoundingClientRect();
+        
+        return new Vector2(
+            ((event.clientX - rect.left) * this.width / this.element.clientWidth) / this.width * 2 - 1,
+            ((event.clientY - rect.top) * this.height / this.element.clientHeight) / this.height * -2 + 1
+        );
     }
 }

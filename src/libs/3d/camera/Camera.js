@@ -1,37 +1,37 @@
 import Color from '../../core/Color';
-import Matrix4 from '../../math/Matrix4';
 import Vector2 from '../../math/Vector2';
 import Node3d from '../Node3d';
 
 export default class Camera extends Node3d {
     constructor() {
         super();
-        this.fog = new Vector2(0,100);
+        this.fog = new Vector2(0, 100);
         this.backgroundColor = Color.black;
         this.projectionUpdated = true;
-    }
-
-    get fog() {
-        return this._fog;
-    }
-
-    set fog(v) {
-        this._fog = v;
-    }
-
-    get lookAtMatrix(){
-        const worldMatrix = this.worldMatrix;
-        return Matrix4.lookAtMatrix(worldMatrix.positionVector, this.target, this.up);
+        this.active = true;
     }
 
     get projectionMatrix(){
-        if(this.projectionUpdated){
-            this._projectionMatrix = this.lookAtMatrix;
-        }
-        return this._projectionMatrix;
+        return this.invertMatrix;
     }
 
-    static positionName = 'cameraPosition';
+    get scene() {
+        const scene = super.scene;
+        scene.camera = this;
+
+        scene.setParameter(Camera.fogDistanceName, this.fog);
+        scene.setParameter(Camera.backgroundColorName, this.backgroundColor);
+        scene.setParameter(Camera.positionName, this.worldPosition);
+        scene.setParameter(Camera.projectionMatrixName, this.projectionMatrix);
+        return scene;
+    }
+
+    setScene(scene) {
+        super.setScene(scene);
+        return this;
+    }
+
+    static positionName = 'viewPosition';
     static projectionMatrixName = 'projectionMatrix';
     static backgroundColorName = 'backgroundColor';
     static fogDistanceName = 'fogDistance';
