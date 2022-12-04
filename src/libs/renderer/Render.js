@@ -7,7 +7,9 @@ export default class Render extends Node {
      */
     constructor() {
         super();
-        this.colorId = Color.unique();
+        const colorId = Color.unique();
+        Render.cache[colorId] = this;
+        this.setParameter(Render.colorIdName, colorId);
         this.material = null;
         this.vertexBuffer = null;
     }
@@ -19,6 +21,9 @@ export default class Render extends Node {
     get scene() {
         const scene = new Scene();
         update(this.root);
+        for (const id in scene.materials) {
+            const material = scene.materials[id].setScene(scene);
+        }
 
         /** Load a Node in the current WebGLRenderer
          * @param {Render} render Node to load
@@ -53,6 +58,12 @@ export default class Render extends Node {
         }
     }
 
+    static search(colorId) {
+        return Render.cache[colorId];
+    }
+
+    static cache = {};
+
     static primitive = {
         points: 'POINTS',
         triangles: 'TRIANGLES',
@@ -62,4 +73,6 @@ export default class Render extends Node {
         lineLoop: 'LINE_FAN',
         lineStrip: 'LINE_STRIP',
     };
+
+    static colorIdName = 'colorId';
 }

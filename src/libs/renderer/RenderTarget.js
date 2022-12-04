@@ -10,7 +10,8 @@ export default class RenderTarget extends Node {
         this.height = height;
         this.format = RenderTarget.format.rgba;
         this.scissor = false;
-        this.materialOverride = null;
+        this.material = null;
+        this.output = null;
     }
 
     get aspectRatio() {
@@ -18,8 +19,12 @@ export default class RenderTarget extends Node {
     }
 
     static format = {
-        rbga: 'rgba',
-        rbg: 'rgb',
-        alpha: 'alpha',
+        rgba: 'RGBA',
+        rgb: 'RGB',
+        alpha: 'ALPHA'
+    };
+    static test = {
+        blabla: 'test',
+        second: 'encore'
     }
 }

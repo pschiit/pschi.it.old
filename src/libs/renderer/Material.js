@@ -9,10 +9,7 @@ export default class Material extends Node {
         this.culling = Material.culling.back;
         this.depth = Material.depth.less;
         this.fog = true;
-
-        this.directionalLigthsCount = 0;
-        this.pointLigthsCount = 0;
-        this.spotLigthsCount = 0;
+        this.compiled = false;
     }
 
     get texture() {
@@ -25,6 +22,9 @@ export default class Material extends Node {
 
     setParameter(name, value) {
         this.parameters[name] = value;
+    }
+
+    setScene(scene){
     }
 
     static textureName = 'texture';

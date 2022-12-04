@@ -118,21 +118,8 @@ export default class HtmlNode extends Node {
     getPointerPosition(event) {
         const rect = this.element.getBoundingClientRect();
         return new Vector2(
-            ((event.clientX - rect.left) * this.width / this.element.clientWidth),
-            ((rect.bottom - event.clientY) * this.height / this.element.clientHeight)
-        );
-    }
-
-    /** Get the pointer webgl-relative position (-1, 1) from an Pointer(or Mouse) Event,
-     * assumes HTMLElement doesn't have padding or border
-     * @param {PointerEvent} event Pointer event
-     * @return {Vector2} the pointer position as Vector2
-    */
-    getMouseRelativePositon(event) {
-        const rect = this.element.getBoundingClientRect();
-        return new Vector2(
-            ((event.clientX - rect.left) * this.width / this.element.clientWidth) / this.width * 2 - 1,
-            ((event.clientY - rect.top) * this.height / this.element.clientHeight) / this.height * -2 + 1
+            Math.round((event.clientX - rect.left) * this.width / this.element.clientWidth),
+            Math.round((rect.bottom - event.clientY) * this.height / this.element.clientHeight)
         );
     }
 

@@ -1,9 +1,5 @@
 import Color from '../../core/Color';
-import Matrix4 from '../../math/Matrix4';
 import Vector2 from '../../math/Vector2';
-import Render from '../../renderer/Render';
-import RenderTarget from '../../renderer/RenderTarget';
-import Scene from '../../renderer/Scene';
 import Node3d from '../Node3d';
 
 export default class Camera extends Node3d {

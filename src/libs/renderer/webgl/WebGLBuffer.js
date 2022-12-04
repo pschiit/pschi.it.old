@@ -17,10 +17,7 @@ export default class WebGLBuffer extends WebGLNode {
             : buffer.usage === Buffer.usage.stream ? renderer.gl.STREAM_DRAW
                 : renderer.gl.STATIC_DRAW;
 
-        this.type = buffer.data instanceof Uint32Array ? renderer.gl.UNSIGNED_INT
-            : buffer.data instanceof Uint16Array ? renderer.gl.UNSIGNED_SHORT
-                : buffer.data instanceof Uint8Array ? renderer.gl.UNSIGNED_BYTE
-                    : renderer.gl.FLOAT;
+        this.type = WebGLRenderer.typeFrom(renderer, buffer.data);
 
         if (webGLTarget === renderer.gl.ELEMENT_ARRAY_BUFFER) {
             this.update = (buffer) => {

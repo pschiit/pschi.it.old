@@ -111,6 +111,13 @@ export default class Color extends Vector4 {
         this[3] = value;
     }
 
+    normalize(){
+        this[0] = this[0] / 255;
+        this[1] = this[1] / 255;
+        this[2] = this[2] / 255;
+        this[3] = this[3] / 255;
+    }
+
     toString() {
         return this.hex.toString(16);
     }

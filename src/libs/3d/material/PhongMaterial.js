@@ -1,5 +1,8 @@
 import Color from '../../core/Color';
 import Material from '../../renderer/Material';
+import DirectionalLight from '../light/DirectionalLight';
+import PointLight from '../light/PointLight';
+import SpotLight from '../light/SpotLight';
 
 export default class PhongMaterial extends Material {
     constructor() {
@@ -10,6 +13,43 @@ export default class PhongMaterial extends Material {
         this.emissiveColor = Color.black;
 
         this.shininess = 32;
+
+        this.directionalLigthsCount = 0;
+        this.pointLigthsCount = 0;
+        this.spotLigthsCount = 0;
+    }
+
+    get pointLigthsCount() {
+        return this._pointLigthsCount;
+    }
+
+    set pointLigthsCount(v) {
+        if (this.pointLigthsCount != v) {
+            this._pointLigthsCount = v;
+            this.compiled = false;
+        }
+    }
+
+    get spotLigthsCount() {
+        return this._spotLigthsCount;
+    }
+
+    set spotLigthsCount(v) {
+        if (this.spotLigthsCount != v) {
+            this._spotLigthsCount = v;
+            this.compiled = false;
+        }
+    }
+
+    get directionalLigthsCount() {
+        return this._directionalLigthsCount;
+    }
+
+    set directionalLigthsCount(v) {
+        if (this.directionalLigthsCount != v) {
+            this._directionalLigthsCount = v;
+            this.compiled = false;
+        }
     }
 
     get ambientColor() {
@@ -82,6 +122,13 @@ export default class PhongMaterial extends Material {
 
     set shininess(v) {
         this.setParameter(PhongMaterial.shininessName, v);
+    }
+
+    setScene(scene) {
+        super.setScene(scene);
+        this.pointLightsCount = scene.parameters[PointLight.ambientStrengthName]?.length;
+        this.directionalLigthsCount = scene.parameters[DirectionalLight.ambientStrengthName]?.length;
+        this.spotLigthsCount = scene.parameters[SpotLight.ambientStrengthName]?.length;
     }
 
     static ambientColorName = "materialAmbientColor";

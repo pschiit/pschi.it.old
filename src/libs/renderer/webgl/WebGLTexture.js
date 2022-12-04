@@ -15,13 +15,8 @@ export default class WebGLTexture extends WebGLNode {
 
         this.unit = renderer.textureUnit++;
         this.level = 0;
-        this.format = texture.format === Texture.format.rgb ? renderer.gl.RGB
-            : texture.format === Texture.format.alpha ? renderer.gl.ALPHA
-                : renderer.gl.RGBA;
-        this.type = texture.data instanceof Float32Array ? renderer.gl.FLOAT
-            : texture.data instanceof Uint32Array ? renderer.gl.UNSIGNED_INT
-                : texture.data instanceof Uint16Array ? renderer.gl.UNSIGNED_SHORT
-                    : renderer.gl.UNSIGNED_BYTE;
+        this.format = WebGLRenderer.formatFrom(renderer, texture.format);
+        this.type = WebGLRenderer.typeFrom(renderer, texture.data);
         renderer.texture2d = this;
         // renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_WRAP_S, renderer.gl.CLAMP_TO_EDGE);
         // renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_WRAP_T, renderer.gl.CLAMP_TO_EDGE);

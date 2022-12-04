@@ -16,6 +16,8 @@ import Angle from './libs/math/Angle';
 import Buffer from './libs/core/Buffer';
 import MathArray from './libs/math/MathArray';
 import RenderTarget from './libs/renderer/RenderTarget';
+import PickingMaterial from './libs/3d/material/PickingMaterial';
+import RenderBuffer from './libs/renderer/RenderBuffer';
 
 const defaultStyle = {
     width: '100%',
@@ -116,6 +118,7 @@ cameraTexture.translate(5, 5, 5);
 cameraTexture.target = new Vector3(0, 0, 0);
 world.appendChild(cameraTexture);
 
+const pickingMaterial = new PickingMaterial();
 const textureMaterial = new PhongMaterial();
 textureMaterial.texture = new Texture(cameraTexture, 1024, 1024);
 const floor = new Node3d();
@@ -174,15 +177,33 @@ spotLight.vertexBuffer = reverseCube;
 world.appendChild(spotLight);
 
 
-// redLight.toggle();
-// greenLight.toggle();
-// blueLight.toggle();
-// whiteLight.toggle();
-// sun.toggle();
+element.addEventListener('onclick', (e) => {
+    console.log('toggle sun');
+    sun.toggle();
+});
+redLight.addEventListener('onclick', (e) => {
+    console.log('toggle red');
+    redLight.toggle();
+});
+greenLight.addEventListener('onclick', (e) => {
+    console.log('toggle green');
+    greenLight.toggle();
+});
+blueLight.addEventListener('onclick', (e) => {
+    console.log('toggle blue');
+    blueLight.toggle();
+});
+whiteLight.addEventListener('onclick', (e) => {
+    console.log('toggle white');
+    whiteLight.toggle();
+});
+spotLight.addEventListener('onclick', (e) => {
+    console.log('toggle spot');
+    spotLight.toggle();
+});
 
-const leftTarget = canvas.renderTarget;
+const leftTarget = new RenderTarget(0, 0, 0, 0);
 leftTarget.scissor = true;
-leftTarget.width = leftTarget.width / 2;
 leftTarget.data = cameraTexture;
 
 
@@ -190,23 +211,45 @@ const cameraRight = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
 cameraRight.translate(5, 5, 5);
 cameraRight.target = new Vector3(0, 0, 0);
 world.appendChild(cameraRight);
-const rightTarget = new RenderTarget(leftTarget.width, 0, leftTarget.width, leftTarget.height);
+const rightTarget = new RenderTarget(0, 0, 0, 0);
 rightTarget.scissor = true;
 rightTarget.data = cameraRight;
 
 let then = 0;
+let request = requestAnimationFrame(draw);
 function draw(time) {
+    const renderTarget = canvas.renderTarget;
+    leftTarget.width = renderTarget.width / 2;
+    leftTarget.height = renderTarget.height;
+    rightTarget.x = leftTarget.width;
+    rightTarget.width = leftTarget.width;
+    rightTarget.height = leftTarget.height;
+
     textureMaterial.texture.updated = true;
     element.rotate(0.01, 1, 1, 1);
     cameraTexture.translate(0.1, 0, 0);
     cameraTexture.target = cameraTexture.target;
-    cameraTexture.projectionUpdated= true;
+    cameraTexture.projectionUpdated = true;
     cameraRight.translate(-0.1, 0, 0);
     cameraRight.target = cameraRight.target;
-    cameraRight.projectionUpdated= true;
+    cameraRight.projectionUpdated = true;
 
-    canvas.render(leftTarget);
-    canvas.render(rightTarget);
-    requestAnimationFrame(draw);
+    canvas.render(leftTarget, rightTarget);
+    request = requestAnimationFrame(draw);
 }
-requestAnimationFrame(draw);
+
+canvas.element.onpointerdown = (e) => {
+    const mousePosition = canvas.getPointerPosition(e);
+    const renderTarget = mousePosition[0] > leftTarget.width ? rightTarget : leftTarget;
+    renderTarget.material = pickingMaterial;
+    renderTarget.output = new RenderBuffer(mousePosition[0], mousePosition[1]);
+    canvas.render(renderTarget);
+    const color = new Color(renderTarget.output.data);
+    color.normalize();
+    const node = Node3d.search(color);
+    if (node) {
+        node.dispatchEvent({ type: 'onclick' });
+    }
+    renderTarget.material = null;
+    renderTarget.output = null;
+}

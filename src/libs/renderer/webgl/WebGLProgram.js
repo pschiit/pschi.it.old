@@ -17,13 +17,11 @@ export default class WebGLProgram extends WebGLNode {
         this.parameters = {};
         this.parameters = {};
         this.cache = {};
-        if (!(material instanceof GLSLMaterial)) {
-            material = GLSLMaterial.from(material);
-        }
         this.location = renderer.gl.createProgram();
-        this.vertexShader = WebGLShader.from(renderer, material.vertexShader);
+        const glsl = material instanceof GLSLMaterial ? material : GLSLMaterial.from(material);
+        this.vertexShader = WebGLShader.from(renderer, glsl.vertexShader);
         renderer.gl.attachShader(this.location, this.vertexShader.location);
-        this.fragmentShader = WebGLShader.from(renderer, material.fragmentShader);
+        this.fragmentShader = WebGLShader.from(renderer, glsl.fragmentShader);
         renderer.gl.attachShader(this.location, this.fragmentShader.location);
         renderer.gl.linkProgram(this.location);
         if (!renderer.gl.getProgramParameter(this.location, renderer.gl.LINK_STATUS)) {
@@ -41,6 +39,7 @@ export default class WebGLProgram extends WebGLNode {
             const attribute = renderer.gl.getActiveAttrib(this.location, i);
             createAttribute(renderer, this, attribute);
         }
+        material.compiled = true;
     }
 
     /** Return whether or not this WebGLProgram has been created from the Material
@@ -59,11 +58,10 @@ export default class WebGLProgram extends WebGLNode {
     /** Get the Material's WebGLProgram from a WebGLRenderingContext
      * @param {WebGLRenderer} renderer the context of the renderer
      * @param {Material} material  associated Material
-     * @param {Boolean} recompile  whether you wish to recompiled a program ( default = false)
      */
-    static from(renderer, material, recompile = false) {
-        return recompile ? new WebGLProgram(renderer, material)
-            : renderer.nodes[material.id] || new WebGLProgram(renderer, material);
+    static from(renderer, material) {
+        return material.compiled ? renderer.nodes[material.id] || new WebGLProgram(renderer, material)
+            : new WebGLProgram(renderer, material);
     }
 }
 
