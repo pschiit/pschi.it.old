@@ -22,6 +22,15 @@ export default class Buffer extends Node {
                 return;
             }
         });
+
+        this.addEventListener(Node.event.nodeInserted, (e) => {
+            const child = e.inserted;
+            if (!(child instanceof Buffer)
+                || (this.type != child.data.constructor)) {
+                this.removeChild(child);
+                return;
+            }
+        });
     }
 
     get index() {
@@ -44,20 +53,20 @@ export default class Buffer extends Node {
     }
 
     get data() {
-        if (this.childrens.length > 0) {
-            const data = new this.type(this.length);
+        if (this.childrens.some(c => c.updated)) {
+            this._data = new this.type(this.length);
             const arrayStep = this.step;
 
             this.childrens.forEach(buffer => {
                 const offset = buffer.offset;
                 let position = 0;
-                for (let i = 0; i < data.length; i += arrayStep) {
+                for (let i = 0; i < this._data.length; i += arrayStep) {
                     for (let j = 0; j < buffer.step; j++) {
-                        data[offset + i + j] = buffer.data[position++];
+                        this._data[offset + i + j] = buffer.data[position++];
                     }
                 }
+                buffer.updated = false;
             });
-            return data;
         }
         return this._data;
     }

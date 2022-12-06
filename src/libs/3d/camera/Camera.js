@@ -21,7 +21,7 @@ export default class Camera extends Node3d {
 
         scene.setParameter(Camera.fogDistanceName, this.fog);
         scene.setParameter(Camera.backgroundColorName, this.backgroundColor);
-        scene.setParameter(Camera.positionName, this.worldPosition);
+        scene.setParameter(Camera.positionName, this.vertexMatrix.positionVector);
         scene.setParameter(Camera.projectionMatrixName, this.projectionMatrix);
         return scene;
     }

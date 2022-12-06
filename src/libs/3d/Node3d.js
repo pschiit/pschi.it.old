@@ -7,20 +7,15 @@ export default class Node3d extends Render {
     */
     constructor() {
         super();
-        this.up = Vector3.yAxis.clone();
         this.matrix = Matrix4.identityMatrix();
         this._target = new Vector3();
     }
 
-    get invertMatrix() {
-        return this.matrix.clone().invert();
-    }
-
-    get vertexMatrix(){
+    get vertexMatrix() {
         return this.parameters[Node3d.vertexMatrixName];
     }
 
-    get normalMatrix(){
+    get normalMatrix() {
         return this.parameters[Node3d.normalMatrixName];
     }
 
@@ -29,25 +24,28 @@ export default class Node3d extends Render {
             : this.matrix.clone();
     }
 
-    /** Return a Vector3 reflecting the up direction of the current Node3d from the world perspective
-     * @return {Vector3} node up direction vector
-    */
-    get worldUp() {
-        return this.up.transform(this.worldMatrix);
+    get invertMatrix() {
+        return this.matrix.clone().invert();
     }
 
-    /** Return a Vector3 reflecting the world position of the current Node3d
-     * @return {Vector3} scale vector
+    /** Return a Vector3 reflecting the x axis from the current Node3d
+     * @return {Vector3} x axis vector
     */
-    get worldPosition() {
-        return this.worldMatrix.positionVector;
+    get xAxis() {
+        return this.matrix.xAxis;
     }
 
-    /** Return a Vector3 reflecting the world scale of the current Node3d
-     * @return {Vector3} scale vector
+    /** Return a Vector3 reflecting the y axis from the current Node3d
+     * @return {Vector3} y axis vector
     */
-    get worldScale() {
-        return this.worldMatrix.scaleVector;
+    get yAxis() {
+        return this.matrix.yAxis;
+    }
+    /** Return a Vector3 reflecting the z axis from the current Node3d
+     * @return {Vector3} z axis vector
+    */
+    get zAxis() {
+        return this.matrix.zAxis;
     }
 
     /** Return a Vector3 reflecting the position of the current Node3d
@@ -55,6 +53,13 @@ export default class Node3d extends Render {
     */
     get position() {
         return this.matrix.positionVector;
+    }
+
+    /** Set the Node3d position 
+     * @return {Vector3} position vector
+    */
+    set position(v) {
+        this.matrix.positionVector = v;
     }
 
     /** Return a Vector3 reflecting the scale of the current Node3d
@@ -76,8 +81,7 @@ export default class Node3d extends Render {
     */
     set target(v) {
         this._target = v;
-        const worldMatrix = this.worldMatrix;
-        this.matrix = Matrix4.targetMatrix(worldMatrix.positionVector, this.target, this.up);
+        this.matrix.target(this._target);
     }
 
     /** Translate the Node3d by a Vector3 array

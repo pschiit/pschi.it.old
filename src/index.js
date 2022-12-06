@@ -1,23 +1,20 @@
+import BoxBuffer from './libs/3d/buffer/BoxBuffer';
+import PlaneBuffer from './libs/3d/buffer/PlaneBuffer';
 import PerspectiveCamera from './libs/3d/camera/PerspectiveCamera';
 import DirectionalLight from './libs/3d/light/DirectionalLight';
 import PointLight from './libs/3d/light/PointLight';
+import SpotLight from './libs/3d/light/SpotLight';
+import PhongMaterial from './libs/3d/material/PhongMaterial';
+import PickingMaterial from './libs/3d/material/PickingMaterial';
 import Node3d from './libs/3d/Node3d';
 import Color from './libs/core/Color';
 import HtmlNode from './libs/html/HtmlNode';
 import WebGLCanvas from './libs/html/WebGLCanvas';
-import PhongMaterial from './libs/3d/material/PhongMaterial';
-import BoxBuffer from './libs/3d/buffer/BoxBuffer';
-import PlaneBuffer from './libs/3d/buffer/PlaneBuffer';
-import Vector3 from './libs/math/Vector3';
-import Texture from './libs/renderer/Texture';
-import Matrix4 from './libs/math/Matrix4';
-import SpotLight from './libs/3d/light/SpotLight';
 import Angle from './libs/math/Angle';
-import Buffer from './libs/core/Buffer';
-import MathArray from './libs/math/MathArray';
-import RenderTarget from './libs/renderer/RenderTarget';
-import PickingMaterial from './libs/3d/material/PickingMaterial';
+import Matrix4 from './libs/math/Matrix4';
+import Vector3 from './libs/math/Vector3';
 import RenderBuffer from './libs/renderer/RenderBuffer';
+import Texture from './libs/renderer/Texture';
 
 const defaultStyle = {
     width: '100%',
@@ -112,7 +109,6 @@ plane.uv = [
 
 const world = new Node3d();
 
-
 const camera = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
 camera.translate(5, 5, 5);
 camera.target = new Vector3(0, 0, 0);
@@ -121,6 +117,7 @@ world.appendChild(camera);
 const pickingMaterial = new PickingMaterial();
 const textureMaterial = new PhongMaterial();
 textureMaterial.texture = new Texture(camera, 1024, 1024);
+
 const floor = new Node3d();
 floor.material = textureMaterial;
 floor.vertexBuffer = plane;
@@ -130,51 +127,51 @@ const element = new Node3d();
 element.material = textureMaterial;
 element.translate(0, 1, 0);
 element.vertexBuffer = cube;
-world.appendChild(element);
+floor.appendChild(element);
 
 const redLight = new PointLight(
     Color.red,
     new Vector3(5, 3, -5));
 redLight.material = textureMaterial;
 redLight.vertexBuffer = reverseCube;
-world.appendChild(redLight);
+floor.appendChild(redLight);
 
 const greenLight = new PointLight(
     Color.green,
     new Vector3(-5, 3, -5));
 greenLight.material = textureMaterial;
 greenLight.vertexBuffer = reverseCube;
-world.appendChild(greenLight);
+floor.appendChild(greenLight);
 
 const blueLight = new PointLight(
     Color.blue,
     new Vector3(-5, 3, 5));
 blueLight.material = textureMaterial;
 blueLight.vertexBuffer = reverseCube;
-world.appendChild(blueLight);
+floor.appendChild(blueLight);
 
 const whiteLight = new PointLight(
     Color.white,
     new Vector3(5, 3, 5));
 whiteLight.material = textureMaterial;
 whiteLight.vertexBuffer = reverseCube;
-world.appendChild(whiteLight);
+floor.appendChild(whiteLight);
 
 const sun = new DirectionalLight(
     Color.white.scale(0.5),
     new Vector3(10, 20, 10),
     new Vector3(0, 0, 0));
-world.appendChild(sun);
+floor.appendChild(sun);
 
 const spotLight = new SpotLight(
     Color.magenta,
     Math.cos(Angle.toRadian(50)),
-    new Vector3(3, 2, 3),
+    new Vector3(-3, 2, -3),
     new Vector3(0, 0, 0));
 spotLight.innerRadius = Math.cos(Angle.toRadian(40));
 spotLight.material = textureMaterial;
 spotLight.vertexBuffer = reverseCube;
-world.appendChild(spotLight);
+floor.appendChild(spotLight);
 
 
 element.addEventListener('onclick', (e) => {
@@ -207,9 +204,7 @@ let request = requestAnimationFrame(draw);
 function draw(time) {
     textureMaterial.texture.updated = true;
     element.rotate(0.01, 1, 1, 1);
-    camera.translate(0.1, 0, 0);
-    camera.target = camera.target;
-    camera.projectionUpdated = true;
+    floor.rotate(0.01, 0, 1, 0);
 
     canvas.render(camera);
     request = requestAnimationFrame(draw);
@@ -229,4 +224,54 @@ canvas.element.onpointerdown = (e) => {
     }
     renderTarget.material = null;
     renderTarget.output = null;
+}
+
+document.onkeydown = e => {
+    const step = 0.1;
+    switch (e.code) {
+        case 'a':
+        case 'KeyA':
+        case 'ArrowLeft':
+            camera.rotate(step * 0.1, 0, 1, 0);
+            camera.projectionUpdated = true;
+            break;
+        case 'd':
+        case 'KeyD':
+        case 'ArrowRight':
+            camera.rotate(step * 0.1, 0, -1, 0);
+            camera.projectionUpdated = true;
+            break;
+        case 'w':
+        case 'KeyW':
+        case 'ArrowUp':
+            camera.translate(0, 0, -step);
+            camera.projectionUpdated = true;
+            break;
+        case 's':
+        case 'KeyS':
+        case 'ArrowDown':
+            camera.translate(0, 0, step);
+            camera.projectionUpdated = true;
+            break;
+        case 'ControlLeft':
+            camera.rotate(step * 0.1, -1, 0, 0);
+            camera.projectionUpdated = true;
+            break;
+        case 'Space':
+            camera.rotate(step * 0.1, 1, 0, 0);
+            camera.projectionUpdated = true;
+            break;
+        case 'q':
+        case 'KeyQ':
+            camera.rotate(step * 0.1, 0, 0, -1,);
+            camera.projectionUpdated = true;
+            break;
+        case 'e':
+        case 'KeyE':
+            camera.rotate(step * 0.1, 0, 0, 1);
+            camera.projectionUpdated = true;
+            break;
+        default:
+            return;
+    }
 }

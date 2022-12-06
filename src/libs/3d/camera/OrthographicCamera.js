@@ -83,7 +83,7 @@ export default class OrthographicCamera extends Camera {
 
     get projectionMatrix(){
         if (this.projectionUpdated) {
-            this._projectionMatrix =  this.orthograpicMatrix.clone().multiply(this.invertMatrix);
+            this._projectionMatrix =  this.orthograpicMatrix.clone().multiply(this.parameters[OrthographicCamera.vertexMatrixName].clone().invert());
             this.projectionUpdated = false;
         }
         return this._projectionMatrix;
