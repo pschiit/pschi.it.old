@@ -333,7 +333,7 @@ export default class WebGLRenderer extends Node {
             render(this, node.data.scene);
         }
         if ( this.renderTarget.output instanceof RenderBuffer) {
-            this.gl.readPixels( this.renderTarget.output.x,  this.renderTarget.output.y,  this.renderTarget.output.width,  this.renderTarget.output.height, WebGLRenderer.formatFrom(this,  this.renderTarget.output.format), WebGLRenderer.typeFrom(this,  this.renderTarget.output.data),  this.renderTarget.output.data);
+            this.gl.readPixels( this.renderTarget.output.x,  this.renderTarget.output.y,  this.renderTarget.output.width,  this.renderTarget.output.height, WebGLRenderer.formatFrom(this,  this.renderTarget.output.format), WebGLRenderer.typeFrom(this,  this.renderTarget.output.type),  this.renderTarget.output.data);
         }
         this.renderTarget = previous;
 
@@ -437,11 +437,10 @@ export default class WebGLRenderer extends Node {
     }
 
     static typeFrom(renderer, typeArray) {
-        return typeArray instanceof Float32Array ? renderer.gl.FLOAT
-            : typeArray instanceof Uint32Array ? renderer.gl.UNSIGNED_INT
-                : typeArray instanceof Uint16Array ? renderer.gl.UNSIGNED_SHORT
-                    : typeArray instanceof Uint8Array ? renderer.gl.UNSIGNED_BYTE
-                        : renderer.gl.FLOAT;
+        return typeArray === Float32Array ? renderer.gl.FLOAT
+            : typeArray === Uint32Array ? renderer.gl.UNSIGNED_INT
+                : typeArray === Uint16Array ? renderer.gl.UNSIGNED_SHORT
+                    : renderer.gl.UNSIGNED_BYTE;
     }
 }
 

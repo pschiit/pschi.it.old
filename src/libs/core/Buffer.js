@@ -17,20 +17,15 @@ export default class Buffer extends Node {
         this.addEventListener(Node.event.nodeInserted, (e) => {
             const child = e.inserted;
             if (!(child instanceof Buffer)
-                || (this.type != child.data.constructor)) {
+                || (this.type != child.type)) {
                 this.removeChild(child);
                 return;
             }
         });
+    }
 
-        this.addEventListener(Node.event.nodeInserted, (e) => {
-            const child = e.inserted;
-            if (!(child instanceof Buffer)
-                || (this.type != child.data.constructor)) {
-                this.removeChild(child);
-                return;
-            }
-        });
+    get mainBuffer() {
+        return this.parent instanceof Buffer ? this.parent.mainBuffer : this;
     }
 
     get index() {
@@ -53,26 +48,31 @@ export default class Buffer extends Node {
     }
 
     get data() {
-        if (this.childrens.some(c => c.updated)) {
-            this._data = new this.type(this.length);
+        if (this.childrens.length > 0) {
+            const data = new this.type(this.length);
             const arrayStep = this.step;
 
-            this.childrens.forEach(buffer => {
-                const offset = buffer.offset;
+            this.childrens.forEach(b => {
+                const offset = b.offset;
                 let position = 0;
-                for (let i = 0; i < this._data.length; i += arrayStep) {
-                    for (let j = 0; j < buffer.step; j++) {
-                        this._data[offset + i + j] = buffer.data[position++];
+                const bufferData = b.data;
+                for (let i = 0; i < data.length; i += arrayStep) {
+                    for (let j = 0; j < b.step; j++) {
+                        data[offset + i + j] = bufferData[position++];
                     }
                 }
-                buffer.updated = false;
+                b.updated = false;
             });
+            
+            return data;
         }
         return this._data;
     }
 
     set data(v) {
-        this._data = v;
+        if (!(this.childrens.length > 0)) {
+            this._data = v;
+        }
     }
 
     get step() {
@@ -116,15 +116,15 @@ export default class Buffer extends Node {
     }
 
     get BYTES_PER_STEP() {
-        return this.data.BYTES_PER_ELEMENT * this.step;
+        return this.BYTES_PER_ELEMENT * this.step;
     }
 
     get BYTES_PER_OFFSET() {
-        return this.data.BYTES_PER_ELEMENT * this.offset;
+        return this.BYTES_PER_ELEMENT * this.offset;
     }
 
     get BYTES_PER_ELEMENT() {
-        return this.data.BYTES_PER_ELEMENT;
+        return this.type.BYTES_PER_ELEMENT;
     }
 
     get offset() {
@@ -143,7 +143,7 @@ export default class Buffer extends Node {
     setParameter(name, v, step, divisor) {
         let buffer = this.getParameter(name);
         if (v) {
-            if (v instanceof Buffer) {
+            if (v instanceof Buffer && v.type == this.type) {
                 buffer = v;
                 buffer.name = name;
                 this.appendChild(v);
@@ -172,22 +172,20 @@ export default class Buffer extends Node {
     }
 
     transform(matrix) {
-        let vector = this.step == 4 ? new Vector4()
-            : this.step == 3 ? new Vector3() :
-                new Vector2();
-        for (let i = 0; i < this.length; i += vector.length) {
-            for (let j = 0; j < vector.length; j++) {
-                vector[j] = this.data[i + j];
-            }
-            vector.transform(matrix);
-            for (let j = 0; j < vector.length; j++) {
-                this.data[i + j] = vector[j];
+        if (!(this.childrens.length > 0)) {
+            let vector = this.step == 4 ? new Vector4()
+                : this.step == 3 ? new Vector3() :
+                    new Vector2();
+            for (let i = 0; i < this.length; i += vector.length) {
+                for (let j = 0; j < vector.length; j++) {
+                    vector[j] = this.data[i + j];
+                }
+                vector.transform(matrix);
+                for (let j = 0; j < vector.length; j++) {
+                    this.data[i + j] = vector[j];
+                }
             }
         }
-    }
-
-    get mainBuffer() {
-        return this.parent instanceof Buffer ? this.parent.mainBuffer : this;
     }
 
     static usage = {

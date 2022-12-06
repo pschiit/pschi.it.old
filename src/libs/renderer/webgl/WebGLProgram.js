@@ -78,7 +78,7 @@ function createAttribute(renderer, program, attribute) {
                 : 1;
     program.parameters[attribute.name] = divisor > 1 ? (v) => {
         if (v instanceof Buffer) {
-            renderer.arrayBuffer = WebGLBuffer.from(renderer, v.mainBuffer, renderer.gl.ARRAY_BUFFER);
+            renderer.arrayBuffer = WebGLBuffer.from(renderer, v, renderer.gl.ARRAY_BUFFER);
             let offset = v.BYTES_PER_OFFSET;
             for (let i = 1; i <= divisor; i++) {
                 renderer.gl.enableVertexAttribArray(location + i);
