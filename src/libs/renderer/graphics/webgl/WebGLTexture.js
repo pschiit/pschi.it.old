@@ -2,6 +2,7 @@ import Texture from '../Texture';
 import Render from '../Render';
 import WebGLNode from './WebGLNode';
 import WebGLRenderer from './WebGLRenderer';
+import RenderTarget from '../RenderTarget';
 
 export default class WebGLTexture extends WebGLNode {
     /** Create a WebGLTexture for a WebGLRenderingContext
@@ -15,11 +16,10 @@ export default class WebGLTexture extends WebGLNode {
 
         this.unit = renderer.textureUnit++;
         this.level = 0;
-        this.format = WebGLRenderer.formatFrom(renderer, texture.format);
-        this.type = WebGLRenderer.typeFrom(renderer, texture.data.constructor);
         renderer.texture2d = this;
-        // renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_WRAP_S, renderer.gl.CLAMP_TO_EDGE);
-        // renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_WRAP_T, renderer.gl.CLAMP_TO_EDGE);
+        //renderer.gl.generateMipmap(this.target);
+        //renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_WRAP_S, renderer.gl.CLAMP_TO_EDGE);
+        //renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_WRAP_T, renderer.gl.CLAMP_TO_EDGE);
         //renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_MAG_FILTER, renderer.gl.LINEAR);
         renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_MIN_FILTER, renderer.gl.LINEAR);
 
@@ -27,14 +27,20 @@ export default class WebGLTexture extends WebGLNode {
             this.update = (texture) => {
                 if (texture.updated) {
                     renderer.texture2d = this;
-                    if (texture.width && texture.height) {
-                        renderer.gl.texImage2D(this.target, this.level, this.format, texture.width, texture.height, 0, this.format, this.type, texture.data instanceof Render ? null : texture.data);
-                        if (texture.data instanceof Render) {
-                            texture.updated = false;
-                            renderer.render(texture);
-                        }
+                    if (texture.data instanceof RenderTarget) {
+                        const format = WebGLRenderer.formatFrom(renderer, texture.data.format);
+                        const type = WebGLRenderer.typeFrom(renderer, texture.data.type);
+                        renderer.gl.texImage2D(this.target, this.level, format, texture.data.width, texture.data.height, 0, format, type, null);
+                        texture.updated = false;
                     } else {
-                        renderer.gl.texImage2D(this.target, this.level, this.format, this.format, this.type, texture.data);
+                        const format = WebGLRenderer.formatFrom(renderer, texture.format);
+                        const type = WebGLRenderer.typeFrom(renderer, texture.type);
+                        if (texture.width && texture.height) {
+                            renderer.gl.texImage2D(this.target, this.level, format, texture.width, texture.height, 0, format, type, texture.data);
+
+                        } else {
+                            renderer.gl.texImage2D(this.target, this.level, format, format, type, texture.data);
+                        }
                     }
                     texture.updated = false;
                 }
@@ -42,8 +48,10 @@ export default class WebGLTexture extends WebGLNode {
         } else if (this.target === renderer.gl.TEXTURE_CUBE_MAP) {
             this.update = (texture) => {
                 if (texture.updated) {
+                    const format = WebGLRenderer.formatFrom(renderer, texture.format);
+                    const type = WebGLRenderer.typeFrom(renderer, texture.type);
                     renderer.textureCubeMap = this;
-                    renderer.gl.texImage2D(this.target, this.level, this.format, this.format, this.type, texture.data);
+                    renderer.gl.texImage2D(this.target, this.level, format, format, type, texture.data);
                 };
                 texture.updated = false;
             }
@@ -60,6 +68,7 @@ export default class WebGLTexture extends WebGLNode {
     /** Get the Texture's WebGLTexture from a WebGLRenderingContext
      * @param {WebGLRenderer} renderer the rendering context
      * @param {Texture} texture the Texture
+     * @returns {WebGLTexture} the WebGLTexture
      */
     static from(renderer, texture) {
         return renderer.nodes[texture.id] || new WebGLTexture(renderer, texture);

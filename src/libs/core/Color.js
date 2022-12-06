@@ -116,6 +116,8 @@ export default class Color extends Vector4 {
         this[1] = this[1] / 255;
         this[2] = this[2] / 255;
         this[3] = this[3] / 255;
+        
+        return this;
     }
 
     toString() {

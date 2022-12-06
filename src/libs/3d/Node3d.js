@@ -1,6 +1,6 @@
 import Matrix4 from '../math/Matrix4';
 import Vector3 from '../math/Vector3';
-import Render from '../renderer/Render';
+import Render from '../renderer/graphics/Render';
 
 export default class Node3d extends Render {
     /** Create a new Node3d

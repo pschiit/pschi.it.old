@@ -1,10 +1,8 @@
 import Canvas from './Canvas';
 import Node from '../core/Node';
-import WebGLRenderer from '../renderer/webgl/WebGLRenderer';
-import Texture from '../renderer/Texture';
-import Render from '../renderer/Render';
-import RenderTarget from '../renderer/RenderTarget';
+import WebGLRenderer from '../renderer/graphics/webgl/WebGLRenderer';
 import Vector2 from '../math/Vector2';
+import RenderTarget from '../renderer/graphics/RenderTarget';
 
 export default class WebGLCanvas extends Canvas {
     /** Create a new WebGLCanvas HtmlNode
@@ -12,7 +10,7 @@ export default class WebGLCanvas extends Canvas {
     */
     constructor(contextOptions) {
         super();
-        this._renderTarget = new RenderTarget(0, 0, this.clientWidth, this.clientHeight);
+        this._renderTarget = new RenderTarget();
         initContext(this, contextOptions);
 
         this.element.addEventListener('webglcontextlost', (e) => {
@@ -65,8 +63,8 @@ export default class WebGLCanvas extends Canvas {
         return null;
     }
 
-    /** Render a Render|Texture in the cWebGLCanvas
-     * @param {Render|RenderTarget} node Node to render
+    /** Render a GraphicsNode in the WebGLCanvas
+     * @param {GraphicsNode} node GraphicsNode to render
      * @returns {WebGLCanvas} the current WebGLCanvas
      */
     render(node) {

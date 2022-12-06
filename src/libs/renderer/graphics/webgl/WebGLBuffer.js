@@ -1,5 +1,5 @@
 
-import Buffer from '../../core/Buffer';
+import Buffer from '../../../core/Buffer';
 import WebGLNode from './WebGLNode';
 import WebGLRenderer from './WebGLRenderer';
 
@@ -49,6 +49,7 @@ export default class WebGLBuffer extends WebGLNode {
      * @param {WebGLRenderer} renderer the rendering context
      * @param {Buffer} buffer the Buffer
      * @param {Number} webGLTarget  WebGL target
+     * @returns {WebGLBuffer} the WebGLBuffer
      */
     static from(renderer, buffer, webGLTarget) {
         buffer = buffer.mainBuffer;

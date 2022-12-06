@@ -1,29 +1,32 @@
-import PerspectiveCamera from '../../3d/camera/PerspectiveCamera';
-import Color from '../../core/Color';
-import Node from '../../core/Node';
-import Material from '../Material';
+import PerspectiveCamera from '../../../3d/camera/PerspectiveCamera';
+import Color from '../../../core/Color';
+import Node from '../../../core/Node';
 import Render from '../Render';
-import RenderBuffer from '../RenderBuffer';
+import RenderBuffer from '../buffer/RenderBuffer';
 import RenderTarget from '../RenderTarget';
 import Scene from '../Scene';
 import Texture from '../Texture';
+import GraphicsRenderer from '../GraphicsRenderer';
+import Material from '../Material';
 import WebGLBuffer from './WebGLBuffer';
 import WebGLFramebuffer from './WebGLFramebuffer';
 import WebGLProgram from './WebGLProgram';
 import WebGLShader from './WebGLShader';
 import WebGLTexture from './WebGLTexture';
 import WebGLVertexArray from './WebGLVertexArray';
+import GraphicsNode from '../GraphicsNode';
+import Vector4 from '../../../math/Vector4';
 
-export default class WebGLRenderer extends Node {
+export default class WebGLRenderer extends GraphicsRenderer {
     /** Create a WebGLRenderer from a WebGLRenderingContext
      * @param {WebGLRenderingContext} gl the context of the renderer
      */
     constructor(gl) {
         super();
-        this.resized = true;
         this.gl = gl;
         this.polyfillExtension();
         this.clearColor();
+        this.viewport = new Vector4();
         this.culling = null;
         this.depth = null;
         this.clear();
@@ -83,6 +86,67 @@ export default class WebGLRenderer extends Node {
                 }
             }
         });
+    }
+
+    /** Render a GraphicsNode in the current WebGLRenderer
+     * @param {GraphicsNode} node Node to render
+     * @returns {WebGLRenderer} the current WebGLRenderer
+     */
+    render(node) {
+        let renderTarget = this.parent.renderTarget;
+        if (node instanceof Render && renderTarget.data != node) {
+            renderTarget.data = node;
+        } else if (node instanceof Texture) {
+            if (!this.framebuffer?.is(node)) {
+                this.framebuffer = WebGLFramebuffer.from(this, node);
+                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.framebuffer.location);
+                if (this.texture2d?.is(node)) {
+                    this.texture2d = null;
+                }
+            } else if (this.framebuffer) {
+                this.framebuffer = null;
+                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+            }
+            renderTarget = node.data;
+        } else if (node instanceof RenderTarget) {
+            renderTarget = node;
+        }
+        const viewport = renderTarget.viewport;
+        const scissor = renderTarget.scissor;
+        if (scissor) {
+            if (!this.scissor) {
+                this.gl.enable(this.gl.SCISSOR_TEST);
+            }
+            if (!this.scissor?.equals(scissor)) {
+                this.gl.scissor(scissor[0], scissor[1], scissor[2], scissor[3]);
+                this.scissor = scissor;
+            }
+        } else if (this.scissor) {
+            this.gl.disable(this.gl.SCISSOR_TEST);
+            this.scissor = null;
+        }
+        if (!this.viewport.equals(viewport)) {
+            this.gl.viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+        }
+
+        render(this, renderTarget);
+        const read = renderTarget.read;
+        if (read) {
+            this.gl.readPixels(read[0], read[1], read[2], read[3], WebGLRenderer.formatFrom(this, renderTarget.format), WebGLRenderer.typeFrom(this, renderTarget.type), renderTarget.output);
+        }
+
+        return this;
+    }
+
+    /** Remove all dependencies from GraphicsNode in the current WebGLRenderer
+     * @param {GraphicsNode} node GraphicsNode to render
+     * @returns {WebGLRenderer} the current WebGLRenderer
+     */
+    remove(node) {
+        const toRemove = this.childrens.filter(c => c.is(node));
+        toRemove.forEach(this.removeChild.bind(this));
+
+        return this;
     }
 
     /** Return the WebGLProgram currently used by the WebGLRenderer
@@ -187,23 +251,6 @@ export default class WebGLRenderer extends Node {
         }
     }
 
-    /** Return the WebGLFramebuffer currently used by the WebGLRenderer
-     * @return {WebGLFramebuffer} the WebGLFramebuffer used
-     */
-    get framebuffer() {
-        return this._framebuffer;
-    }
-
-    /** Bind a WebGLFramebuffer as the current framebuffer of the WebGLRenderer
-     * @param {WebGLFramebuffer} v WebGLFramebuffer to bind
-     */
-    set framebuffer(v) {
-        if (this._framebuffer != v) {
-            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, v?.location);
-            this._framebuffer = v;
-        }
-    }
-
     get depth() {
         return this._depth;
     }
@@ -258,21 +305,6 @@ export default class WebGLRenderer extends Node {
         }
     }
 
-    get scissor() {
-        return this._scissor;
-    }
-
-    set scissor(v) {
-        if (this.scissor != v) {
-            if (v) {
-                this.gl.enable(this.gl.SCISSOR_TEST);
-            } else {
-                this.gl.disable(this.gl.SCISSOR_TEST)
-            }
-            this._scissor = v;
-        }
-    }
-
     get material() {
         return this._material;
     }
@@ -288,61 +320,6 @@ export default class WebGLRenderer extends Node {
                 this.program = null;
             }
         }
-    }
-
-    get renderTarget() {
-        return this._renderTarget;
-    }
-
-    set renderTarget(v) {
-        if (this.renderTarget != v) {
-            if (v) {
-                if (v instanceof Texture) {
-                    this.framebuffer = WebGLFramebuffer.from(this, v);
-                    if (this.texture2d?.is(v)) {
-                        this.texture2d = null;
-                    }
-                } else {
-                    this.framebuffer = null;
-                }
-                if (v.scissor) {
-                    this.scissor = true;
-                    this.gl.scissor(v.x, v.y, v.width, v.height);
-                } else {
-                    this.scissor = false;
-                }
-                this.gl.viewport(v.x, v.y, v.width, v.height);
-                this._renderTarget = v;
-            } else {
-                this._renderTarget = null;
-            }
-        }
-    }
-
-    /** Render a Render|Texture in the current WebGLRenderer
-     * @param {Render|RenderTarget} node Node to render
-     * @returns {WebGLRenderer} the current WebGLRenderer
-     */
-    render(node) {
-        const previous = this.renderTarget;
-        if (node instanceof Render) {
-            this.renderTarget = this.parent.renderTarget;
-            render(this, node.scene);
-        } else if (node instanceof RenderTarget) {
-            this.renderTarget = node;
-            render(this, node.data.scene);
-        }
-        if ( this.renderTarget.output instanceof RenderBuffer) {
-            this.gl.readPixels( this.renderTarget.output.x,  this.renderTarget.output.y,  this.renderTarget.output.width,  this.renderTarget.output.height, WebGLRenderer.formatFrom(this,  this.renderTarget.output.format), WebGLRenderer.typeFrom(this,  this.renderTarget.output.type),  this.renderTarget.output.data);
-        }
-        this.renderTarget = previous;
-
-        return this;
-    }
-
-    remove(node) {
-        const toRemove = this.childrens.filter(c => c.is(node));
-        toRemove.forEach(this.removeChild.bind(this));
     }
 
     clearColor(color = Color.black) {
@@ -446,13 +423,14 @@ export default class WebGLRenderer extends Node {
 
 /** Render a Scene in a WebGLRenderer
  * @param {WebGLRenderer} renderer drawing context
- * @param {Scene} scene to render
+ * @param {RenderTarget} renderTarget to render
  */
-function render(renderer, scene) {
+function render(renderer, renderTarget) {
+    const scene = renderTarget.data.scene;
     if (scene.camera) {
         const camera = scene.camera;
         let aspectRatio = 0;
-        aspectRatio = renderer.renderTarget.aspectRatio;
+        aspectRatio = renderTarget.aspectRatio;
         if (camera instanceof PerspectiveCamera) {
             if (aspectRatio != camera.aspectRatio) {
                 camera.aspectRatio = aspectRatio;
@@ -474,9 +452,9 @@ function render(renderer, scene) {
         const webGLBuffer = WebGLBuffer.from(renderer, buffer, renderer.gl.ELEMENT_ARRAY_BUFFER);
         webGLBuffer.update(buffer);
     }
-    if (renderer.renderTarget?.material) {
+    if (renderTarget?.material) {
         scene.materials = {};
-        scene.materials[renderer.renderTarget.material.id] = renderer.renderTarget?.material
+        scene.materials[renderTarget.material.id] = renderTarget?.material
     }
     for (const id in scene.materials) {
         const material = scene.materials[id];
@@ -494,8 +472,8 @@ function render(renderer, scene) {
     }
     renderer.clear();
     scene.renders.forEach(r => {
-        if (renderer.renderTarget?.material) {
-            draw(r, renderer.renderTarget.material);
+        if (renderTarget?.material) {
+            draw(r, renderTarget.material);
         } else {
             draw(r, r.material);
         }

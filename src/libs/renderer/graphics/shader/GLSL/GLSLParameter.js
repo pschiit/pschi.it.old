@@ -1,14 +1,13 @@
-import Camera from '../../../3d/camera/Camera';
-import DirectionalLight from '../../../3d/light/DirectionalLight';
-import PointLight from '../../../3d/light/PointLight';
-import SpotLight from '../../../3d/light/SpotLight';
-import PhongMaterial from '../../../3d/material/PhongMaterial';
-import Node3d from '../../../3d/Node3d';
-import Node from '../../../core/Node';
+import Camera from '../../../../3d/camera/Camera';
+import DirectionalLight from '../../../../3d/light/DirectionalLight';
+import PointLight from '../../../../3d/light/PointLight';
+import SpotLight from '../../../../3d/light/SpotLight';
+import PhongMaterial from '../../../../3d/material/PhongMaterial';
+import Node3d from '../../../../3d/Node3d';
+import Node from '../../../../core/Node';
 import Material from '../../Material';
 import Render from '../../Render';
-import VertexBuffer from '../../VertexBuffer';
-import GLSLMaterial from './GLSLMaterial';
+import VertexBuffer from '../../buffer/VertexBuffer';
 
 export default class GLSLParameter extends Node {
     /** Create a GLSL Parameter

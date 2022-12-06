@@ -1,5 +1,5 @@
-import Buffer from '../core/Buffer';
-import RenderTarget from './RenderTarget';
+import Buffer from '../../../core/Buffer';
+import RenderTarget from '../RenderTarget';
 
 export default class RenderBuffer extends Buffer {
     constructor(x = 0, y = 0, width = 1, height = 1, format = null) {

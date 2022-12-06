@@ -1,6 +1,7 @@
-import Node from '../core/Node';
-import MathArray from '../math/MathArray';
-export default class Scene extends Node {
+import MathArray from '../../math/MathArray';
+import GraphicsNode from './GraphicsNode';
+
+export default class Scene extends GraphicsNode {
     constructor() {
         super();
         this.camera = null;

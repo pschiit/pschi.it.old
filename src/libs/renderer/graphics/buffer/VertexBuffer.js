@@ -1,6 +1,6 @@
-import Buffer from'../core/Buffer';
+import Buffer from '../../../core/Buffer';
 
-export default class  VertexBuffer extends Buffer {
+export default class VertexBuffer extends Buffer {
     constructor() {
         super(new Float32Array(), 0);
         this.primitive = null;
@@ -49,14 +49,14 @@ export default class  VertexBuffer extends Buffer {
     }
 
     set uv(v) {
-        this.setParameter(this.uvName, v, this.uvLength);
+        this.setParameter(this.uvName, v, this.uvLength).normalize = true;
     }
 
     reverseNormal() {
         const normal = this.normal.data;
-        this.normal = normal.map(n => n > 0 ? -1 
-            : n < 0 ? 1 
-            : 0);
+        this.normal = normal.map(n => n > 0 ? -1
+            : n < 0 ? 1
+                : 0);
     }
 
     transform(matrix) {

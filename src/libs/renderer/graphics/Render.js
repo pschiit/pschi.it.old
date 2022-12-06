@@ -1,8 +1,8 @@
-import Color from '../core/Color';
-import Node from '../core/Node';
+import Color from '../../core/Color';
+import GraphicsNode from './GraphicsNode';
 import Scene from './Scene';
 
-export default class Render extends Node {
+export default class Render extends GraphicsNode {
     /** Create a Renderable Node for a Renderer
      */
     constructor() {

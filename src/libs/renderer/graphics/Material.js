@@ -1,6 +1,6 @@
-import Node from'../core/Node';
+import GraphicsNode from './GraphicsNode';
 
-export default class Material extends Node {
+export default class Material extends GraphicsNode {
     /** Create a new Material
     */
     constructor(){

@@ -16,8 +16,7 @@ export default class Buffer extends Node {
 
         this.addEventListener(Node.event.nodeInserted, (e) => {
             const child = e.inserted;
-            if (!(child instanceof Buffer)
-                || (this.type != child.type)) {
+            if (!(child instanceof Buffer)) {
                 this.removeChild(child);
                 return;
             }
@@ -63,7 +62,7 @@ export default class Buffer extends Node {
                 }
                 b.updated = false;
             });
-            
+
             return data;
         }
         return this._data;
@@ -143,12 +142,12 @@ export default class Buffer extends Node {
     setParameter(name, v, step, divisor) {
         let buffer = this.getParameter(name);
         if (v) {
-            if (v instanceof Buffer && v.type == this.type) {
+            if (v instanceof Buffer) {
                 buffer = v;
                 buffer.name = name;
                 this.appendChild(v);
             } else {
-                if (v.constructor != this.type) {
+                if (Array.isArray(v)) {
                     v = new this.type(v);
                 }
                 if (!buffer) {

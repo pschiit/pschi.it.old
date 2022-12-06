@@ -13,13 +13,17 @@ import WebGLCanvas from './libs/html/WebGLCanvas';
 import Angle from './libs/math/Angle';
 import Matrix4 from './libs/math/Matrix4';
 import Vector3 from './libs/math/Vector3';
-import RenderBuffer from './libs/renderer/RenderBuffer';
-import Texture from './libs/renderer/Texture';
+import RenderBuffer from './libs/renderer/graphics/buffer/RenderBuffer';
+import RenderTarget from './libs/renderer/graphics/RenderTarget';
+import Texture from './libs/renderer/graphics/Texture';
+import Buffer from './libs/core/Buffer';
+import Vector4 from './libs/math/Vector4';
 
 const defaultStyle = {
     width: '100%',
     height: '100%',
     margin: 0,
+    background: '#000000'
 };
 HtmlNode.document.style = defaultStyle;
 const body = HtmlNode.body;
@@ -116,7 +120,7 @@ world.appendChild(camera);
 
 const pickingMaterial = new PickingMaterial();
 const textureMaterial = new PhongMaterial();
-textureMaterial.texture = new Texture(camera, 1024, 1024);
+textureMaterial.texture = new Texture(new RenderTarget(camera, 1024, 1024));
 
 const floor = new Node3d();
 floor.material = textureMaterial;
@@ -198,32 +202,36 @@ spotLight.addEventListener('onclick', (e) => {
     console.log('toggle spot');
     spotLight.toggle();
 });
-
 let then = 0;
+
+const renderTarget = canvas.renderTarget;
+
+
 let request = requestAnimationFrame(draw);
 function draw(time) {
-    textureMaterial.texture.updated = true;
     element.rotate(0.01, 1, 1, 1);
     floor.rotate(0.01, 0, 1, 0);
 
+    canvas.render(textureMaterial.texture);
     canvas.render(camera);
     request = requestAnimationFrame(draw);
 }
 
+const pickingTexture = new Texture(renderTarget);
 canvas.element.onpointerdown = (e) => {
     const mousePosition = canvas.getPointerPosition(e);
-    const renderTarget = canvas.renderTarget;
+
+    renderTarget.read = new Vector4(mousePosition[0], mousePosition[1], 1, 1);
     renderTarget.material = pickingMaterial;
-    renderTarget.output = new RenderBuffer(mousePosition[0], mousePosition[1]);
-    canvas.render(camera);
-    const color = new Color(renderTarget.output.data);
-    color.normalize();
-    const node = Node3d.search(color);
+
+    canvas.render(pickingTexture);
+    const color = new Color(renderTarget.output);
+    const node = Node3d.search(color.normalize());
     if (node) {
         node.dispatchEvent({ type: 'onclick' });
     }
+    renderTarget.read = null;
     renderTarget.material = null;
-    renderTarget.output = null;
 }
 
 document.onkeydown = e => {
