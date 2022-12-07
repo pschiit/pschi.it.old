@@ -22,12 +22,11 @@ export default class WebGLRenderer extends GraphicsRenderer {
         super();
         this.gl = gl;
         this.polyfillExtension();
-        this.clearColor();
         this.viewport = new Vector4();
+        this.clearColor = new Color();
         this.scissor = null;
         this.culling = null;
         this.depth = null;
-        this.clear();
 
         this.textureUnit = 0;
 
@@ -304,13 +303,6 @@ export default class WebGLRenderer extends GraphicsRenderer {
         }
     }
 
-    clearColor(color = Color.black) {
-        if (color != this._clearColor) {
-            this.gl.clearColor(color[0], color[1], color[2], color[3]);
-            this._clearColor = color;
-        }
-    }
-
     clear(color = true, depth = true, stencil = true) {
         let bits = 0;
 
@@ -440,6 +432,7 @@ function render(renderer, renderTarget) {
     }
     const viewport = renderTarget.viewport;
     const scissor = renderTarget.scissor;
+    const clearColor = scene.camera?.backgroundColor || Color.black;
     if (scissor) {
         if (!renderer.scissor) {
             renderer.gl.enable(renderer.gl.SCISSOR_TEST);
@@ -455,8 +448,12 @@ function render(renderer, renderTarget) {
     }
     if (!renderer.viewport.equals(viewport)) {
         renderer.gl.viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+        renderer.viewport = viewport;
     }
-    renderer.clearColor(scene.camera?.backgroundColor);
+    if (!renderer.clearColor.equals(clearColor)) {
+        renderer.gl.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
+        renderer.clearColor = clearColor;
+    }
     renderer.clear();
     scene.renders.forEach(r => {
         if (renderTarget.material) {
