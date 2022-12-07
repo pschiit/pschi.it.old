@@ -14,7 +14,7 @@ export default class RenderTarget extends GraphicsNode {
         this.height = height;
         this.data = data;
         this.format = RenderTarget.format.rgba;
-        this.type = Uint8Array.constructor;
+        this.type = new Float32Array(0).constructor;
         this.scissor = null;
         this.read = null;
         this.texture = null;
@@ -104,7 +104,7 @@ export default class RenderTarget extends GraphicsNode {
         if (this.read) {
             const length = this.read[2] * this.read[3] * this.step;
             if (this._readBuffer?.length != length) {
-                this._readBuffer = new Uint8Array(length);
+                this._readBuffer = new this.type(length);
             }
             return this._readBuffer;
         } else {

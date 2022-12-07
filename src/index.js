@@ -224,8 +224,7 @@ canvas.element.onpointerdown = (e) => {
 
     canvas.render(pickingTexture);
     const color = new Color(renderTarget.output);
-    console.log(color);
-    const node = Node3d.search(color.normalize());
+    const node = Node3d.search(color);
     if (node) {
         node.dispatchEvent({ type: 'onclick' });
     }

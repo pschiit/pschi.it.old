@@ -26,7 +26,7 @@ export default class WebGLTexture extends WebGLNode {
         if (this.target === renderer.gl.TEXTURE_2D) {
             this.update = (texture) => {
                 if (texture.updated) {
-                    renderer.texture2d = this;
+                    renderer.gl.bindTexture(this.target, this.location);
                     if (texture.data instanceof RenderTarget) {
                         const format = WebGLRenderer.formatFrom(renderer, texture.data.format);
                         const type = WebGLRenderer.typeFrom(renderer, texture.data.type);
@@ -50,7 +50,7 @@ export default class WebGLTexture extends WebGLNode {
                 if (texture.updated) {
                     const format = WebGLRenderer.formatFrom(renderer, texture.format);
                     const type = WebGLRenderer.typeFrom(renderer, texture.type);
-                    renderer.textureCubeMap = this;
+                    renderer.gl.bindTexture(this.target, this.location);
                     renderer.gl.texImage2D(this.target, this.level, format, format, type, texture.data);
                 };
                 texture.updated = false;

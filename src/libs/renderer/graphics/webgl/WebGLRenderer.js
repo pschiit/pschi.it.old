@@ -21,7 +21,7 @@ export default class WebGLRenderer extends GraphicsRenderer {
     constructor(gl) {
         super();
         this.gl = gl;
-        this.polyfillExtension();
+        polyfillExtension(this);
         this.viewport = new Vector4();
         this.clearColor = new Color();
         this.scissor = null;
@@ -96,7 +96,6 @@ export default class WebGLRenderer extends GraphicsRenderer {
         } else if (node instanceof Texture) {
             if (!this.framebuffer?.is(node)) {
                 this.framebuffer = WebGLFramebuffer.from(this, node);
-                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.framebuffer.location);
             }
             if (this.texture2d?.is(node)) {
                 this.texture2d = null;
@@ -113,7 +112,6 @@ export default class WebGLRenderer extends GraphicsRenderer {
         }
         if (this.framebuffer) {
             this.framebuffer = null;
-            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
         }
 
         return this;
@@ -198,6 +196,23 @@ export default class WebGLRenderer extends GraphicsRenderer {
         }
     }
 
+    /** Return the WebGLFramebuffer currently used by the WebGLRenderer
+     * @return {WebGLFramebuffer} the WebGLFramebuffer used
+     */
+    get framebuffer() {
+        return this._framebuffer;
+    }
+
+    /** Bind a WebGLFramebuffer as the current texture of the WebGLRenderer
+     * @param {WebGLFramebuffer} v WebGLFramebuffer to bind
+     */
+    set framebuffer(v) {
+        if (this._framebuffer != v) {
+            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, v?.location);
+            this._framebuffer = v;
+        }
+    }
+
     /** Return the WebGLTexture currently used by the WebGLRenderer
      * @return {WebGLTexture} the WebGLVertexArray used
      */
@@ -232,60 +247,6 @@ export default class WebGLRenderer extends GraphicsRenderer {
         }
     }
 
-    get depth() {
-        return this._depth;
-    }
-
-    set depth(v) {
-        if (this._depth != v) {
-            if (!this._depth) {
-                this.gl.enable(this.gl.DEPTH_TEST);
-                if (v == Material.depth.less) {
-                    this.gl.depthFunc(this.gl.LESS);
-                } else if (v == Material.depth.never) {
-                    this.gl.depthFunc(this.gl.NEVER);
-                } else if (v == Material.depth.always) {
-                    this.gl.depthFunc(this.gl.ALWAYS);
-                } else if (v == Material.depth.equal) {
-                    this.gl.depthFunc(this.gl.EQUAL);
-                } else if (v == Material.depth.notEqual) {
-                    this.gl.depthFunc(this.gl.NOTEQUAL);
-                } else if (v == Material.depth.greater) {
-                    this.gl.depthFunc(this.gl.GREATER);
-                } else if (v == Material.depth.lessEqual) {
-                    this.gl.depthFunc(this.gl.LEQUAL);
-                } else if (v == Material.depth.greaterEqual) {
-                    this.gl.depthFunc(this.gl.GEQUAL);
-                }
-            } else if (!v) {
-                this.gl.disable(this.gl.DEPTH_TEST);
-            }
-            this._depth = v;
-        }
-    }
-
-    get culling() {
-        return this._culling;
-    }
-
-    set culling(v) {
-        if (this._culling != v) {
-            if (!this._culling) {
-                this.gl.enable(this.gl.CULL_FACE);
-                if (v == Material.culling.front) {
-                    this.gl.cullFace(this.gl.FRONT);
-                } else if (v == Material.culling.back) {
-                    this.gl.cullFace(this.gl.BACK);
-                } else if (v == Material.culling.doubleside) {
-                    this.gl.cullFace(this.gl.FRONT_AND_BACK);
-                }
-            } else if (!v) {
-                this.gl.disable(this.gl.CULL_FACE);
-            }
-            this._culling = v;
-        }
-    }
-
     get material() {
         return this._material;
     }
@@ -295,90 +256,59 @@ export default class WebGLRenderer extends GraphicsRenderer {
             this._material = v;
             if (v) {
                 this.program = WebGLProgram.from(this, v);
-                this.culling = v.culling;
+                const culling = v.culling;
+                if (culling) {
+                    if (!this.culling) {
+                        this.gl.enable(this.gl.CULL_FACE);
+                    }
+                    if (this.culling != culling) {
+                        this.culling = culling;
+                        if (culling == Material.culling.front) {
+                            this.gl.cullFace(this.gl.FRONT);
+                        } else if (culling == Material.culling.back) {
+                            this.gl.cullFace(this.gl.BACK);
+                        } else if (culling == Material.culling.doubleside) {
+                            this.gl.cullFace(this.gl.FRONT_AND_BACK);
+                        }
+                    }
+                } else if (this.culling) {
+                    this.gl.disable(this.gl.CULL_FACE);
+                    this.culling = null;
+                }
+                const depth = v.depth;
+                if (depth) {
+                    if (!this.depth) {
+                        this.gl.enable(this.gl.DEPTH_TEST);
+                    }
+                    if (this.depth != depth) {
+                        this.depth = depth;
+                        if (depth == Material.depth.less) {
+                            this.gl.depthFunc(this.gl.LESS);
+                        } else if (depth == Material.depth.nedepther) {
+                            this.gl.depthFunc(this.gl.NEVER);
+                        } else if (depth == Material.depth.always) {
+                            this.gl.depthFunc(this.gl.ALWAYS);
+                        } else if (depth == Material.depth.equal) {
+                            this.gl.depthFunc(this.gl.EQUAL);
+                        } else if (depth == Material.depth.notEqual) {
+                            this.gl.depthFunc(this.gl.NOTEQUAL);
+                        } else if (depth == Material.depth.greater) {
+                            this.gl.depthFunc(this.gl.GREATER);
+                        } else if (depth == Material.depth.lessEqual) {
+                            this.gl.depthFunc(this.gl.LEQUAL);
+                        } else if (depth == Material.depth.greaterEqual) {
+                            this.gl.depthFunc(this.gl.GEQUAL);
+                        }
+                    }
+                } else if (this.depth) {
+                    this.gl.disable(this.gl.DEPTH_TEST);
+                    this.depth = null;
+                }
                 this.depth = v.depth;
             } else {
                 this.program = null;
             }
         }
-    }
-
-    clear(color = true, depth = true, stencil = true) {
-        let bits = 0;
-
-        if (color) bits |= this.gl.COLOR_BUFFER_BIT;
-        if (depth) bits |= this.gl.DEPTH_BUFFER_BIT;
-        if (stencil) bits |= this.gl.STENCIL_BUFFER_BIT;
-
-        this.gl.clear(bits);
-    }
-
-    polyfillExtension() {
-        this.extensions = {};
-        this.gl.getSupportedExtensions().forEach(e => this.extensions[e] = this.gl.getExtension(e))
-        const instancedArrays = this.getExtension('ANGLE_instanced_arrays');
-        Object.defineProperties(this.gl, {
-            VERTEX_ATTRIB_ARRAY_DIVISOR: {
-                value: instancedArrays.VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE,
-                writable: false
-            },
-            drawArraysInstanced: {
-                value: function (mode, first, count, primcount) {
-                    return instancedArrays.drawArraysInstancedANGLE(mode, first, count, primcount);
-                },
-                writable: false
-            },
-            drawElementsInstanced: {
-                value: function (mode, count, type, offset, primcount) {
-                    return instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, primcount);
-                },
-                writable: false
-            },
-            vertexAttribDivisor: {
-                value: function (index, divisor) {
-                    return instancedArrays.vertexAttribDivisorANGLE(index, divisor);
-                },
-                writable: false
-            },
-        });
-        const vertexArray = this.getExtension('OES_vertex_array_object');
-        Object.defineProperties(this.gl, {
-            VERTEX_ARRAY_BINDING: {
-                value: vertexArray.VERTEX_ARRAY_BINDING_OES,
-                writable: false
-            },
-            createVertexArray: {
-                value: function () {
-                    return vertexArray.createVertexArrayOES();
-                },
-                writable: false
-            },
-            deleteVertexArray: {
-                value: function (arrayObject) {
-                    return vertexArray.deleteVertexArrayOES(arrayObject);
-                },
-                writable: false
-            },
-            isVertexArray: {
-                value: function (arrayObject) {
-                    return vertexArray.isVertexArray(arrayObject);
-                },
-                writable: false
-            },
-            bindVertexArray: {
-                value: function (arrayObject) {
-                    return vertexArray.bindVertexArrayOES(arrayObject);
-                },
-                writable: false
-            },
-        });
-    }
-
-    getExtension(name) {
-        return this.extensions[name]
-            || this.extensions['MOZ_' + name]
-            || this.extensions['OP_' + name]
-            || this.extensions['WEBKIT_' + name];
     }
 
     static formatFrom(renderer, format) {
@@ -454,7 +384,7 @@ function render(renderer, renderTarget) {
         renderer.gl.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
         renderer.clearColor = clearColor;
     }
-    renderer.clear();
+    clear();
     scene.renders.forEach(r => {
         if (renderTarget.material) {
             draw(r, renderTarget.material);
@@ -462,8 +392,18 @@ function render(renderer, renderTarget) {
             draw(r, r.material);
         }
     });
-    renderer.vertexArray = null;
+    //renderer.gl.bindVertexArray(null);
 
+
+    function clear(color = true, depth = true, stencil = true) {
+        let bits = 0;
+
+        if (color) bits |= renderer.gl.COLOR_BUFFER_BIT;
+        if (depth) bits |= renderer.gl.DEPTH_BUFFER_BIT;
+        if (stencil) bits |= renderer.gl.STENCIL_BUFFER_BIT;
+
+        renderer.gl.clear(bits);
+    }
 
     /** Draw a Render in a WebGLRenderer
      * @param {Render} render to use
@@ -489,5 +429,73 @@ function render(renderer, renderTarget) {
         } else {
             renderer.gl.drawArrays(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.offset, render.vertexBuffer.count);
         }
+    }
+}
+
+function polyfillExtension(renderer) {
+    renderer.extensions = {};
+    renderer.gl.getSupportedExtensions().forEach(e => renderer.extensions[e] = renderer.gl.getExtension(e))
+    const instancedArrays = getExtension('ANGLE_instanced_arrays');
+    Object.defineProperties(renderer.gl, {
+        VERTEX_ATTRIB_ARRAY_DIVISOR: {
+            value: instancedArrays.VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE,
+            writable: false
+        },
+        drawArraysInstanced: {
+            value: function (mode, first, count, primcount) {
+                return instancedArrays.drawArraysInstancedANGLE(mode, first, count, primcount);
+            },
+            writable: false
+        },
+        drawElementsInstanced: {
+            value: function (mode, count, type, offset, primcount) {
+                return instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, primcount);
+            },
+            writable: false
+        },
+        vertexAttribDivisor: {
+            value: function (index, divisor) {
+                return instancedArrays.vertexAttribDivisorANGLE(index, divisor);
+            },
+            writable: false
+        },
+    });
+    const vertexArray = getExtension('OES_vertex_array_object');
+    Object.defineProperties(renderer.gl, {
+        VERTEX_ARRAY_BINDING: {
+            value: vertexArray.VERTEX_ARRAY_BINDING_OES,
+            writable: false
+        },
+        createVertexArray: {
+            value: function () {
+                return vertexArray.createVertexArrayOES();
+            },
+            writable: false
+        },
+        deleteVertexArray: {
+            value: function (arrayObject) {
+                return vertexArray.deleteVertexArrayOES(arrayObject);
+            },
+            writable: false
+        },
+        isVertexArray: {
+            value: function (arrayObject) {
+                return vertexArray.isVertexArray(arrayObject);
+            },
+            writable: false
+        },
+        bindVertexArray: {
+            value: function (arrayObject) {
+                return vertexArray.bindVertexArrayOES(arrayObject);
+            },
+            writable: false
+        },
+    });
+
+    function getExtension(name) {
+        return renderer.extensions[name]
+            || renderer.extensions['MOZ_' + name]
+            || renderer.extensions['OP_' + name]
+            || renderer.extensions['WEBKIT_' + name];
     }
 }
