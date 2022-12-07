@@ -13,11 +13,9 @@ import WebGLCanvas from './libs/html/WebGLCanvas';
 import Angle from './libs/math/Angle';
 import Matrix4 from './libs/math/Matrix4';
 import Vector3 from './libs/math/Vector3';
-import RenderBuffer from './libs/renderer/graphics/buffer/RenderBuffer';
+import Vector4 from './libs/math/Vector4';
 import RenderTarget from './libs/renderer/graphics/RenderTarget';
 import Texture from './libs/renderer/graphics/Texture';
-import Buffer from './libs/core/Buffer';
-import Vector4 from './libs/math/Vector4';
 
 const defaultStyle = {
     width: '100%',
@@ -226,6 +224,7 @@ canvas.element.onpointerdown = (e) => {
 
     canvas.render(pickingTexture);
     const color = new Color(renderTarget.output);
+    console.log(color);
     const node = Node3d.search(color.normalize());
     if (node) {
         node.dispatchEvent({ type: 'onclick' });

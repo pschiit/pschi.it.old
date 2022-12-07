@@ -1,5 +1,7 @@
+import Camera from '../../3d/camera/Camera';
 import Vector4 from '../../math/Vector4';
 import GraphicsNode from './GraphicsNode';
+import Render from './Render';
 import Scene from './Scene';
 
 export default class RenderTarget extends GraphicsNode {
@@ -17,6 +19,31 @@ export default class RenderTarget extends GraphicsNode {
         this.read = null;
         this.texture = null;
         this.material = null;
+    }
+    
+    get scene() {
+        const scene = new Scene();
+        scene.renderTarget = this;
+        if(this.data instanceof Camera){
+            scene.camera = this.data;
+        }
+        update(this.data.root);
+        if (this.material) {
+            scene.materials = {};
+            scene.materials[this.material.id] = this.material;
+        }
+        for (const id in scene.materials) {
+            scene.materials[id].setScene(scene);
+        }
+        return scene;
+
+        /** Load a Node in the current WebGLRenderer
+         * @param {Render} render Node to load
+         */
+        function update(render) {
+            render.setScene(scene);
+            render.childrens.forEach(update);
+        }
     }
 
     get x() {
@@ -49,10 +76,6 @@ export default class RenderTarget extends GraphicsNode {
 
     set height(v) {
         this.viewport[3] = v;
-    }
-
-    get scene() {
-        return this.data.scene;
     }
 
     get format() {

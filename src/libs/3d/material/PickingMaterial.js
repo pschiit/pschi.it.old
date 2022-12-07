@@ -4,8 +4,4 @@ export default class PickingMaterial extends Material {
     constructor() {
         super();
     }
-
-    setScene(scene){
-        super.setScene(scene);
-    }
 }

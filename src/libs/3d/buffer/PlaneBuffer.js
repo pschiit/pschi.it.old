@@ -1,6 +1,6 @@
 import Color from '../../core/Color';
 import Render from '../../renderer/graphics/Render';
-import VertexBuffer from '../../renderer/graphics/buffer/VertexBuffer';
+import VertexBuffer from '../../renderer/graphics/VertexBuffer';
 
 export default class PlaneBuffer extends VertexBuffer {
     constructor(width = 1, height = 1, color = null, uv = null, primitive = Render.primitive.triangles) {

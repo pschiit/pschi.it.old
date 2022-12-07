@@ -4,11 +4,13 @@ import GraphicsNode from './GraphicsNode';
 export default class Scene extends GraphicsNode {
     constructor() {
         super();
+        this.renderTarget = null;
         this.camera = null;
         this.renders = [];
         this.programs = [];
         this.buffers = {};
         this.indexes = {};
+        this.textures = {};
         this.materials = {};
         this.parameters = {};
     }

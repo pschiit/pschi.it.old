@@ -1,21 +1,18 @@
-import PerspectiveCamera from '../../../3d/camera/PerspectiveCamera';
 import Color from '../../../core/Color';
 import Node from '../../../core/Node';
-import Render from '../Render';
-import RenderBuffer from '../buffer/RenderBuffer';
-import RenderTarget from '../RenderTarget';
-import Scene from '../Scene';
-import Texture from '../Texture';
+import Vector4 from '../../../math/Vector4';
+import GraphicsNode from '../GraphicsNode';
 import GraphicsRenderer from '../GraphicsRenderer';
 import Material from '../Material';
+import Render from '../Render';
+import RenderTarget from '../RenderTarget';
+import Texture from '../Texture';
 import WebGLBuffer from './WebGLBuffer';
 import WebGLFramebuffer from './WebGLFramebuffer';
 import WebGLProgram from './WebGLProgram';
 import WebGLShader from './WebGLShader';
 import WebGLTexture from './WebGLTexture';
 import WebGLVertexArray from './WebGLVertexArray';
-import GraphicsNode from '../GraphicsNode';
-import Vector4 from '../../../math/Vector4';
 
 export default class WebGLRenderer extends GraphicsRenderer {
     /** Create a WebGLRenderer from a WebGLRenderingContext
@@ -27,6 +24,7 @@ export default class WebGLRenderer extends GraphicsRenderer {
         this.polyfillExtension();
         this.clearColor();
         this.viewport = new Vector4();
+        this.scissor = null;
         this.culling = null;
         this.depth = null;
         this.clear();
@@ -100,39 +98,23 @@ export default class WebGLRenderer extends GraphicsRenderer {
             if (!this.framebuffer?.is(node)) {
                 this.framebuffer = WebGLFramebuffer.from(this, node);
                 this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.framebuffer.location);
-                if (this.texture2d?.is(node)) {
-                    this.texture2d = null;
-                }
-            } else if (this.framebuffer) {
-                this.framebuffer = null;
-                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+            }
+            if (this.texture2d?.is(node)) {
+                this.texture2d = null;
             }
             renderTarget = node.data;
         } else if (node instanceof RenderTarget) {
             renderTarget = node;
-        }
-        const viewport = renderTarget.viewport;
-        const scissor = renderTarget.scissor;
-        if (scissor) {
-            if (!this.scissor) {
-                this.gl.enable(this.gl.SCISSOR_TEST);
-            }
-            if (!this.scissor?.equals(scissor)) {
-                this.gl.scissor(scissor[0], scissor[1], scissor[2], scissor[3]);
-                this.scissor = scissor;
-            }
-        } else if (this.scissor) {
-            this.gl.disable(this.gl.SCISSOR_TEST);
-            this.scissor = null;
-        }
-        if (!this.viewport.equals(viewport)) {
-            this.gl.viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
         }
 
         render(this, renderTarget);
         const read = renderTarget.read;
         if (read) {
             this.gl.readPixels(read[0], read[1], read[2], read[3], WebGLRenderer.formatFrom(this, renderTarget.format), WebGLRenderer.typeFrom(this, renderTarget.type), renderTarget.output);
+        }
+        if (this.framebuffer) {
+            this.framebuffer = null;
+            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
         }
 
         return this;
@@ -426,22 +408,7 @@ export default class WebGLRenderer extends GraphicsRenderer {
  * @param {RenderTarget} renderTarget to render
  */
 function render(renderer, renderTarget) {
-    const scene = renderTarget.data.scene;
-    if (scene.camera) {
-        const camera = scene.camera;
-        let aspectRatio = 0;
-        aspectRatio = renderTarget.aspectRatio;
-        if (camera instanceof PerspectiveCamera) {
-            if (aspectRatio != camera.aspectRatio) {
-                camera.aspectRatio = aspectRatio;
-                camera.projectionUpdated = true;
-                scene.setParameter(PerspectiveCamera.projectionMatrixName, camera.projectionMatrix);
-            }
-        }
-        renderer.clearColor(camera.backgroundColor);
-    } else {
-        renderer.clearColor();
-    }
+    const scene = renderTarget.scene;
     for (const id in scene.buffers) {
         const buffer = scene.buffers[id];
         const webGLBuffer = WebGLBuffer.from(renderer, buffer, renderer.gl.ARRAY_BUFFER);
@@ -452,9 +419,10 @@ function render(renderer, renderTarget) {
         const webGLBuffer = WebGLBuffer.from(renderer, buffer, renderer.gl.ELEMENT_ARRAY_BUFFER);
         webGLBuffer.update(buffer);
     }
-    if (renderTarget?.material) {
-        scene.materials = {};
-        scene.materials[renderTarget.material.id] = renderTarget?.material
+    for (const id in scene.textures) {
+        const texture = scene.textures[id];
+        const webGLTexture = WebGLTexture.from(renderer, texture);
+        webGLTexture.update(texture);
     }
     for (const id in scene.materials) {
         const material = scene.materials[id];
@@ -470,9 +438,28 @@ function render(renderer, renderTarget) {
         }
         scene.programs.push(renderer.program);
     }
+    const viewport = renderTarget.viewport;
+    const scissor = renderTarget.scissor;
+    if (scissor) {
+        if (!renderer.scissor) {
+            renderer.gl.enable(renderer.gl.SCISSOR_TEST);
+        }
+        if (!renderer.scissor?.equals(scissor)) {
+            console.log('scissor', renderer.scissor);
+            renderer.gl.scissor(scissor[0], scissor[1], scissor[2], scissor[3]);
+            renderer.scissor = scissor;
+        }
+    } else if (renderer.scissor) {
+        renderer.gl.disable(renderer.gl.SCISSOR_TEST);
+        renderer.scissor = null;
+    }
+    if (!renderer.viewport.equals(viewport)) {
+        renderer.gl.viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+    }
+    renderer.clearColor(scene.camera?.backgroundColor);
     renderer.clear();
     scene.renders.forEach(r => {
-        if (renderTarget?.material) {
+        if (renderTarget.material) {
             draw(r, renderTarget.material);
         } else {
             draw(r, r.material);

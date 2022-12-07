@@ -141,8 +141,6 @@ export default class Node3d extends Render {
         if (this.renderable) {
             this.setParameter(Node3d.normalMatrixName, vertexMatrix.clone().invert().transpose());
         }
-
-        return this;
     }
 
     static vertexMatrixName = 'vertexMatrix';

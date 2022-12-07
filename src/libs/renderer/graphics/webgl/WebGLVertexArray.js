@@ -1,5 +1,5 @@
 import Material from '../Material';
-import VertexBuffer from '../buffer/VertexBuffer';
+import VertexBuffer from '../VertexBuffer';
 import WebGLBuffer from './WebGLBuffer';
 import WebGLNode from './WebGLNode';
 import WebGLProgram from './WebGLProgram';

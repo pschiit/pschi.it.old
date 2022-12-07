@@ -25,6 +25,13 @@ export default class Material extends GraphicsNode {
     }
 
     setScene(scene){
+        if (!scene.materials[this.id]) {
+            scene.materials[this.id] = this;
+        }
+        const texture = this.texture;
+        if (texture && !scene.textures[texture.id]) {
+            scene.textures[texture.id] = texture;
+        }
     }
 
     static textureName = 'texture';

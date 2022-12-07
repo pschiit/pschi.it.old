@@ -7,7 +7,7 @@ import Node3d from '../../../../3d/Node3d';
 import Node from '../../../../core/Node';
 import Material from '../../Material';
 import Render from '../../Render';
-import VertexBuffer from '../../buffer/VertexBuffer';
+import VertexBuffer from '../../VertexBuffer';
 
 export default class GLSLParameter extends Node {
     /** Create a GLSL Parameter

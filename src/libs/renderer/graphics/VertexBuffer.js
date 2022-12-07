@@ -1,4 +1,4 @@
-import Buffer from '../../../core/Buffer';
+import Buffer from '../../core/Buffer';
 
 export default class VertexBuffer extends Buffer {
     constructor() {

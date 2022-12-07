@@ -80,5 +80,19 @@ export default class PerspectiveCamera extends Camera {
         return new Frustum(left, rigth, top, bottom, near, far);
     }
 
+    setScene(scene){
+        super.setScene(scene);
+        const aspectRatio = scene.renderTarget.aspectRatio;
+        if (aspectRatio != this.aspectRatio) {
+            this.aspectRatio = aspectRatio;
+            this.projectionUpdated = true;
+        }
+        if (this.projectionUpdated) {
+            this._projectionMatrix = this.perspectiveMatrix.clone().multiply(this.parameters[Camera.vertexMatrixName].clone().invert());
+            this.projectionUpdated = false;
+        }
+        scene.setParameter(PerspectiveCamera.projectionMatrixName, this.projectionMatrix);
+    }
+
     static perspectiveMatrixName = 'perspectiveMatrix';
 }

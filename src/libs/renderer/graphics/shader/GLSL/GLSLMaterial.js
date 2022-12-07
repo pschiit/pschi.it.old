@@ -7,7 +7,7 @@ import PickingMaterial from '../../../../3d/material/PickingMaterial';
 import Node3d from '../../../../3d/Node3d';
 import Material from '../../Material';
 import Render from '../../Render';
-import VertexBuffer from '../../buffer/VertexBuffer';
+import VertexBuffer from '../../VertexBuffer';
 import GLSLParameter from './GLSLParameter';
 import GLSLShader from './GLSLShader';
 

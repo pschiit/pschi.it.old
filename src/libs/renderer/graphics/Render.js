@@ -17,24 +17,7 @@ export default class Render extends GraphicsNode {
     get renderable() {
         return this.material && this.vertexBuffer?.count > 0;
     }
-
-    get scene() {
-        const scene = new Scene();
-        update(this.root);
-        for (const id in scene.materials) {
-            const material = scene.materials[id].setScene(scene);
-        }
-
-        /** Load a Node in the current WebGLRenderer
-         * @param {Render} render Node to load
-         */
-        function update(render) {
-            render.setScene(scene);
-            render.childrens.forEach(update);
-        }
-        return scene;
-    }
-
+    
     setScene(scene) {
         if (this.renderable) {
             if (!scene.buffers[this.vertexBuffer.id]) {
@@ -48,8 +31,6 @@ export default class Render extends GraphicsNode {
             }
             scene.renders.push(this);
         }
-
-        return this;
     }
 
     setParameter(name, value) {

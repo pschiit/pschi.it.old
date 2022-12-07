@@ -289,27 +289,26 @@ function createUniform(renderer, program, uniform) {
         case renderer.gl.SAMPLER_CUBE:
             if (uniform.size > 1) {
                 program.parameters[name] = (v) => {
-                    if (v) {
-                        const textures = v.map(t => WebGLTexture.from(renderer, t));
-                        const units = textures.map(t => t.units);
-                        if (program.cache[name] != units) {
-                            renderer.gl.uniform1iv(location, units);
-                            program.cache[name] = units;
-                            textures.forEach(t => {
-                                renderer.gl.activeTexture(renderer.gl.TEXTURE0 + t.unit);
-                                renderer.texture2d = t;
-                            });
-                        }
-                    } else if (program.cache[name] = null) {
-                        renderer.gl.uniform1iv(location, null);
-                        program.cache[name] = null;
-                    };
+                    // if (v) {
+                    //     const textures = v.map(t => WebGLTexture.from(renderer, t));
+                    //     const units = textures.map(t => t.units);
+                    //     if (program.cache[name] != units) {
+                    //         renderer.gl.uniform1iv(location, units);
+                    //         program.cache[name] = units;
+                    //         textures.forEach(t => {
+                    //             renderer.gl.activeTexture(renderer.gl.TEXTURE0 + t.unit);
+                    //             renderer.texture2d = t;
+                    //         });
+                    //     }
+                    // } else if (program.cache[name] = null) {
+                    //     renderer.gl.uniform1iv(location, null);
+                    //     program.cache[name] = null;
+                    // };
                 }
             } else {
                 program.parameters[name] = (v) => {
                     if (v && !renderer.framebuffer?.is(v)) {
                         var texture = WebGLTexture.from(renderer, v);
-                        texture.update(v);
                         if (program.cache[name] != texture.unit) {
                             renderer.gl.uniform1i(location, texture.unit);
                             renderer.gl.activeTexture(renderer.gl.TEXTURE0 + texture.unit);
