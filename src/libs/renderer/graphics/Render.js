@@ -7,7 +7,7 @@ export default class Render extends GraphicsNode {
      */
     constructor() {
         super();
-        const colorId = Color.unique();
+        const colorId = Render.generateColorId();
         Render.cache[colorId] = this;
         this.setParameter(Render.colorIdName, colorId);
         this.material = null;
@@ -56,4 +56,15 @@ export default class Render extends GraphicsNode {
     };
 
     static colorIdName = 'colorId';
+
+    static generateColorId() {
+        do {
+            const color = Color.random();
+            if (!cache[color]) {
+                cache[color] = true;
+                return color;
+            }
+        } while (true);
+    }
 }
+const cache = {};

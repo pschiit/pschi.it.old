@@ -368,7 +368,6 @@ function render(renderer, renderTarget) {
             renderer.gl.enable(renderer.gl.SCISSOR_TEST);
         }
         if (!renderer.scissor?.equals(scissor)) {
-            console.log('scissor', renderer.scissor);
             renderer.gl.scissor(scissor[0], scissor[1], scissor[2], scissor[3]);
             renderer.scissor = scissor;
         }
@@ -392,7 +391,7 @@ function render(renderer, renderTarget) {
             draw(r, r.material);
         }
     });
-    //renderer.gl.bindVertexArray(null);
+    renderer.vertexArray = null;
 
 
     function clear(color = true, depth = true, stencil = true) {
@@ -420,9 +419,9 @@ function render(renderer, renderTarget) {
         if (render.vertexBuffer.index) {
             const webGLIndex = WebGLBuffer.from(renderer, render.vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
             if (divisorCount) {
-                renderer.gl.drawElementsInstanced(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.count, webGLIndex.type, render.vertexBuffer.offset, divisorCount);
+                renderer.gl.drawElementsInstanced(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, render.vertexBuffer.index.type), render.vertexBuffer.offset, divisorCount);
             } else {
-                renderer.gl.drawElements(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.count, webGLIndex.type, render.vertexBuffer.offset);
+                renderer.gl.drawElements(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, render.vertexBuffer.index.type), render.vertexBuffer.offset);
             }
         } else if (divisorCount) {
             renderer.gl.drawArraysInstanced(renderer.gl[render.vertexBuffer.primitive], render.vertexBuffer.offset, render.vertexBuffer.count, divisorCount);
@@ -434,9 +433,17 @@ function render(renderer, renderTarget) {
 
 function polyfillExtension(renderer) {
     renderer.extensions = {};
-    renderer.gl.getSupportedExtensions().forEach(e => renderer.extensions[e] = renderer.gl.getExtension(e))
+    renderer.gl.getSupportedExtensions().forEach(e => renderer.extensions[e] = renderer.gl.getExtension(e));
+    const standardDerivative = getExtension('OES_standard_derivatives');
     const instancedArrays = getExtension('ANGLE_instanced_arrays');
+    const vertexArray = getExtension('OES_vertex_array_object');
     Object.defineProperties(renderer.gl, {
+        //OES_standard_derivatives
+        FRAGMENT_SHADER_DERIVATIVE_HINT:{
+            value: standardDerivative.FRAGMENT_SHADER_DERIVATIVE_HINT_OES,
+            writable: false
+        },
+        //ANGLE_instanced_arrays
         VERTEX_ATTRIB_ARRAY_DIVISOR: {
             value: instancedArrays.VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE,
             writable: false
@@ -459,9 +466,7 @@ function polyfillExtension(renderer) {
             },
             writable: false
         },
-    });
-    const vertexArray = getExtension('OES_vertex_array_object');
-    Object.defineProperties(renderer.gl, {
+        //OES_vertex_array_object
         VERTEX_ARRAY_BINDING: {
             value: vertexArray.VERTEX_ARRAY_BINDING_OES,
             writable: false

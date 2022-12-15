@@ -17,8 +17,6 @@ export default class WebGLBuffer extends WebGLNode {
             : buffer.usage === Buffer.usage.stream ? renderer.gl.STREAM_DRAW
                 : renderer.gl.STATIC_DRAW;
 
-        this.type = WebGLRenderer.typeFrom(renderer, buffer.type);
-
         if (webGLTarget === renderer.gl.ELEMENT_ARRAY_BUFFER) {
             this.update = (buffer) => {
                 if (buffer.updated) {
@@ -31,7 +29,8 @@ export default class WebGLBuffer extends WebGLNode {
             this.update = (buffer) => {
                 if (buffer.updated) {
                     renderer.arrayBuffer = this;
-                    renderer.gl.bufferData(this.target, buffer.data, this.usage);
+                    const data = buffer.data;
+                    renderer.gl.bufferData(this.target, data, this.usage);
                     buffer.updated = false;
                 }
             };

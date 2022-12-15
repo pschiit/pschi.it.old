@@ -4,6 +4,7 @@ import PerspectiveCamera from './libs/3d/camera/PerspectiveCamera';
 import DirectionalLight from './libs/3d/light/DirectionalLight';
 import PointLight from './libs/3d/light/PointLight';
 import SpotLight from './libs/3d/light/SpotLight';
+import GridMaterial from './libs/3d/material/GridMaterial';
 import PhongMaterial from './libs/3d/material/PhongMaterial';
 import PickingMaterial from './libs/3d/material/PickingMaterial';
 import Node3d from './libs/3d/Node3d';
@@ -66,7 +67,7 @@ cube.uv = [
     1, 0,
 ];
 const reverseCube = new BoxBuffer();
-reverseCube.reverseNormal();
+reverseCube.normal.scale(-1);
 reverseCube.setColor(Color.white);
 reverseCube.uv = [
     0, 0, //F
@@ -100,8 +101,8 @@ reverseCube.uv = [
     1, 0,
 ];
 const plane = new PlaneBuffer(10, 10);
-plane.transform(Matrix4.identityMatrix().rotate(Math.PI / 2, new Vector3(1, 0, 0)));
 plane.setColor(Color.white);
+plane.transform(Matrix4.identityMatrix().rotate(Math.PI / 2, new Vector3(1, 0, 0)));
 plane.uv = [
     0, 0,
     0, 1,
@@ -112,13 +113,14 @@ plane.uv = [
 const world = new Node3d();
 
 const camera = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
-camera.translate(5, 5, 5);
+camera.translate(7, 5, 7);
 camera.target = new Vector3(0, 0, 0);
 world.appendChild(camera);
 
 const pickingMaterial = new PickingMaterial();
 const textureMaterial = new PhongMaterial();
 textureMaterial.texture = new Texture(new RenderTarget(camera, 1024, 1024));
+const gridMaterial = new GridMaterial(new Color(0.4, 0.4, 0.4, 1));
 
 const floor = new Node3d();
 floor.material = textureMaterial;
