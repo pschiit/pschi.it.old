@@ -1,14 +1,14 @@
-import Camera from '../../../3d/camera/Camera';
-import DirectionalLight from '../../../3d/light/DirectionalLight';
-import PointLight from '../../../3d/light/PointLight';
-import SpotLight from '../../../3d/light/SpotLight';
-import PhongMaterial from '../../../3d/material/PhongMaterial';
-import Node3d from '../../../3d/Node3d';
-import Node from '../../../core/Node';
+import Camera from '../../../../3d/camera/Camera';
+import DirectionalLight from '../../../../3d/light/DirectionalLight';
+import PointLight from '../../../../3d/light/PointLight';
+import SpotLight from '../../../../3d/light/SpotLight';
+import GridMaterial from '../../../../3d/material/GridMaterial';
+import PhongMaterial from '../../../../3d/material/PhongMaterial';
+import Node3d from '../../../../3d/Node3d';
+import Node from '../../../../core/Node';
 import Material from '../../Material';
 import Render from '../../Render';
 import VertexBuffer from '../../VertexBuffer';
-import GLSLMaterial from './GLSLMaterial';
 
 export default class GLSLParameter extends Node {
     /** Create a GLSL Parameter
@@ -116,6 +116,11 @@ export default class GLSLParameter extends Node {
                 name === PhongMaterial.diffuseTextureName ? new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.sampler2D, PhongMaterial.diffuseTextureName, length) :
                 name === PhongMaterial.specularTextureName ? new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.sampler2D, PhongMaterial.specularTextureName, length) :
                 name === PhongMaterial.emissiveTextureName ? new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.sampler2D, PhongMaterial.emissiveTextureName, length) :
+
+
+                name === GridMaterial.distanceName ? new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.float, GridMaterial.distanceName, length) :
+                name === GridMaterial.sizesName ? new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec2, GridMaterial.sizesName, length) :
+                name === GridMaterial.colorName ? new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, GridMaterial.colorName, length) :
 
                 name === Render.colorIdName ? new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, Render.colorIdName, length) :
                     null;

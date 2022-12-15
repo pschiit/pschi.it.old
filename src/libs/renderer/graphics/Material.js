@@ -1,6 +1,6 @@
-import Node from'../core/Node';
+import GraphicsNode from './GraphicsNode';
 
-export default class Material extends Node {
+export default class Material extends GraphicsNode {
     /** Create a new Material
     */
     constructor(){
@@ -25,6 +25,13 @@ export default class Material extends Node {
     }
 
     setScene(scene){
+        if (!scene.materials[this.id]) {
+            scene.materials[this.id] = this;
+        }
+        const texture = this.texture;
+        if (texture && !scene.textures[texture.id]) {
+            scene.textures[texture.id] = texture;
+        }
     }
 
     static textureName = 'texture';

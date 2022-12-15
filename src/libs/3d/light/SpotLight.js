@@ -12,10 +12,9 @@ export default class SpotLight extends Light {
     setScene(scene) {
         super.setScene(scene);
         const parameters = {};
-        const position = this.vertexMatrix.positionVector;
         parameters[SpotLight.colorName] = this.color.rgb;
-        parameters[SpotLight.positionName]=  position;
-        parameters[SpotLight.directionName]= position.clone().substract(this.target).normalize();
+        parameters[SpotLight.positionName]=  this.vertexMatrix.positionVector;
+        parameters[SpotLight.directionName]= this.vertexMatrix.zAxis;
         parameters[SpotLight.innerRadiusName]= this.innerRadius;
         parameters[SpotLight.radiusName]= this.radius;
         parameters[SpotLight.ambientStrengthName]= this.ambientStrength;

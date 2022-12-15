@@ -1,6 +1,6 @@
 import Color from '../../core/Color';
-import Render from '../../renderer/Render';
-import VertexBuffer from '../../renderer/VertexBuffer';
+import Render from '../../renderer/graphics/Render';
+import VertexBuffer from '../../renderer/graphics/VertexBuffer';
 
 export default class BoxBuffer extends VertexBuffer {
     constructor(width = 1, height = 1, depth = 1, color = null, uv = null, primitive = Render.primitive.triangles) {

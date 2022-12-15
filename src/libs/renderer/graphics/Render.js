@@ -1,13 +1,13 @@
-import Color from '../core/Color';
-import Node from '../core/Node';
+import Color from '../../core/Color';
+import GraphicsNode from './GraphicsNode';
 import Scene from './Scene';
 
-export default class Render extends Node {
+export default class Render extends GraphicsNode {
     /** Create a Renderable Node for a Renderer
      */
     constructor() {
         super();
-        const colorId = Color.unique();
+        const colorId = Render.generateColorId();
         Render.cache[colorId] = this;
         this.setParameter(Render.colorIdName, colorId);
         this.material = null;
@@ -17,24 +17,7 @@ export default class Render extends Node {
     get renderable() {
         return this.material && this.vertexBuffer?.count > 0;
     }
-
-    get scene() {
-        const scene = new Scene();
-        update(this.root);
-        for (const id in scene.materials) {
-            const material = scene.materials[id].setScene(scene);
-        }
-
-        /** Load a Node in the current WebGLRenderer
-         * @param {Render} render Node to load
-         */
-        function update(render) {
-            render.setScene(scene);
-            render.childrens.forEach(update);
-        }
-        return scene;
-    }
-
+    
     setScene(scene) {
         if (this.renderable) {
             if (!scene.buffers[this.vertexBuffer.id]) {
@@ -48,8 +31,6 @@ export default class Render extends Node {
             }
             scene.renders.push(this);
         }
-
-        return this;
     }
 
     setParameter(name, value) {
@@ -75,4 +56,15 @@ export default class Render extends Node {
     };
 
     static colorIdName = 'colorId';
+
+    static generateColorId() {
+        do {
+            const color = Color.random();
+            if (!cache[color]) {
+                cache[color] = true;
+                return color;
+            }
+        } while (true);
+    }
 }
+const cache = {};

@@ -15,20 +15,11 @@ export default class Camera extends Node3d {
         return this.invertMatrix;
     }
 
-    get scene() {
-        const scene = super.scene;
-        scene.camera = this;
-
-        scene.setParameter(Camera.fogDistanceName, this.fog);
-        scene.setParameter(Camera.backgroundColorName, this.backgroundColor);
-        scene.setParameter(Camera.positionName, this.worldPosition);
-        scene.setParameter(Camera.projectionMatrixName, this.projectionMatrix);
-        return scene;
-    }
-
     setScene(scene) {
         super.setScene(scene);
-        return this;
+        scene.setParameter(Camera.fogDistanceName, this.fog);
+        scene.setParameter(Camera.backgroundColorName, this.backgroundColor);
+        scene.setParameter(Camera.positionName, this.vertexMatrix.positionVector);
     }
 
     static positionName = 'viewPosition';

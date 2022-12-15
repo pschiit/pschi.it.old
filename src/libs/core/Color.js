@@ -116,6 +116,8 @@ export default class Color extends Vector4 {
         this[1] = this[1] / 255;
         this[2] = this[2] / 255;
         this[3] = this[3] / 255;
+        
+        return this;
     }
 
     toString() {
@@ -140,17 +142,6 @@ export default class Color extends Vector4 {
     static random() {
         return Color.fromHex(Math.floor(Math.random() * 16777215));
     }
-
-    static unique() {
-        do {
-            const color = Color.random();
-            if (!cache[color]) {
-                cache[color] = true;
-                return color;
-            }
-        } while (true);
-    }
-
     static white = new Color(1, 1, 1, 1);
     static black = new Color(0, 0, 0, 1);
     static red = new Color(1, 0, 0, 1);
@@ -160,5 +151,3 @@ export default class Color extends Vector4 {
     static magenta = new Color(1, 0, 1, 1);
     static yellow = new Color(1, 1, 0, 1);
 }
-
-const cache = {}

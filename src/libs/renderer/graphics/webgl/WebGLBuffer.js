@@ -1,5 +1,5 @@
 
-import Buffer from '../../core/Buffer';
+import Buffer from '../../../core/Buffer';
 import WebGLNode from './WebGLNode';
 import WebGLRenderer from './WebGLRenderer';
 
@@ -17,8 +17,6 @@ export default class WebGLBuffer extends WebGLNode {
             : buffer.usage === Buffer.usage.stream ? renderer.gl.STREAM_DRAW
                 : renderer.gl.STATIC_DRAW;
 
-        this.type = WebGLRenderer.typeFrom(renderer, buffer.data);
-
         if (webGLTarget === renderer.gl.ELEMENT_ARRAY_BUFFER) {
             this.update = (buffer) => {
                 if (buffer.updated) {
@@ -31,7 +29,8 @@ export default class WebGLBuffer extends WebGLNode {
             this.update = (buffer) => {
                 if (buffer.updated) {
                     renderer.arrayBuffer = this;
-                    renderer.gl.bufferData(this.target, buffer.data, this.usage);
+                    const data = buffer.data;
+                    renderer.gl.bufferData(this.target, data, this.usage);
                     buffer.updated = false;
                 }
             };
@@ -49,8 +48,10 @@ export default class WebGLBuffer extends WebGLNode {
      * @param {WebGLRenderer} renderer the rendering context
      * @param {Buffer} buffer the Buffer
      * @param {Number} webGLTarget  WebGL target
+     * @returns {WebGLBuffer} the WebGLBuffer
      */
     static from(renderer, buffer, webGLTarget) {
+        buffer = buffer.mainBuffer;
         return renderer.nodes[buffer.id] || new WebGLBuffer(renderer, buffer, webGLTarget);
     }
 }

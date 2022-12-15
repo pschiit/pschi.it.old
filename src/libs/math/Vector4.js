@@ -1,8 +1,8 @@
-import Vector2 from'./Vector2';
-import Vector3 from'./Vector3';
-import MathArray from'./MathArray';
+import Vector2 from './Vector2';
+import Vector3 from './Vector3';
+import MathArray from './MathArray';
 
-export default class  Vector4  extends MathArray{
+export default class Vector4 extends MathArray {
     /** Create a new Vector3 from the coordinates xyzw or a vector array
      * @param {Number|Number[]} x first coordinate or vector array
      * @param {Number} y second coordinate
@@ -18,7 +18,7 @@ export default class  Vector4  extends MathArray{
                 this[2] = x[2];
                 this[3] = x[3];
             }
-            else{
+            else {
                 this[0] = x;
                 if (Number.isFinite(y)) {
                     this[1] = y;
@@ -43,7 +43,7 @@ export default class  Vector4  extends MathArray{
             this[2] === vector[2] &&
             this[3] === vector[3];
     }
-    
+
     /** Add a vector array to the current Vector4
      * @param {Vector4} vector right operand
      * @return the current updated Vector4
@@ -171,5 +171,37 @@ export default class  Vector4  extends MathArray{
     */
     toVector3() {
         return new Vector3(this[0], this[1], this[2]);
+    }
+
+    /** Convert the current Quaternion Vector4 to a Euler Vector3 in radians
+     * @return {Vector3} Euler Vector3
+    */
+    toEuler() {
+        const result = new Vector3()
+        let x = this[0],
+            y = this[1],
+            z = this[2],
+            w = this[3],
+            x2 = x * x,
+            y2 = y * y,
+            z2 = z * z,
+            w2 = w * w;
+        let unit = x2 + y2 + z2 + w2;
+        let test = x * w - y * z;
+        if (test > 0 * unit) { 
+            result[0] = Math.PI / 2;
+            result[1] = 2 * Math.atan2(y, x);
+            result[2] = 0;
+        } else if (test < 0 * unit) {
+            result[0] = -Math.PI / 2;
+            result[1] = 2 * Math.atan2(y, x);
+            result[2] = 0;
+        } else {
+            result[0] = Math.asin(2 * (x * z - w * y));
+            result[1] = Math.atan2(2 * (x * w + y * z), 1 - 2 * (z2 + w2));
+            result[2] = Math.atan2(2 * (x * y + z * w), 1 - 2 * (y2 + z2));
+        }
+
+        return result;
     }
 }

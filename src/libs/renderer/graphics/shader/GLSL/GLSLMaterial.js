@@ -1,13 +1,13 @@
-import Camera from '../../../3d/camera/Camera';
-import DirectionalLight from '../../../3d/light/DirectionalLight';
-import PointLight from '../../../3d/light/PointLight';
-import SpotLight from '../../../3d/light/SpotLight';
-import PhongMaterial from '../../../3d/material/PhongMaterial';
-import PickingMaterial from '../../../3d/material/PickingMaterial';
-import Node3d from '../../../3d/Node3d';
+import Camera from '../../../../3d/camera/Camera';
+import DirectionalLight from '../../../../3d/light/DirectionalLight';
+import PointLight from '../../../../3d/light/PointLight';
+import SpotLight from '../../../../3d/light/SpotLight';
+import GridMaterial from '../../../../3d/material/GridMaterial';
+import PhongMaterial from '../../../../3d/material/PhongMaterial';
+import PickingMaterial from '../../../../3d/material/PickingMaterial';
+import Node3d from '../../../../3d/Node3d';
 import Material from '../../Material';
 import Render from '../../Render';
-import Scene from '../../Scene';
 import VertexBuffer from '../../VertexBuffer';
 import GLSLParameter from './GLSLParameter';
 import GLSLShader from './GLSLShader';
@@ -34,6 +34,8 @@ export default class GLSLMaterial extends Material {
             return GLSLMaterial.phongMaterial(material);
         } else if (material instanceof PickingMaterial) {
             return GLSLMaterial.pickingMaterial(material);
+        } else if (material instanceof GridMaterial) {
+            return GLSLMaterial.gridMaterial(material);
         }
     }
 
@@ -104,16 +106,14 @@ export default class GLSLMaterial extends Material {
                 vColor,
                 vDistance,
                 vUV,
-            ], [
-                'void main(){',
-                `   gl_Position = ${cameraMatrix} * ${vertexMatrix} * ${position};`,
-                `   ${vDistance} = gl_Position.w;`,
-                `   ${vNormal} = normalize(vec3(${normalMatrix} * ${normal}));`,
-                `   ${vPosition} = vec3(${vertexMatrix} * ${position});`,
-                `   ${vColor} = ${color};`,
-                `   ${vUV} = ${uv};`,
-                '}'
-            ].join('\n'));
+            ], `void main(){
+                    gl_Position = ${cameraMatrix} * ${vertexMatrix} * ${position};
+                    ${vDistance} = gl_Position.w;
+                    ${vNormal} = normalize(vec3(${normalMatrix} * ${normal}));
+                    ${vPosition} = vec3(${vertexMatrix} * ${position});
+                    ${vColor} = ${color};
+                    ${vUV} = ${uv};
+                }`);
 
             const fragmentShader = new GLSLShader(GLSLShader.type.fragmentShader, [
                 cameraPosition,
@@ -148,18 +148,16 @@ export default class GLSLMaterial extends Material {
                 vColor,
                 vUV,
                 vDistance,
-            ], [
-                calculateLight(),
-                'void main(){',
-                `   vec3 normal = normalize(${vNormal});`,
-                `   vec3 cameraPosition = normalize(${cameraPosition} - ${vPosition});`,
-                createColor(),
-                '   vec3 color = vec3(0.0);',
-                createLight(),
-                createFog(),
-                '   gl_FragColor =  vec4(color, fragmentColor.a);',
-                '}'
-            ].join('\n'), GLSLShader.precision.high);
+            ], `${calculateLight()}
+                void main(){
+                    vec3 normal = normalize(${vNormal});
+                    vec3 cameraPosition = normalize(${cameraPosition} - ${vPosition});
+                    ${createColor()}
+                    vec3 color = vec3(0.0);
+                    ${createLight()}
+                    ${createFog()}
+                   gl_FragColor =  vec4(color, fragmentColor.a);
+                }`, GLSLShader.precision.high);
 
             const glslMaterial = new GLSLMaterial(vertexShader, fragmentShader);
             GLSLMaterial.cache[material.id] = glslMaterial;
@@ -269,19 +267,80 @@ export default class GLSLMaterial extends Material {
                 position,
                 vertexMatrix,
                 cameraMatrix,
-            ], [
-                'void main(){',
-                `   gl_Position = ${cameraMatrix} * ${vertexMatrix} * ${position};`,
-                '}'
-            ].join('\n'));
+            ], `void main(){
+                   gl_Position = ${cameraMatrix} * ${vertexMatrix} * ${position};
+                }`);
 
             const fragmentShader = new GLSLShader(GLSLShader.type.fragmentShader, [
                 pickingColor,
-            ], [
-                'void main(){',
-                `   gl_FragColor = vec4(${pickingColor},1.0);`,
-                '}'
-            ].join('\n'), GLSLShader.precision.high);
+            ], `void main(){
+                   gl_FragColor = vec4(${pickingColor},1.0);
+                }`, GLSLShader.precision.high);
+            const glslMaterial = new GLSLMaterial(vertexShader, fragmentShader);
+            GLSLMaterial.cache[material.id] = glslMaterial;
+        }
+
+        return GLSLMaterial.cache[material.id];
+    }
+
+
+    /** Create a new GLSLMaterial from a PickingMaterial and a Scene
+     * @param {GridMaterial} material PickingMaterial to convert
+     * @returns {GLSLMaterial} the GLSLMaterial
+    */
+    static gridMaterial = (material) => {
+        if (!GLSLMaterial.cache[material.id]) {
+            var planeAxes = material.axes.substring(0, 2);
+            const position = GLSLParameter.from(VertexBuffer.positionName);
+
+            const vertexMatrix = GLSLParameter.from(Node3d.vertexMatrixName);
+
+            const cameraPosition = GLSLParameter.from(Camera.positionName);
+            const cameraMatrix = GLSLParameter.from(Camera.projectionMatrixName);
+            const gridDistance = GLSLParameter.from(GridMaterial.distanceName);
+            const gridSize = GLSLParameter.from(GridMaterial.sizesName);
+            const gridColor = GLSLParameter.from(GridMaterial.colorName);
+
+            const vPosition = GLSLParameter.from('v_' + VertexBuffer.positionName);
+
+            const vertexShader = new GLSLShader(GLSLShader.type.vertexShader, [
+                position,
+                vertexMatrix,
+                cameraMatrix,
+                cameraPosition,
+                gridDistance,
+                vPosition,
+            ], `void main(){
+                   vec3 pos = ${position}.${material.axes} * ${gridDistance};
+                   pos.${planeAxes} += ${cameraPosition}.${planeAxes};
+                   gl_Position = ${cameraMatrix} * ${vertexMatrix} * vec4(pos, 1.0);
+                   ${vPosition} = pos;
+                }`);
+
+            const fragmentShader = new GLSLShader(GLSLShader.type.fragmentShader, [
+                gridDistance,
+                cameraPosition,
+                gridSize,
+                vPosition,
+                gridColor,
+            ], `#extension GL_OES_standard_derivatives : enable
+                float getGrid(float size) {
+                    vec2 r = ${vPosition}.${planeAxes} / size;
+                    vec2 grid = abs(fract(r - 1.0) - 1.0) / fwidth(r);
+                    float line = min(grid.x, grid.y);
+                    return 1.0 - min(line, 1.0);
+                }
+                
+                void main() {
+                    vec3 cameraPosition = normalize(${cameraPosition} - ${vPosition});
+                    float d = 1.0 - min(distance(${cameraPosition}.${planeAxes}, ${vPosition}.${planeAxes}) / ${gridDistance}, 1.0);
+                    float g1 = getGrid(${gridSize}.x);
+                    float g2 = getGrid(${gridSize}.y);
+                    gl_FragColor = vec4(${gridColor}, mix(g2, g1, g1) * pow(d, 3.0));
+                    gl_FragColor.a = mix(0.5 * gl_FragColor.a, gl_FragColor.a, g2);
+                    if ( gl_FragColor.a <= 0.0 ) discard;
+                }`, GLSLShader.precision.high);
+
             const glslMaterial = new GLSLMaterial(vertexShader, fragmentShader);
             GLSLMaterial.cache[material.id] = glslMaterial;
         }

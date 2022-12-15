@@ -15,6 +15,43 @@ export default class Matrix4 extends MathArray {
         }
     }
 
+    /** Return a float reflecting the uniform scale from the current Matrix
+     * @return {Number} uniform scale
+    */
+    get uniformScale() {
+        return this[15];
+    }
+
+    /** Return a Vector3 reflecting the x axis from the current Matrix
+     * @return {Vector3} x axis vector
+    */
+    get xAxis() {
+        return new Vector3(this[0], this[1], this[2]);
+    }
+
+    /** Set the Matrix4 y axis component 
+     * @return {Vector3} y axis vector
+    */
+    set yAxis(v) {
+        this[4] = v[0];
+        this[5] = v[1];
+        this[6] = v[2];
+    }
+
+    /** Return a Vector3 reflecting the y axis from the current Matrix
+     * @return {Vector3} y axis vector
+    */
+    get yAxis() {
+        return new Vector3(this[4], this[5], this[6]);
+    }
+
+    /** Return a Vector3 reflecting the z axis from the current Matrix
+     * @return {Vector3} z axis vector
+    */
+    get zAxis() {
+        return new Vector3(this[8], this[9], this[10]);
+    }
+
     /** Return a Vector3 reflecting the position from the current Matrix
      * @return {Vector3} position vector
     */
@@ -41,8 +78,8 @@ export default class Matrix4 extends MathArray {
             Math.hypot(this[8], this[9], this[10]));
     }
 
-    /** Set the Matrix4 position component 
-     * @return {Vector3} position vector
+    /** Set the Matrix4 scale component 
+     * @return {Vector3} scale vector
     */
     set scaleVector(v) {
         this[0] = v[0];
@@ -50,7 +87,10 @@ export default class Matrix4 extends MathArray {
         this[10] = v[2];
     }
 
-    get rotationVector() {
+    /** Return the Matrix4 rotation component 
+     * @return {Vector4} rotation quaternion
+    */
+    get quaternion() {
         const out = new Vector4();
         let scaling = this.scaleVector;
         let is1 = 1 / scaling[0];
@@ -260,8 +300,6 @@ export default class Matrix4 extends MathArray {
         let len = Math.hypot(x, y, z);
 
         if (len == 0) {
-            console.log(radians, x, y, z);
-            alert(len)
             throw new Error(`Can't rotate matrix from [${x},${y},${z}].`);
         }
 
@@ -443,6 +481,46 @@ export default class Matrix4 extends MathArray {
         this[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
         this[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
         this[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+
+        return this;
+    }
+
+    target(vector) {
+        const eye = this.positionVector;
+        const up = this.yAxis;
+        let z0 = eye[0] - vector[0],
+            z1 = eye[1] - vector[1],
+            z2 = eye[2] - vector[2];
+        let len = z0 * z0 + z1 * z1 + z2 * z2;
+        if (len > 0) {
+            len = 1 / Math.sqrt(len);
+            z0 *= len;
+            z1 *= len;
+            z2 *= len;
+        }
+        let x0 = up[1] * z2 - up[2] * z1,
+            x1 = up[2] * z0 - up[0] * z2,
+            x2 = up[0] * z1 - up[1] * z0;
+        len = x0 * x0 + x1 * x1 + x2 * x2;
+        if (len > 0) {
+            len = 1 / Math.sqrt(len);
+            x0 *= len;
+            x1 *= len;
+            x2 *= len;
+        }
+        this[0] = x0;
+        this[1] = x1;
+        this[2] = x2;
+        this[4] = z1 * x2 - z2 * x1;
+        this[5] = z2 * x0 - z0 * x2;
+        this[6] = z0 * x1 - z1 * x0;
+        this[8] = z0;
+        this[9] = z1;
+        this[10] = z2;
+        this[12] = eye[0];
+        this[13] = eye[1];
+        this[14] = eye[2];
+        this[15] = 1;
 
         return this;
     }
@@ -645,7 +723,7 @@ export default class Matrix4 extends MathArray {
         return result;
     }
 
-    /** Create a new perspective Matrix4to
+    /** Create a new perspective Matrix4
      * @param {Number} fovy vertical field of view in degrees
      * @param {Number} aspect ratio of the frustum 
      * @param {Number} near bound of the frustum
@@ -667,6 +745,31 @@ export default class Matrix4 extends MathArray {
             result[10] = -1;
             result[14] = -2 * near;
         }
+
+        return result;
+    }
+
+    /** Create a new frustum Matrix4
+     * @param {Number} left Left bound of the frustum
+     * @param {Number} right Right bound of the frustum
+     * @param {Number} bottom Bottom bound of the frustum
+     * @param {Number} top Top bound of the frustum
+     * @param {Number} near Near bound of the frustum
+     * @param {Number} far Far bound of the frustum
+     * @return {Matrix4} the perspective Matrix4
+    */
+    static frustum(left, right, bottom, top, near, far) {
+        const result = new Matrix4();
+        let rl = 1 / (right - left);
+        let tb = 1 / (top - bottom);
+        let nf = 1 / (near - far);
+        result[0] = near * 2 * rl;
+        result[5] = near * 2 * tb;
+        result[8] = (right + left) * rl;
+        result[9] = (top + bottom) * tb;
+        result[10] = (far + near) * nf;
+        result[11] = -1;
+        result[14] = far * near * 2 * nf;
 
         return result;
     }

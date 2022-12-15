@@ -1,7 +1,6 @@
-import GLSLShader from'../shader/GLSL/GLSLShader';
-import Shader from'../shader/Shader';
-import WebGLNode from'./WebGLNode';
-import WebGLRenderer from'./WebGLRenderer';
+import Shader from '../shader/Shader';
+import WebGLNode from './WebGLNode';
+import WebGLRenderer from './WebGLRenderer';
 
 export default class  WebGLShader extends WebGLNode {
     /** Create a WebGLShader from a Shader for a WebGLRenderingContext
@@ -24,6 +23,7 @@ export default class  WebGLShader extends WebGLNode {
     /** Get the Shader's WebGLShader from a WebGLRenderingContext
      * @param {WebGLRenderer} renderer the context of the renderer
      * @param {Shader} shader  the Shader 
+     * @returns {WebGLShader} the WebGLShader
      */
      static from(renderer, shader) {
         return renderer.nodes[shader.id] || new WebGLShader(renderer, shader);

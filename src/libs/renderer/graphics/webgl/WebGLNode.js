@@ -1,5 +1,4 @@
-import Node from '../../core/Node';
-import Texture from '../Texture';
+import Node from '../../../core/Node';
 import WebGLRenderer from './WebGLRenderer';
 
 export default class WebGLNode extends Node {

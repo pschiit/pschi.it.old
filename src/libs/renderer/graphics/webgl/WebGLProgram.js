@@ -1,5 +1,6 @@
-import Buffer from '../../core/Buffer';
+import Buffer from '../../../core/Buffer';
 import Material from '../Material';
+import RenderTarget from '../RenderTarget';
 import GLSLMaterial from '../shader/GLSL/GLSLMaterial';
 import WebGLBuffer from './WebGLBuffer';
 import WebGLNode from './WebGLNode';
@@ -58,6 +59,7 @@ export default class WebGLProgram extends WebGLNode {
     /** Get the Material's WebGLProgram from a WebGLRenderingContext
      * @param {WebGLRenderer} renderer the context of the renderer
      * @param {Material} material  associated Material
+     * @returns {WebGLProgram} the WebGLProgram
      */
     static from(renderer, material) {
         return material.compiled ? renderer.nodes[material.id] || new WebGLProgram(renderer, material)
@@ -78,11 +80,11 @@ function createAttribute(renderer, program, attribute) {
                 : 1;
     program.parameters[attribute.name] = divisor > 1 ? (v) => {
         if (v instanceof Buffer) {
-            renderer.arrayBuffer = WebGLBuffer.from(renderer, v.mainBuffer, renderer.gl.ARRAY_BUFFER);
+            renderer.arrayBuffer = WebGLBuffer.from(renderer, v, renderer.gl.ARRAY_BUFFER);
             let offset = v.BYTES_PER_OFFSET;
             for (let i = 1; i <= divisor; i++) {
                 renderer.gl.enableVertexAttribArray(location + i);
-                renderer.gl.vertexAttribPointer(location + i, v.step / divisor, renderer.arrayBuffer.type, v.normalize, v.BYTES_PER_PARENT_STEP, offset);
+                renderer.gl.vertexAttribPointer(location + i, v.step / divisor, WebGLRenderer.typeFrom(renderer, v.type), v.normalize, v.mainBuffer.BYTES_PER_STEP, offset);
                 offset += v.BYTES_PER_ELEMENT * divisor;
                 if (v.divisor) {
                     renderer.gl.vertexAttribDivisor(location + i, v.divisor);
@@ -113,9 +115,9 @@ function createAttribute(renderer, program, attribute) {
         }
     } : (v) => {
         if (v instanceof Buffer) {
-            renderer.arrayBuffer = WebGLBuffer.from(renderer, v.mainBuffer, renderer.gl.ARRAY_BUFFER);
+            renderer.arrayBuffer = WebGLBuffer.from(renderer, v, renderer.gl.ARRAY_BUFFER);
             renderer.gl.enableVertexAttribArray(location);
-            renderer.gl.vertexAttribPointer(location, v.step, renderer.arrayBuffer.type, v.normalize, v.BYTES_PER_PARENT_STEP, v.BYTES_PER_OFFSET);
+            renderer.gl.vertexAttribPointer(location, v.step, WebGLRenderer.typeFrom(renderer, v.type), v.normalize, v.mainBuffer.BYTES_PER_STEP, v.BYTES_PER_OFFSET);
             if (v.divisor) {
                 renderer.gl.vertexAttribDivisor(location, v.divisor);
             }
@@ -138,7 +140,7 @@ function createAttribute(renderer, program, attribute) {
                         renderer.gl.vertexAttrib1fv(location, v);
                         break;
                     default:
-                    //throw new Error('the length of a float constant value must be between 1 and 4!');
+                        throw new Error('the length of a float constant value must be between 1 and 4!');
                 }
             }
         }
@@ -286,27 +288,26 @@ function createUniform(renderer, program, uniform) {
         case renderer.gl.SAMPLER_CUBE:
             if (uniform.size > 1) {
                 program.parameters[name] = (v) => {
-                    if (v) {
-                        const textures = v.map(t => WebGLTexture.from(renderer, t));
-                        const units = textures.map(t => t.units);
-                        if (program.cache[name] != units) {
-                            renderer.gl.uniform1iv(location, units);
-                            program.cache[name] = units;
-                            textures.forEach(t => {
-                                renderer.gl.activeTexture(renderer.gl.TEXTURE0 + t.unit);
-                                renderer.texture2d = t;
-                            });
-                        }
-                    } else if (program.cache[name] = null) {
-                        renderer.gl.uniform1iv(location, null);
-                        program.cache[name] = null;
-                    };
+                    // if (v) {
+                    //     const textures = v.map(t => WebGLTexture.from(renderer, t));
+                    //     const units = textures.map(t => t.units);
+                    //     if (program.cache[name] != units) {
+                    //         renderer.gl.uniform1iv(location, units);
+                    //         program.cache[name] = units;
+                    //         textures.forEach(t => {
+                    //             renderer.gl.activeTexture(renderer.gl.TEXTURE0 + t.unit);
+                    //             renderer.texture2d = t;
+                    //         });
+                    //     }
+                    // } else if (program.cache[name] = null) {
+                    //     renderer.gl.uniform1iv(location, null);
+                    //     program.cache[name] = null;
+                    // };
                 }
             } else {
                 program.parameters[name] = (v) => {
                     if (v && !renderer.framebuffer?.is(v)) {
                         var texture = WebGLTexture.from(renderer, v);
-                        texture.update(v);
                         if (program.cache[name] != texture.unit) {
                             renderer.gl.uniform1i(location, texture.unit);
                             renderer.gl.activeTexture(renderer.gl.TEXTURE0 + texture.unit);

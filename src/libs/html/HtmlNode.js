@@ -1,6 +1,5 @@
 import Node from '../core/Node';
 import Vector2 from '../math/Vector2';
-import RenderTarget from '../renderer/RenderTarget';
 
 export default class HtmlNode extends Node {
     /** Create a new HtmlNode

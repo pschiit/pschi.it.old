@@ -1,5 +1,5 @@
 import Color from '../../core/Color';
-import Material from '../../renderer/Material';
+import Material from '../../renderer/graphics/Material';
 import DirectionalLight from '../light/DirectionalLight';
 import PointLight from '../light/PointLight';
 import SpotLight from '../light/SpotLight';
