@@ -1,4 +1,4 @@
-import Camera from '../../../../3d/camera/Camera';
+import CameraNode from '../../../../3d/camera/CameraNode';
 import DirectionalLight from '../../../../3d/light/DirectionalLight';
 import PointLight from '../../../../3d/light/PointLight';
 import SpotLight from '../../../../3d/light/SpotLight';
@@ -50,10 +50,10 @@ export default class GLSLMaterial extends Material {
             const color = GLSLParameter.from(VertexBuffer.colorName);
             const uv = GLSLParameter.from(VertexBuffer.uvName);
 
-            const cameraPosition = GLSLParameter.from(Camera.positionName);
-            const cameraMatrix = GLSLParameter.from(Camera.projectionMatrixName);
-            const fogColor = GLSLParameter.from(Camera.backgroundColorName);
-            const fogDistance = GLSLParameter.from(Camera.fogDistanceName);
+            const cameraPosition = GLSLParameter.from(CameraNode.positionName);
+            const cameraMatrix = GLSLParameter.from(CameraNode.projectionMatrixName);
+            const fogColor = GLSLParameter.from(CameraNode.backgroundColorName);
+            const fogDistance = GLSLParameter.from(CameraNode.fogDistanceName);
             const vertexMatrix = GLSLParameter.from(Node3d.vertexMatrixName);
             const normalMatrix = GLSLParameter.from(Node3d.normalMatrixName);
 
@@ -80,7 +80,7 @@ export default class GLSLMaterial extends Material {
             const vColor = GLSLParameter.from('v_' + VertexBuffer.colorName);
             const vNormal = GLSLParameter.from('v_' + VertexBuffer.normalName);
             const vUV = GLSLParameter.from('v_' + VertexBuffer.uvName);
-            const vDistance = GLSLParameter.from('v_' + Camera.fogDistanceName);
+            const vDistance = GLSLParameter.from('v_' + CameraNode.fogDistanceName);
 
             const materialAmbientColor = GLSLParameter.from(PhongMaterial.ambientColorName);
             const materialDiffuseColor = GLSLParameter.from(PhongMaterial.diffuseColorName);
@@ -260,7 +260,7 @@ export default class GLSLMaterial extends Material {
     static pickingMaterial = (material) => {
         if (!GLSLMaterial.cache[material.id]) {
             const position = GLSLParameter.from(VertexBuffer.positionName);
-            const cameraMatrix = GLSLParameter.from(Camera.projectionMatrixName);
+            const cameraMatrix = GLSLParameter.from(CameraNode.projectionMatrixName);
             const vertexMatrix = GLSLParameter.from(Node3d.vertexMatrixName);
             const pickingColor = GLSLParameter.from(Render.colorIdName);
             const vertexShader = new GLSLShader(GLSLShader.type.vertexShader, [
@@ -295,8 +295,8 @@ export default class GLSLMaterial extends Material {
 
             const vertexMatrix = GLSLParameter.from(Node3d.vertexMatrixName);
 
-            const cameraPosition = GLSLParameter.from(Camera.positionName);
-            const cameraMatrix = GLSLParameter.from(Camera.projectionMatrixName);
+            const cameraPosition = GLSLParameter.from(CameraNode.positionName);
+            const cameraMatrix = GLSLParameter.from(CameraNode.projectionMatrixName);
             const gridDistance = GLSLParameter.from(GridMaterial.distanceName);
             const gridSize = GLSLParameter.from(GridMaterial.sizesName);
             const gridColor = GLSLParameter.from(GridMaterial.colorName);

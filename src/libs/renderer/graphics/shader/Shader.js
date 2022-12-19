@@ -1,18 +1,50 @@
-import Node from'../../../core/Node';
-export default class  Shader extends Node {
+import Parameter from './Parameter';
+import ShaderNode from './ShaderNode';
+
+export default class Shader extends ShaderNode {
     /** Create a Shader
      */
-    constructor() {
+    constructor(type, operations, precision) {
         super();
-        this._source = null;
-        this.type = null;
+        this.compiled = false;
+        this.type = type;
+        this.operations = operations;
+        this.precision = precision || Shader.precision.high;
     }
 
-    get source() {
-        return this._source;
+    static vertexShader(operations, precision = Shader.precision.high) {
+        if(!Array.isArray(operations)){
+            operations = [operations];
+        }
+        return new Shader(Shader.type.vertexShader, operations, precision);
     }
 
-    set source(v) {
-        this._source = v;
+    static fragmentShader(operations, precision = Shader.precision.low) {
+        if(!Array.isArray(operations)){
+            operations = [operations];
+        }
+        return new Shader(Shader.type.fragmentShader, operations, precision);
     }
+
+    /** Shader parameters
+    */
+    static parameters = {
+        output: Parameter.vector4('output'),
+        pointSize:Parameter.number('pointSize'),
+    };
+
+    /** Shader type value
+    */
+    static type = {
+        vertexShader: 'vertexShader',
+        fragmentShader: 'fragmentShader'
+    };
+
+    /** GLSLShader precision value
+    */
+    static precision = {
+        low: 'low',
+        medium: 'medium',
+        high: 'high'
+    };
 }

@@ -1,6 +1,7 @@
-import Light from './Light';
+import Parameter from '../../renderer/graphics/shader/Parameter';
+import LightNode from './LightNode';
 
-export default class DirectionalLight extends Light {
+export default class DirectionalLight extends LightNode {
     constructor(color, position, target) {
         super(color);
         this.translate(position);
@@ -10,15 +11,17 @@ export default class DirectionalLight extends Light {
     setScene(scene) {
         super.setScene(scene);
         const parameters = {};
-        parameters[DirectionalLight.colorName] = this.color.rgb.scale(this.intensity);
-        parameters[DirectionalLight.directionName] = this.vertexMatrix.zAxis;
-        parameters[DirectionalLight.ambientStrengthName] = this.ambientStrength;
+        parameters[DirectionalLight.parameters.color] = this.color.rgb.scale(this.intensity);
+        parameters[DirectionalLight.parameters.direction] = this.vertexMatrix.zAxis;
+        parameters[DirectionalLight.parameters.ambientStrength] = this.ambientStrength;
         scene.setParameter(parameters);
 
         return this;
     }
 
-    static colorName = 'directionalLightColor';
-    static directionName = 'directionalLightDirection';
-    static ambientStrengthName = 'directionalLightAmbientStrength';
+    static parameters = {
+        color: Parameter.vector3('directionalLightColor', Parameter.qualifier.const),
+        direction: Parameter.vector3('directionalLightDirection', Parameter.qualifier.const),
+        ambientStrength: Parameter.vector3('directionalLightAmbientStrength', Parameter.qualifier.const),
+    };
 }

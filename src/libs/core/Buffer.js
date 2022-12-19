@@ -6,7 +6,6 @@ import Node from './Node';
 export default class Buffer extends Node {
     constructor(data, step = 1, divisor = 0) {
         super();
-        this._index = null;
         this.usage = Buffer.usage.static;
         this.data = data;
         this.step = step;
@@ -27,44 +26,21 @@ export default class Buffer extends Node {
         return this.parent instanceof Buffer ? this.parent.mainBuffer : this;
     }
 
-    get index() {
-        return this._index;
-    }
-
-    set index(v) {
-        if (v) {
-            if (Array.isArray(v)) {
-                v = this.count < 255 ? new Uint8Array(v)
-                    : this.count < 65535 ? new Uint16Array(v)
-                        : new Uint32Array(v);
-            }
-            if (this.index) {
-                this.index.data = v;
-            } else {
-                this._index = new Buffer(v);
-            }
-        } else {
-            this.index = null;
-        }
-    }
-
     get data() {
         if (this.childrens.length > 0) {
+            const data = new this.type(this.length);
+            const arrayStep = this.step;
 
-            const testData = new Float32Array(this.length);
-            const s = this.step;
-
-            this.childrens.forEach(b => {
-                const offset = b.offset;
+            this.childrens.forEach(buffer => {
+                const offset = buffer.offset;
                 let position = 0;
-                const bufferData = b.data;
-                for (let i = 0; i < testData.length; i += s) {
-                    for (let j = 0; j < b.step; j++) {
-                        testData[offset + i + j] = bufferData[position++];
+                for (let i = 0; i < data.length; i += arrayStep) {
+                    for (let j = 0; j < buffer.step; j++) {
+                        data[offset + i + j] = buffer.data[position++];
                     }
                 }
-                b.updated = false;
             });
+            return data;
 
             // const length = this.BYTES_LENGTH;
             // const data = new ArrayBuffer(length);
@@ -85,7 +61,6 @@ export default class Buffer extends Node {
             //     b.updated = false;
             // });
             // console.log(data, testData, new Float32Array(data));
-            return testData;
         }
         return this._data;
     }
@@ -120,7 +95,7 @@ export default class Buffer extends Node {
 
     get type() {
         if (this.childrens.length > 0) {
-            return new ArrayBuffer(0).constructor;
+            return new Float32Array(0).constructor;
         }
         return this.data.constructor;
     }

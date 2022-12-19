@@ -23,6 +23,12 @@ export default class Node {
         return this.parent ? this.parent.root : this;
     }
 
+    setParameter(name, value) {
+        if (this.parameters[name] != value) {
+            this.parameters[name] = value;
+        }
+    }
+
     /** Append a child Node to the current Node
      * and update the child's parent to the new current Node
      * @param {Node} child the Node to append 

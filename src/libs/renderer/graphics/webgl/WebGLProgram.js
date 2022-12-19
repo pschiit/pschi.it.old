@@ -1,7 +1,5 @@
 import Buffer from '../../../core/Buffer';
 import Material from '../Material';
-import RenderTarget from '../RenderTarget';
-import GLSLMaterial from '../shader/GLSL/GLSLMaterial';
 import WebGLBuffer from './WebGLBuffer';
 import WebGLNode from './WebGLNode';
 import WebGLRenderer from './WebGLRenderer';
@@ -19,10 +17,9 @@ export default class WebGLProgram extends WebGLNode {
         this.parameters = {};
         this.cache = {};
         this.location = renderer.gl.createProgram();
-        const glsl = material instanceof GLSLMaterial ? material : GLSLMaterial.from(material);
-        this.vertexShader = WebGLShader.from(renderer, glsl.vertexShader);
+        this.vertexShader = WebGLShader.from(renderer, material.vertexShader);
         renderer.gl.attachShader(this.location, this.vertexShader.location);
-        this.fragmentShader = WebGLShader.from(renderer, glsl.fragmentShader);
+        this.fragmentShader = WebGLShader.from(renderer, material.fragmentShader);
         renderer.gl.attachShader(this.location, this.fragmentShader.location);
         renderer.gl.linkProgram(this.location);
         if (!renderer.gl.getProgramParameter(this.location, renderer.gl.LINK_STATUS)) {
@@ -40,7 +37,6 @@ export default class WebGLProgram extends WebGLNode {
             const attribute = renderer.gl.getActiveAttrib(this.location, i);
             createAttribute(renderer, this, attribute);
         }
-        material.compiled = true;
     }
 
     /** Return whether or not this WebGLProgram has been created from the Material
@@ -126,6 +122,7 @@ function createAttribute(renderer, program, attribute) {
             if (Number.isFinite(v)) {
                 renderer.gl.vertexAttrib1f(location, v);
             } else {
+                console.log(v)
                 switch (v.length) {
                     case 4:
                         renderer.gl.vertexAttrib4fv(location, v);

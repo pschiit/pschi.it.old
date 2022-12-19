@@ -1,5 +1,6 @@
 import Color from '../../core/Color';
 import Material from '../../renderer/graphics/Material';
+import Parameter from '../../renderer/graphics/shader/Parameter';
 import DirectionalLight from '../light/DirectionalLight';
 import PointLight from '../light/PointLight';
 import SpotLight from '../light/SpotLight';
@@ -53,71 +54,72 @@ export default class PhongMaterial extends Material {
     }
 
     get ambientColor() {
-        return this.parameters[PhongMaterial.ambientColorName];
+        return this.parameters[PhongMaterial.parameters.ambientColor];
     }
 
     set ambientColor(v) {
-        this.setParameter(PhongMaterial.ambientColorName, v);
-    }
-
-    get ambientTexture() {
-        return this.parameters[PhongMaterial.ambientTextureName];
-    }
-
-    set ambientTexture(v) {
-        this.setParameter(PhongMaterial.ambientTextureName, v);
+        this.setParameter(PhongMaterial.parameters.ambientColor, v);
     }
 
     get diffuseColor() {
-        return this.parameters[PhongMaterial.diffuseColorName];
+        return this.parameters[PhongMaterial.parameters.diffuseColor];
     }
 
     set diffuseColor(v) {
-        this.setParameter(PhongMaterial.diffuseColorName, v);
-    }
-
-    get diffuseTexture() {
-        return this.parameters[PhongMaterial.diffuseTextureName];
-    }
-
-    set diffuseTexture(v) {
-        this.setParameter(PhongMaterial.diffuseTextureName, v);
+        this.setParameter(PhongMaterial.parameters.diffuseColor, v);
     }
 
     get specularColor() {
-        return this.parameters[PhongMaterial.specularColorName];
+        return this.parameters[PhongMaterial.parameters.specularColor];
     }
 
     set specularColor(v) {
-        this.setParameter(PhongMaterial.specularColorName, v);
-    }
-
-    get specularTexture() {
-        return this.parameters[PhongMaterial.specularTextureName];
-    }
-
-    set specularTexture(v) {
-        this.setParameter(PhongMaterial.specularTextureName, v);
+        this.setParameter(PhongMaterial.parameters.specularColor, v);
     }
 
     get emissiveColor() {
-        return this.parameters[PhongMaterial.emissiveColorName];
+        return this.parameters[PhongMaterial.parameters.emissiveColor];
     }
 
     set emissiveColor(v) {
-        this.setParameter(PhongMaterial.emissiveColorName, v);
+        this.setParameter(PhongMaterial.parameters.emissiveColor, v);
+    }
+
+
+    get ambientTexture() {
+        return this.parameters[PhongMaterial.parameters.ambientTexture];
+    }
+
+    set ambientTexture(v) {
+        this.setParameter(PhongMaterial.parameters.ambientTexture, v);
+    }
+
+    get diffuseTexture() {
+        return this.parameters[PhongMaterial.parameters.diffuseTexture];
+    }
+
+    set diffuseTexture(v) {
+        this.setParameter(PhongMaterial.parameters.diffuseTexture, v);
+    }
+
+    get specularTexture() {
+        return this.parameters[PhongMaterial.parameters.specularTexture];
+    }
+
+    set specularTexture(v) {
+        this.setParameter(PhongMaterial.parameters.specularTexture, v);
     }
 
     get emissiveTexture() {
-        return this.parameters[PhongMaterial.emissiveTextureName];
+        return this.parameters[PhongMaterial.parameters.emissiveTexture];
     }
 
     set emissiveTexture(v) {
-        this.setParameter(PhongMaterial.emissiveTextureName, v);
+        this.setParameter(PhongMaterial.parameters.emissiveTexture, v);
     }
 
     get shininess() {
-        return this.parameters[PhongMaterial.shininessName];
+        return this.parameters[PhongMaterial.parameters.shininess];
     }
 
     set shininess(v) {
@@ -126,10 +128,22 @@ export default class PhongMaterial extends Material {
 
     setScene(scene) {
         super.setScene(scene);
-        this.pointLightsCount = scene.parameters[PointLight.intensityName]?.length || 0;
-        this.directionalLigthsCount = scene.parameters[DirectionalLight.ambientStrengthName]?.length || 0;
-        this.spotLigthsCount = scene.parameters[SpotLight.intensityName]?.length || 0;
+        this.pointLightsCount = scene.parameters[PointLight.parameters.ambientStrength]?.length || 0;
+        this.directionalLigthsCount = scene.parameters[DirectionalLight.parameters.ambientStrength]?.length || 0;
+        this.spotLigthsCount = scene.parameters[SpotLight.parameters.ambientStrength]?.length || 0;
     }
+
+    static parameters = {
+        ambientColor: Parameter.vector3('materialAmbientColor', Parameter.qualifier.const),
+        diffuseColor: Parameter.vector3('materialDiffuseColor', Parameter.qualifier.const),
+        specularColor: Parameter.vector3('materialSpecularColor', Parameter.qualifier.const),
+        emissiveColor: Parameter.vector3('materialEmissiveColor', Parameter.qualifier.const),
+        ambientTexture: Parameter.texture('materialAmbientTexture', Parameter.qualifier.const),
+        diffuseTexture: Parameter.texture('materialDiffuseTexture', Parameter.qualifier.const),
+        specularTexture: Parameter.texture('materialSpecularTexture', Parameter.qualifier.const),
+        emissiveTexture: Parameter.texture('materialEmissiveTexture', Parameter.qualifier.const),
+        shininess: Parameter.number('materialShininess', Parameter.qualifier.const),
+    };
 
     static ambientColorName = "materialAmbientColor";
     static diffuseColorName = "materialDiffuseColor";

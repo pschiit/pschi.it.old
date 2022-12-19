@@ -1,29 +1,32 @@
 import GraphicsNode from './GraphicsNode';
+import Parameter from './shader/Parameter';
+import Texture from './Texture';
 
 export default class Material extends GraphicsNode {
     /** Create a new Material
     */
-    constructor(){
+    constructor(vertexShader, fragmentShader){
         super();
 
-        this.culling = Material.culling.back;
-        this.depth = Material.depth.less;
+        this.culling = null;
+        this.depth = null;
+        this.vertexShader = vertexShader;
+        this.fragmentShader = fragmentShader;
         this.fog = true;
-        this.compiled = false;
+    }
+
+    get compiled(){
+        return this.vertexShader?.compiled && this.fragmentShader?.compiled;
     }
 
     get texture() {
-        return this.parameters[Material.textureName];
+        return this.parameters[Material.parameters.texture];
     }
 
     set texture(v) {
-        this.setParameter(Material.textureName, v);
+        this.setParameter(Material.parameters.texture, v);
     }
-
-    setParameter(name, value) {
-        this.parameters[name] = value;
-    }
-
+    
     setScene(scene){
         if (!scene.materials[this.id]) {
             scene.materials[this.id] = this;
@@ -33,6 +36,10 @@ export default class Material extends GraphicsNode {
             scene.textures[texture.id] = texture;
         }
     }
+
+    static parameters = {
+        texture: Parameter.texture('texture',Parameter.qualifier.const)
+    };
 
     static textureName = 'texture';
 

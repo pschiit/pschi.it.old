@@ -1,4 +1,4 @@
-import Camera from '../../../../3d/camera/Camera';
+import CameraNode from '../../../../3d/camera/CameraNode';
 import DirectionalLight from '../../../../3d/light/DirectionalLight';
 import PointLight from '../../../../3d/light/PointLight';
 import SpotLight from '../../../../3d/light/SpotLight';
@@ -79,11 +79,11 @@ export default class GLSLParameter extends Node {
                 name === 'v_' + VertexBuffer.colorName ? new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.vec4, 'v_' + VertexBuffer.colorName, length) :
                 name === 'v_' + VertexBuffer.uvName ? new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.vec2, 'v_' + VertexBuffer.uvName, length) :
 
-                name === Camera.positionName ? new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, Camera.positionName, length) :
-                name === Camera.projectionMatrixName ? new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.mat4, Camera.projectionMatrixName, length) :
-                name === Camera.backgroundColorName ? new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, Camera.backgroundColorName, length) :
-                name === Camera.fogDistanceName ? new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec2, Camera.fogDistanceName, length) :
-                name === 'v_' + Camera.fogDistanceName ? new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.float, 'v_' + Camera.fogDistanceName, length) :
+                name === CameraNode.positionName ? new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, CameraNode.positionName, length) :
+                name === CameraNode.projectionMatrixName ? new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.mat4, CameraNode.projectionMatrixName, length) :
+                name === CameraNode.backgroundColorName ? new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec3, CameraNode.backgroundColorName, length) :
+                name === CameraNode.fogDistanceName ? new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.vec2, CameraNode.fogDistanceName, length) :
+                name === 'v_' + CameraNode.fogDistanceName ? new GLSLParameter(GLSLParameter.qualifier.varying, GLSLParameter.type.float, 'v_' + CameraNode.fogDistanceName, length) :
 
                 name === Node3d.vertexMatrixName ? new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.mat4, Node3d.vertexMatrixName, length) :
                 name === Node3d.normalMatrixName ? new GLSLParameter(GLSLParameter.qualifier.uniform, GLSLParameter.type.mat4, Node3d.normalMatrixName, length) :
