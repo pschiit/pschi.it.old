@@ -32,8 +32,8 @@ camera.target = new Vector3(0, 0, 0);
 world.appendChild(camera);
 
 const floor = new Node3d();
-floor.material = new PickingMaterial();
-const plane = new PlaneBuffer();
+floor.material = new GridMaterial();
+const plane = new PlaneBuffer(2,2);
 plane.setColor(Color.red);
 plane.normal = null;
 plane.transform(Matrix4.identityMatrix().rotate(Math.PI / 2, new Vector3(1, 0, 0)));

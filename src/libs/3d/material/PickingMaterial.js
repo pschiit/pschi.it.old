@@ -1,5 +1,4 @@
 import Material from '../../renderer/graphics/Material';
-import Conversion from '../../renderer/graphics/shader/Conversion';
 import Operation from '../../renderer/graphics/shader/Operation';
 import Shader from '../../renderer/graphics/shader/Shader';
 import VertexBuffer from '../../renderer/graphics/VertexBuffer';
@@ -21,6 +20,6 @@ export default class PickingMaterial extends Material {
         this.fragmentShader = Shader.fragmentShader(
             Operation.equal(
                 Shader.parameters.output,
-                Conversion.toVector4(Node3d.parameters.colorId, 1)));
+                Operation.toVector4(Node3d.parameters.colorId, 1)));
     }
 }

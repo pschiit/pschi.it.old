@@ -30,9 +30,4 @@ export default class CameraNode extends Node3d {
         backgroundColor: Parameter.vector3('backgroundColor', Parameter.qualifier.const),
         fogDistance: Parameter.vector2('fogDistance', Parameter.qualifier.const),
     }
-
-    static positionName = 'viewPosition';
-    static projectionMatrixName = 'projectionMatrix';
-    static backgroundColorName = 'backgroundColor';
-    static fogDistanceName = 'fogDistance';
 }

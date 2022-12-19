@@ -25,9 +25,4 @@ export default class PointLight extends LightNode {
         ambientStrength: Parameter.number('pointLightAmbientStrength', Parameter.qualifier.const),
         intensity: Parameter.number('pointLightIntensity', Parameter.qualifier.const),
     };
-
-    static colorName = 'pointLightColor';
-    static positionName = 'pointLightPosition';
-    static ambientStrengthName = 'pointLightAmbientStrength';
-    static intensityName = 'pointLightIntensity';
 }

@@ -41,8 +41,6 @@ export default class Material extends GraphicsNode {
         texture: Parameter.texture('texture',Parameter.qualifier.const)
     };
 
-    static textureName = 'texture';
-
     static culling = {
         front: 'front',
         back: 'back',

@@ -123,7 +123,7 @@ export default class PhongMaterial extends Material {
     }
 
     set shininess(v) {
-        this.setParameter(PhongMaterial.shininessName, v);
+        this.setParameter(PhongMaterial.parameters.shininess, v);
     }
 
     setScene(scene) {
@@ -144,16 +144,4 @@ export default class PhongMaterial extends Material {
         emissiveTexture: Parameter.texture('materialEmissiveTexture', Parameter.qualifier.const),
         shininess: Parameter.number('materialShininess', Parameter.qualifier.const),
     };
-
-    static ambientColorName = "materialAmbientColor";
-    static diffuseColorName = "materialDiffuseColor";
-    static specularColorName = "materialSpecularColor";
-    static emissiveColorName = "materialEmissiveColor";
-
-    static ambientTextureName = "materialAmbientTexture";
-    static diffuseTextureName = "materialDiffuseTexture";
-    static specularTextureName = "materialSpecularTexture";
-    static emissiveTextureName = "materialEmissiveTexture";
-
-    static shininessName = "materialShininess";
 }

@@ -95,8 +95,6 @@ export default class OrthographicCamera extends CameraNode {
             this._projectionMatrix = this.orthograpicMatrix.clone().multiply(this.vertexMatrix.clone().invert());
             this.projectionUpdated = false;
         }
-        scene.setParameter(CameraNode.projectionMatrixName, this.projectionMatrix);
+        scene.setParameter(CameraNode.parameters.projectionMatrix, this.projectionMatrix);
     }
-    
-    static orthograpicMatrixName = 'orthograpicMatrix';
 }

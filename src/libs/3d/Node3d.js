@@ -147,12 +147,6 @@ export default class Node3d extends Render {
         }
     }
 
-    static parameters = {
-        vertexMatrix: Parameter.matrix4('vertexMatrix', Parameter.qualifier.const),
-        normalMatrix: Parameter.matrix4('normalMatrix', Parameter.qualifier.const),
-        colorId: Parameter.vector3('colorId', Parameter.qualifier.const),
-    }
-
     static search(colorId) {
         return cache[colorId];
     }
@@ -164,6 +158,12 @@ export default class Node3d extends Render {
                 return color;
             }
         } while (true);
+    }
+
+    static parameters = {
+        vertexMatrix: Parameter.matrix4('vertexMatrix', Parameter.qualifier.const),
+        normalMatrix: Parameter.matrix4('normalMatrix', Parameter.qualifier.const),
+        colorId: Parameter.vector3('colorId', Parameter.qualifier.const),
     }
 }
 const cache = {};
