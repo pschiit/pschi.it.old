@@ -8,7 +8,6 @@ import Node3d from '../Node3d';
 export default class PickingMaterial extends Material {
     constructor() {
         super();
-
         this.vertexShader = Shader.vertexShader(
             Operation.equal(
                 Shader.parameters.output,

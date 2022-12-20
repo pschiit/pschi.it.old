@@ -1,4 +1,5 @@
 import Buffer from '../../../core/Buffer';
+import Matrix4 from '../../../math/Matrix4';
 import Material from '../Material';
 import WebGLBuffer from './WebGLBuffer';
 import WebGLNode from './WebGLNode';

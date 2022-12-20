@@ -96,7 +96,7 @@ export default class GLSLShader extends Shader {
         main.push('}');
 
         const result = declarations.concat(main).join('\n').replaceAll('};', '}');
-        console.log(result);
+        //console.log(result);
         return result;
 
         function addNode(shaderNode) {

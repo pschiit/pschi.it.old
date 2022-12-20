@@ -9,7 +9,7 @@ export default class Node3d extends Render {
     */
     constructor() {
         super();
-        const colorId = Node3d.generateColorId();
+        const colorId = Node3d.generateColorId(this);
         this.setParameter(Node3d.parameters.colorId, colorId);
         this.matrix = Matrix4.identityMatrix();
         this._target = new Vector3();
@@ -150,11 +150,11 @@ export default class Node3d extends Render {
     static search(colorId) {
         return cache[colorId];
     }
-    static generateColorId() {
+    static generateColorId(node) {
         do {
             const color = Color.random();
             if (!cache[color]) {
-                cache[color] = true;
+                cache[color] = node;
                 return color;
             }
         } while (true);

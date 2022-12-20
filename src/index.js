@@ -117,7 +117,7 @@ camera.translate(7, 5, 7);
 camera.target = new Vector3(0, 0, 0);
 world.appendChild(camera);
 
-const pickingMaterial = new GridMaterial();
+const pickingMaterial = new PickingMaterial();
 const textureMaterial = new PhongMaterial();
 textureMaterial.texture = new Texture(new RenderTarget(camera, 1024, 1024));
 const gridMaterial = new GridMaterial(new Color(0.4, 0.4, 0.4, 1));
@@ -226,6 +226,7 @@ canvas.element.onpointerdown = (e) => {
 
     canvas.render(pickingTexture);
     const color = new Color(renderTarget.output);
+    console.log(color);
     const node = Node3d.search(color);
     if (node) {
         node.dispatchEvent({ type: 'onclick' });

@@ -176,13 +176,14 @@ export default class PhongMaterial extends Material {
                     );
                 }
                 if (this.spotLigthsCount) {
-                    SpotLight.parameters.color.length = this.pointLightsCount;
-                    SpotLight.parameters.position.length = this.pointLightsCount;
-                    SpotLight.parameters.direction.length = this.pointLightsCount;
-                    SpotLight.parameters.radius.length = this.pointLightsCount;
-                    SpotLight.parameters.innerRadius.length = this.pointLightsCount;
-                    SpotLight.parameters.ambientStrength.length = this.pointLightsCount;
-                    SpotLight.parameters.intensity.length = this.pointLightsCount;
+                    SpotLight.parameters.color.length = this.spotLigthsCount;
+                    SpotLight.parameters.position.length = this.spotLigthsCount;
+                    SpotLight.parameters.direction.length = this.spotLigthsCount;
+                    SpotLight.parameters.radius.length = this.spotLigthsCount;
+                    SpotLight.parameters.innerRadius.length = this.spotLigthsCount;
+                    SpotLight.parameters.ambientStrength.length = this.spotLigthsCount;
+                    SpotLight.parameters.intensity.length = this.spotLigthsCount;
+                    const r = Parameter.number('r');
                     const lightDistance = Parameter.vector3('lightDistance');
                     const theta = Parameter.number('theta');
                     const smoothing = Parameter.number('smoothing');
@@ -197,17 +198,15 @@ export default class PhongMaterial extends Material {
                                 ),
                                 Operation.equal(
                                     Operation.declare(theta),
-                                    Operation.dot(Operation.normalize(lightDistance), Operation.selection(SpotLight.parameters.direction, '[i]'))
+                                    Operation.substract(Operation.dot(Operation.normalize(lightDistance), Operation.selection(SpotLight.parameters.direction, '[i]')), Operation.selection(SpotLight.parameters.radius, '[i]')),
+                                ),
+                                Operation.equal(Operation.declare(r), Operation.substract(
+                                    Operation.selection(SpotLight.parameters.innerRadius, '[i]'),
+                                    Operation.selection(SpotLight.parameters.radius, '[i]')),
                                 ),
                                 Operation.equal(
                                     Operation.declare(smoothing),
-                                    Operation.clamp(
-                                        Operation.substract(
-                                            Operation.divide(
-                                                Operation.substract(theta, Operation.selection(SpotLight.parameters.radius, '[i]')),
-                                                Operation.selection(SpotLight.parameters.innerRadius, '[i]')),
-                                            Operation.selection(SpotLight.parameters.radius, '[i]')),
-                                        0, 1)
+                                    Operation.clamp(Operation.divide(theta, r), 0, 1)
                                 ),
                                 Operation.equal(
                                     Operation.declare(attenuation),
@@ -257,7 +256,6 @@ export default class PhongMaterial extends Material {
             }
             operations.push(Operation.equal(Shader.parameters.output, Operation.toVector4(color, Operation.selection(fragmentColor, '.a'))));
             this.fragmentShader = Shader.fragmentShader(operations, Shader.precision.high);
-
         }
     }
 
@@ -428,7 +426,7 @@ export default class PhongMaterial extends Material {
                         Operation.equal(
                             Operation.declare(nDotL),
                             Operation.max(
-                                Operation.dot(lightColor, normal),
+                                Operation.dot(lightDirection, normal),
                                 0
                             )
                         ),
@@ -443,7 +441,7 @@ export default class PhongMaterial extends Material {
                         ),
                         // Operation.equal(
                         //     spec,//phong
-                        //     Operation.pow(Operation.max(Operation.dot(cameraPosition, Operation.substract(Operation.multiply(2, Operation.dot(normal, lightDirection), normal), lightDirection)), 0), shininess)
+                        //     Operation.pow(Operation.max(Operation.dot(cameraPosition, Operation.substract(Operation.multiply(2, Operation.dot(normal, lightDirection), normal), lightDirection)), 0), PhongMaterial.parameters.shininess)
                         // ),
                         Operation.equal(
                             Operation.declare(specular),
