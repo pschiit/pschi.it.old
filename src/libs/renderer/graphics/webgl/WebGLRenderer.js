@@ -392,14 +392,14 @@ function render(renderer, renderTarget) {
             renderer.program.setParameter(name, r.parameters[name]);
         }
         if (r.vertexBuffer) {
-            renderer.vertexArray = WebGLVertexArray.from(renderer, r.vertexBuffer, r.material);
+            renderer.vertexArray = WebGLVertexArray.from(renderer, r.vertexBuffer, renderer.material);
             const divisorCount = r.vertexBuffer.divisorCount;
             if (r.vertexBuffer.index) {
                 const webGLIndex = WebGLBuffer.from(renderer, r.vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
                 if (divisorCount) {
-                    renderer.gl.drawElementsInstanced(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, r.vertexBuffer.index.type), r.vertexBuffer.offset, divisorCount);
+                    renderer.gl.drawElementsInstanced(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, r.vertexBuffer.index.type), r.vertexBuffer.BYTES_PER_OFFSET, divisorCount);
                 } else {
-                    renderer.gl.drawElements(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, r.vertexBuffer.index.type), r.vertexBuffer.offset);
+                    renderer.gl.drawElements(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, r.vertexBuffer.index.type), r.vertexBuffer.BYTES_PER_OFFSET);
                 }
             } else if (divisorCount) {
                 renderer.gl.drawArraysInstanced(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.offset, r.vertexBuffer.count, divisorCount);

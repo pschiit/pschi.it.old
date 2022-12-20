@@ -12,6 +12,7 @@ export default class Buffer extends Node {
         this.divisor = divisor;
         this.normalize = false;
         this.updated = true;
+        this.interleaved = false;
 
         this.addEventListener(Node.event.nodeInserted, (e) => {
             const child = e.inserted;
@@ -26,43 +27,52 @@ export default class Buffer extends Node {
         return this.parent instanceof Buffer ? this.parent.mainBuffer : this;
     }
 
-    get data() {
+    get type() {
         if (this.childrens.length > 0) {
-            const data = new this.type(this.length);
-            const arrayStep = this.step;
-
-            this.childrens.forEach(buffer => {
-                const offset = buffer.offset;
-                let position = 0;
-                for (let i = 0; i < data.length; i += arrayStep) {
-                    for (let j = 0; j < buffer.step; j++) {
-                        data[offset + i + j] = buffer.data[position++];
-                    }
-                }
-            });
-            return data;
-
-            // const length = this.BYTES_LENGTH;
-            // const data = new ArrayBuffer(length);
-            // const arrayStep = this.BYTES_PER_STEP;
-
-            // this.childrens.forEach(b => {
-            //     const element = b.BYTES_PER_ELEMENT;
-            //     const step = b.BYTES_PER_STEP;
-            //     const offset = b.BYTES_PER_OFFSET;
-            //     const view = new b.type(data);
-            //     let position = 0;
-            //     const bufferData = b.data;
-            //     for (let i = 0; i < length; i += arrayStep) {
-            //         for (let j = 0; j < step; j += element) {
-            //             data[offset + i + j] = bufferData[position++];
-            //         }
-            //     }
-            //     b.updated = false;
-            // });
-            // console.log(data, testData, new Float32Array(data));
+            return new Float32Array(0).constructor;
         }
-        return this._data;
+        return this.data.constructor;
+    }
+
+    get data() {
+        let data = this._data;
+        if (this.childrens.length > 0) {
+            if (this.interleaved) {
+                const length = this.BYTES_LENGTH;
+                const data = new ArrayBuffer(length);
+                const arrayStep = this.BYTES_PER_STEP;
+    
+                this.childrens.forEach(b => {
+                    const element = b.BYTES_PER_ELEMENT;
+                    const step = b.BYTES_PER_STEP;
+                    const offset = b.BYTES_PER_OFFSET;
+                    const view = new b.type(data);
+                    let position = 0;
+                    const bufferData = b.data;
+                    for (let i = 0; i < length; i += arrayStep) {
+                        for (let j = 0; j < step; j += element) {
+                            view[offset + i + j] = bufferData[position++];
+                        }
+                    }
+                    b.updated = false;
+                });
+            } else {
+                const length = this.BYTES_LENGTH;
+                console.log(length);
+                data = new ArrayBuffer(length);
+                let offset = 0;
+                this.childrens.forEach(b => {
+                    const view = new b.type(data);
+                    let index = offset / b.BYTES_PER_ELEMENT;
+                    b.data.forEach(v=>{
+                        view[index++] = v;
+                    })
+                    offset += b.BYTES_LENGTH;
+                });
+            }
+            console.log(data, this.childrens);
+        }
+        return data;
     }
 
     set data(v) {
@@ -73,7 +83,7 @@ export default class Buffer extends Node {
 
     get step() {
         if (this.childrens.length > 0) {
-            return this.childrens.reduce((r, b) => { return r + b.step; }, 0);
+            return this.interleaved ? this.childrens.reduce((r, b) => { return r + b.step; }, 0) : 0;
         }
         return this._step;
     }
@@ -93,11 +103,14 @@ export default class Buffer extends Node {
                 : 0;
     }
 
-    get type() {
-        if (this.childrens.length > 0) {
-            return new Float32Array(0).constructor;
+    get offset() {
+        const name = this.interleaved ? 'step' : 'length'
+        if (this.parent instanceof Buffer) {
+            return this.parent.childrens
+                .slice(0, this.parent.childrens.indexOf(this))
+                .reduce((r, b) => { return r + b[name]; }, 0);
         }
-        return this.data.constructor;
+        return 0;
     }
 
     get length() {
@@ -109,19 +122,25 @@ export default class Buffer extends Node {
 
     get BYTES_PER_STEP() {
         if (this.childrens.length > 0) {
-            return this.childrens.reduce((r, b) => { return r + b.BYTES_PER_STEP; }, 0);
+            return this.interleaved ? this.childrens.reduce((r, b) => { return r + b.BYTES_PER_STEP; }, 0) : 0;
         }
         return this.BYTES_PER_ELEMENT * this.step;
     }
 
     get BYTES_PER_OFFSET() {
-        if (this.childrens.length > 0) {
-            return this.childrens.reduce((r, b) => { return r + b.BYTES_PER_OFFSET; }, 0);
+        const name = this.interleaved ? 'BYTES_PER_STEP' : 'BYTES_LENGTH'
+        if (this.parent instanceof Buffer) {
+            return this.parent.childrens
+                .slice(0, this.parent.childrens.indexOf(this))
+                .reduce((r, b) => { return r + b[name]; }, 0);
         }
-        return this.BYTES_PER_ELEMENT * this.offset;
+        return 0;
     }
 
     get BYTES_PER_ELEMENT() {
+        if (this.childrens.length > 0) {
+            return null;
+        }
         return this.type.BYTES_PER_ELEMENT;
     }
 
@@ -132,46 +151,6 @@ export default class Buffer extends Node {
         return this.BYTES_PER_ELEMENT * this.data.length;
     }
 
-    get offset() {
-        if (this.parent instanceof Buffer) {
-            return this.parent.childrens
-                .slice(0, this.parent.childrens.indexOf(this))
-                .reduce((r, b) => { return r + b.step; }, 0);
-        }
-        return 0;
-    }
-
-    getParameter(name) {
-        return this.childrens.find(c => c.name == name);
-    }
-
-    setParameter(name, v, step, divisor) {
-        let buffer = this.getParameter(name);
-        if (v) {
-            if (v instanceof Buffer) {
-                buffer = v;
-                buffer.name = name;
-                this.appendChild(v);
-            } else {
-                if (Array.isArray(v)) {
-                    v = new Float32Array(v);
-                }
-                if (!buffer) {
-                    buffer = new Buffer(v, step, divisor);
-                    buffer.name = name;
-                    this.appendChild(buffer);
-                } else {
-                    buffer.data = v;
-                }
-            }
-        } else if (buffer) {
-            this.removeChild(buffer);
-            buffer = null;
-        }
-
-        return buffer;
-    }
-
     scale(value) {
         if (this.childrens.length > 0) {
             this.childrens.forEach(c => c.scale(value));
@@ -180,10 +159,6 @@ export default class Buffer extends Node {
                 this.data[i] *= value;
             }
         }
-    }
-
-    removeParameter(name) {
-        this.removeChild(this.getParameter(name));
     }
 
     transform(matrix) {

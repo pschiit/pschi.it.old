@@ -17,6 +17,7 @@ import Vector3 from './libs/math/Vector3';
 import Vector4 from './libs/math/Vector4';
 import RenderTarget from './libs/renderer/graphics/RenderTarget';
 import Texture from './libs/renderer/graphics/Texture';
+import Buffer from './libs/core/Buffer';
 
 const defaultStyle = {
     width: '100%',
@@ -66,6 +67,7 @@ cube.uv = [
     1, 1,
     1, 0,
 ];
+
 const reverseCube = new BoxBuffer();
 reverseCube.normal.scale(-1);
 reverseCube.setColor(Color.white);
@@ -109,6 +111,19 @@ plane.uv = [
     1, 1,
     1, 0,
 ];
+
+const mainBuffer = new Buffer();
+const mainIndexBuffer = new Buffer();
+[cube.index, plane.index, reverseCube.index].forEach(b => {
+    if (b instanceof Buffer) {
+        mainIndexBuffer.appendChild(b)
+    }
+})
+cube.buffers.concat(reverseCube.buffers, plane.buffers).forEach(b => {
+    if (b instanceof Buffer) {
+        mainBuffer.appendChild(b)
+    }
+})
 
 const world = new Node3d();
 
@@ -177,7 +192,6 @@ spotLight.material = textureMaterial;
 spotLight.vertexBuffer = reverseCube;
 floor.appendChild(spotLight);
 
-
 element.addEventListener('onclick', (e) => {
     console.log('toggle sun');
     sun.toggle();
@@ -216,6 +230,7 @@ function draw(time) {
     canvas.render(camera);
     request = requestAnimationFrame(draw);
 }
+console.log(canvas.context)
 
 const pickingTexture = new Texture(renderTarget);
 canvas.element.onpointerdown = (e) => {
@@ -226,7 +241,6 @@ canvas.element.onpointerdown = (e) => {
 
     canvas.render(pickingTexture);
     const color = new Color(renderTarget.output);
-    console.log(color);
     const node = Node3d.search(color);
     if (node) {
         node.dispatchEvent({ type: 'onclick' });
