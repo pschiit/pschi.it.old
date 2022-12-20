@@ -13,6 +13,7 @@ export default class Parameter extends ShaderNode {
         this.name = name;
         this.type = type;
         this.qualifier = qualifier;
+        this.length = 0;
     }
 
     /** Return the parameter name.

@@ -1,6 +1,5 @@
 import GraphicsNode from './GraphicsNode';
 import Parameter from './shader/Parameter';
-import Texture from './Texture';
 
 export default class Material extends GraphicsNode {
     /** Create a new Material
@@ -8,8 +7,8 @@ export default class Material extends GraphicsNode {
     constructor(vertexShader, fragmentShader){
         super();
 
-        this.culling = null;
-        this.depth = null;
+        this.culling = Material.culling.back;
+        this.depth = Material.depth.less;
         this.vertexShader = vertexShader;
         this.fragmentShader = fragmentShader;
         this.fog = true;

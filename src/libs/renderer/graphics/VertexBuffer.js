@@ -82,7 +82,7 @@ export default class VertexBuffer extends GraphicsNode {
     }
 
     set uv(v) {
-        this.setParameter(VertexBuffer.parameters.uv.name, v, this.uvLength).normalize = true;
+        this.setParameter(VertexBuffer.parameters.uv.name, v, this.uvLength);//.normalize = true;
     }
 
     setParameter(name, v, step, divisor) {

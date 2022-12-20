@@ -72,9 +72,10 @@ export default class GLSLShader extends Shader {
             return shader.source;
         }
 
-        var initialized = {};
-        var extensions = [];
-        var declarations = [];
+        const qualifier = {};
+        let parameters = {};
+        const extensions = [];
+        let declarations = [];
         var main = [
             'void main(){'
         ];
@@ -94,41 +95,50 @@ export default class GLSLShader extends Shader {
         }
         main.push('}');
 
-        var result = declarations.concat(main).join('\n');
-
+        const result = declarations.concat(main).join('\n').replaceAll('};', '}');
+        console.log(result);
         return result;
 
         function addNode(shaderNode) {
-            if (shaderNode instanceof Parameter && !initialized[shaderNode.name]) {
-                if (shaderNode.qualifier) {
-                    declarations.unshift(getDeclaration(shaderNode));
-                } else {
-                    shaderNode._init = typeOf(shaderNode.type) + ' ' + shaderNode;
-                }
-                initialized[shaderNode.name] = true;
-            }
-            if (shaderNode instanceof Operation) {
-                if (shaderNode.symbol instanceof ShaderFunction && !initialized[shaderNode.symbol.name]) {
-                    const shaderFunction = shaderNode.symbol;
-                    shaderFunction.parameters.forEach(addNode);
-                    shaderFunction.operations.forEach(addNode);
-                    let code = toString(shaderFunction);
-                    declarations.push(code);
-                    initialized[shaderFunction.name] = true;
+            if (Array.isArray(shaderNode)) {
+                shaderNode.forEach(addNode)
+            } else if (shaderNode.qualifier && !qualifier[shaderNode.name]) {
+                declarations.unshift(getQualifierDeclaration(shaderNode));
+                qualifier[shaderNode.name] = true;
+            } else if (shaderNode instanceof Operation) {
+                if (shaderNode.symbol instanceof ShaderFunction) {
+                    addNode(shaderNode.symbol);
                 }
                 shaderNode.parameters.forEach(addNode);
+            } else if (shaderNode instanceof ShaderFunction && !parameters[shaderNode.name]) {
+                const previous = parameters;
+                parameters = {};
+                shaderNode.parameters.forEach(addNode);
+                shaderNode.operations.forEach(addNode);
+                let code = toString(shaderNode);
+                declarations.push(code);
+                parameters = previous;
+                parameters[shaderNode.name] = true;
             }
         }
 
-        function getDeclaration(parameter) {
-            return `${qualifierOf(parameter.qualifier)} ${typeOf(parameter.type)} ${parameter}${parameter.length > 0 ? `[${parameter.length}]` : ''};`
+        function getQualifierDeclaration(parameter) {
+            return `${qualifierOf(parameter.qualifier)} ${typeOf(parameter.type)} ${parameter}${parameter.length > 0 ? `[${parameter.length}]` : ''};`;
+        }
+
+        function getfunctionDeclaration(parameter) {
+            return `${typeOf(parameter.type)} ${parameter}${parameter.length > 0 ? `[${parameter.length}]` : ''}`;
         }
 
         function toString(shaderNode) {
             if (shaderNode instanceof ShaderFunction) {
-                return `${typeOf(shaderNode.output)} ${shaderNode.name}(${toString(shaderNode.parameters.map(toString).join(', '))}){\n${shaderNode.operations.map(toString).join(';\n')};\n}`
+                return `${typeOf(shaderNode.output)} ${shaderNode.name}(${toString(shaderNode.parameters.map(getfunctionDeclaration).join(', '))}){\n${shaderNode.operations.map(toString).join(';\n')};\n}`
             }
             if (shaderNode instanceof Operation) {
+                if (shaderNode.symbol === Operation.symbol.declare) {
+                    const parameter = shaderNode.parameters[0];
+                    return `${typeOf(parameter.type)} ${parameter}${parameter.length > 0 ? '[]' : ''}`;
+                }
                 if (shaderNode.symbol instanceof ShaderFunction) {
                     return `${shaderNode.symbol.name}(${shaderNode.parameters.map(toString).join(', ')})`
                 }
@@ -143,6 +153,16 @@ export default class GLSLShader extends Shader {
                     const operations = shaderNode.parameters[1];
                     return `${shaderNode.symbol}(${toString(condition)}){\n${operations.map(toString).join(';\n')};\n}`;
                 }
+                if (shaderNode.symbol === Operation.symbol.for) {
+                    const iterator = shaderNode.parameters[0];
+                    const condition = shaderNode.parameters[1];
+                    const step = shaderNode.parameters[2];
+                    const operations = shaderNode.parameters[3];
+                    return `${shaderNode.symbol}(${iterator};${toString(condition)};${step}){\n${operations.map(toString).join(';\n')};\n}`;
+                }
+                if (shaderNode.symbol === Operation.symbol.selection) {
+                    return shaderNode.parameters.map(toString).join('');
+                }
                 //convertTo
                 if (shaderNode.symbol.prototype instanceof MathArray) {
                     return `${typeOf(shaderNode.symbol)}(${shaderNode.parameters.flatMap(toString).join(', ')})`;
@@ -151,14 +171,20 @@ export default class GLSLShader extends Shader {
                     extensions.push('#extension GL_OES_standard_derivatives : enable');
                     return `fwidth(${shaderNode.parameters.flatMap(toString).join(', ')})`;
                 }
+                if (shaderNode.symbol === Operation.symbol.read) {
+                    return `texture2D(${shaderNode.parameters.flatMap(toString).join(', ')})`;
+                }
                 if (shaderNode.symbol === Operation.symbol.normalize
+                    || shaderNode.symbol === Operation.symbol.len
                     || shaderNode.symbol === Operation.symbol.abs
                     || shaderNode.symbol === Operation.symbol.fract
+                    || shaderNode.symbol === Operation.symbol.dot
                     || shaderNode.symbol === Operation.symbol.min
                     || shaderNode.symbol === Operation.symbol.max
                     || shaderNode.symbol === Operation.symbol.distance
                     || shaderNode.symbol === Operation.symbol.pow
-                    || shaderNode.symbol === Operation.symbol.mix) {
+                    || shaderNode.symbol === Operation.symbol.mix
+                    || shaderNode.symbol === Operation.symbol.clamp) {
                     return `${shaderNode.symbol}(${shaderNode.parameters.flatMap(toString).join(', ')})`;
                 }
                 return shaderNode.parameters.flatMap(toString).join(shaderNode.symbol);
@@ -178,9 +204,9 @@ export default class GLSLShader extends Shader {
                 }
                 return shaderNode;
             }
-            return shaderNode instanceof Vector4 ? 'vec4(' + shaderNode[0] + ', ' + shaderNode[1] + ', ' + shaderNode[2] + ', ' + shaderNode[3] + ')'
-                : shaderNode instanceof Vector3 ? 'vec3(' + shaderNode[0] + ', ' + shaderNode[1] + ', ' + shaderNode[2] + ')'
-                    : shaderNode instanceof Vector2 ? 'vec2(' + shaderNode[0] + ', ' + shaderNode[1] + ')'
+            return shaderNode instanceof Vector4 ? 'vec4(' + toString(shaderNode[0]) + ', ' + toString(shaderNode[1]) + ', ' + toString(shaderNode[2]) + ', ' + toString(shaderNode[3]) + ')'
+                : shaderNode instanceof Vector3 ? 'vec3(' + toString(shaderNode[0]) + ', ' + toString(shaderNode[1]) + ', ' + toString(shaderNode[2]) + ')'
+                    : shaderNode instanceof Vector2 ? 'vec2(' + toString(shaderNode[0]) + ', ' + toString(shaderNode[1]) + ')'
                         : Number.isInteger(shaderNode) ? shaderNode + '.0'
                             : shaderNode;
         }

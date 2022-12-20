@@ -12,7 +12,6 @@ export default class  WebGLShader extends WebGLNode {
         super(renderer, shader.id);
         this.location = renderer.gl.createShader(renderer.gl[getType(shader.type)]);
         const source = shader.source ? shader.source : GLSLShader.from(shader);
-        console.log(source);
         renderer.gl.shaderSource(this.location, source);
         renderer.gl.compileShader(this.location);
         const success = renderer.gl.getShaderParameter(this.location, renderer.gl.COMPILE_STATUS);

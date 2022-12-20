@@ -20,7 +20,7 @@ export default class SpotLight extends LightNode {
         parameters[SpotLight.parameters.radius]= this.radius;
         parameters[SpotLight.parameters.ambientStrength]= this.ambientStrength;
         parameters[SpotLight.parameters.intensity]= this.intensity;
-        scene.setParameter(parameters);
+        scene.addTo(parameters);
 
         return this;
     }

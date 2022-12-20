@@ -15,7 +15,6 @@ export default class Operation extends ShaderNode {
     }
 
     static symbol = {
-        selection: '.',
         equal: ' = ',
         addTo: ' += ',
         substractTo: ' -= ',
@@ -35,18 +34,27 @@ export default class Operation extends ShaderNode {
         greaterEquals: ' >=',
 
         if: 'if',
+        elseIf: 'else if',
+        else: 'else',
+        for: 'for',
         discard: 'discard',
         return: 'return',
+        selection: 'selection',
+        declare: 'declare',
 
+        len: 'length',
         abs: 'abs',
         fract: 'fract',
         fWidth: 'fWidth',
         normalize: 'normalize',
+        dot: 'dot',
         min: 'min',
         max: 'max',
         distance: 'distance',
         pow: 'pow',
         mix: 'mix',
+        read: 'read',
+        clamp: 'clamp',
 
         toVector2: Vector2,
         toVector3: Vector3,
@@ -196,6 +204,10 @@ export default class Operation extends ShaderNode {
         return new Operation(shaderFunction, parameters);
     }
 
+    static len(parameter) {
+        return new Operation(Operation.symbol.len, [parameter]);
+    }
+
     static abs(parameter) {
         return new Operation(Operation.symbol.abs, [parameter]);
     }
@@ -210,6 +222,10 @@ export default class Operation extends ShaderNode {
 
     static normalize(vector) {
         return new Operation(Operation.symbol.normalize, [vector]);
+    }
+
+    static dot(a, b) {
+        return new Operation(Operation.symbol.dot, [a, b]);
     }
 
     static max(a, b) {
@@ -228,8 +244,23 @@ export default class Operation extends ShaderNode {
         return new Operation(Operation.symbol.pow, [a, b]);
     }
 
+    static read(a, b) {
+        return new Operation(Operation.symbol.read, [a, b]);
+    }
+
     static mix(a, b, c) {
         return new Operation(Operation.symbol.mix, [a, b, c]);
+    }
+
+    static clamp(a, b, c) {
+        return new Operation(Operation.symbol.clamp, [a, b, c]);
+    }
+
+    static for(iterator, condition, step, operations) {
+        if (!Array.isArray(operations)) {
+            operations = [operations];
+        }
+        return new Operation(Operation.symbol.for, [iterator, condition, step, operations]);
     }
 
     static if(condition, operations) {
@@ -237,6 +268,10 @@ export default class Operation extends ShaderNode {
             operations = [operations];
         }
         return new Operation(Operation.symbol.if, [condition, operations]);
+    }
+
+    static declare(parameter){
+        return new Operation(Operation.symbol.declare, [parameter]);
     }
 
     static return(value) {

@@ -14,7 +14,7 @@ export default class DirectionalLight extends LightNode {
         parameters[DirectionalLight.parameters.color] = this.color.rgb.scale(this.intensity);
         parameters[DirectionalLight.parameters.direction] = this.vertexMatrix.zAxis;
         parameters[DirectionalLight.parameters.ambientStrength] = this.ambientStrength;
-        scene.setParameter(parameters);
+        scene.addTo(parameters);
 
         return this;
     }
@@ -22,6 +22,6 @@ export default class DirectionalLight extends LightNode {
     static parameters = {
         color: Parameter.vector3('directionalLightColor', Parameter.qualifier.const),
         direction: Parameter.vector3('directionalLightDirection', Parameter.qualifier.const),
-        ambientStrength: Parameter.vector3('directionalLightAmbientStrength', Parameter.qualifier.const),
+        ambientStrength: Parameter.number('directionalLightAmbientStrength', Parameter.qualifier.const),
     };
 }

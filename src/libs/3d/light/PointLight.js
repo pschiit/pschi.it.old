@@ -14,14 +14,14 @@ export default class PointLight extends LightNode {
         parameters[PointLight.parameters.position] = this.vertexMatrix.positionVector;
         parameters[PointLight.parameters.ambientStrength] = this.ambientStrength;
         parameters[PointLight.parameters.intensity] = this.intensity;
-        scene.setParameter(parameters);
+        scene.addTo(parameters);
 
         return this;
     }
 
     static parameters = {
         color: Parameter.vector3('pointLightColor', Parameter.qualifier.const),
-        direction: Parameter.vector3('directionalLightDirection', Parameter.qualifier.const),
+        position: Parameter.vector3('pointLightPosition', Parameter.qualifier.const),
         ambientStrength: Parameter.number('pointLightAmbientStrength', Parameter.qualifier.const),
         intensity: Parameter.number('pointLightIntensity', Parameter.qualifier.const),
     };

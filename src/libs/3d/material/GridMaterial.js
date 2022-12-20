@@ -25,13 +25,13 @@ export default class GridMaterial extends Material {
 
         this.vertexShader = Shader.vertexShader([
             Operation.equal(
-                position,
+                Operation.declare(position),
                 Operation.multiply(
-                    Operation.selection(VertexBuffer.parameters.position, this.axes),
+                    Operation.selection(VertexBuffer.parameters.position, '.' + this.axes),
                     GridMaterial.parameters.distance)),
             Operation.addTo(
-                Operation.selection(position, planeAxes),
-                Operation.selection(CameraNode.parameters.cameraPosition, planeAxes)),
+                Operation.selection(position, '.' + planeAxes),
+                Operation.selection(CameraNode.parameters.cameraPosition, '.' + planeAxes)),
             Operation.equal(
                 Shader.parameters.output,
                 Operation.multiply(
@@ -52,9 +52,9 @@ export default class GridMaterial extends Material {
         const g1 = Parameter.number('g1');
         const g2 = Parameter.number('g2');
 
-        const outputAlpha = Operation.selection(Shader.parameters.output, 'a');
-        const planeAxesSelection = Operation.selection(vPosition, planeAxes);
-        
+        const outputAlpha = Operation.selection(Shader.parameters.output, '.a');
+        const planeAxesSelection = Operation.selection(vPosition, '.' + planeAxes);
+
 
         const size = Parameter.number('size');
         const getGrid = new ShaderFunction(
@@ -63,14 +63,14 @@ export default class GridMaterial extends Material {
             size,
             [
                 Operation.equal(
-                    r,
+                    Operation.declare(r),
                     Operation.divide(
                         planeAxesSelection,
                         size
                     )
                 ),
                 Operation.equal(
-                    grid,
+                    Operation.declare(grid),
                     Operation.divide(
                         Operation.abs(
                             Operation.substract(
@@ -84,10 +84,10 @@ export default class GridMaterial extends Material {
                     )
                 ),
                 Operation.equal(
-                    line,
+                    Operation.declare(line),
                     Operation.min(
-                        Operation.selection(grid, 'x'),
-                        Operation.selection(grid, 'y'),
+                        Operation.selection(grid, '.x'),
+                        Operation.selection(grid, '.y'),
                     ),
                 ),
                 Operation.return(
@@ -97,7 +97,7 @@ export default class GridMaterial extends Material {
 
         this.fragmentShader = Shader.fragmentShader([
             Operation.equal(
-                viewPosition,
+                Operation.declare(viewPosition),
                 Operation.normalize(
                     Operation.substract(
                         CameraNode.parameters.cameraPosition,
@@ -106,12 +106,12 @@ export default class GridMaterial extends Material {
                 )
             ),
             Operation.equal(
-                d,
+                Operation.declare(d),
                 Operation.substract(
                     1,
                     Operation.min(
                         Operation.distance(
-                            Operation.selection(viewPosition, planeAxes),
+                            Operation.selection(viewPosition, '.' + planeAxes),
                             Operation.divide(
                                 planeAxesSelection,
                                 GridMaterial.parameters.distance
@@ -122,16 +122,16 @@ export default class GridMaterial extends Material {
                 )
             ),
             Operation.equal(
-                g1,
+                Operation.declare(g1),
                 Operation.do(
                     getGrid,
-                    Operation.selection(GridMaterial.parameters.sizes, 'x'))
+                    Operation.selection(GridMaterial.parameters.sizes, '.x'))
             ),
             Operation.equal(
-                g2,
+                Operation.declare(g2),
                 Operation.do(
                     getGrid,
-                    Operation.selection(GridMaterial.parameters.sizes, 'y'))
+                    Operation.selection(GridMaterial.parameters.sizes, '.y'))
             ),
             Operation.equal(
                 Shader.parameters.output,
