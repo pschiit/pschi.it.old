@@ -29,7 +29,7 @@ export default class Buffer extends Node {
 
     get type() {
         if (this.childrens.length > 0) {
-            return new Float32Array(0).constructor;
+            return new ArrayBuffer(0).constructor;
         }
         return this.data.constructor;
     }
@@ -37,40 +37,27 @@ export default class Buffer extends Node {
     get data() {
         let data = this._data;
         if (this.childrens.length > 0) {
-            if (this.interleaved) {
-                const length = this.BYTES_LENGTH;
-                const data = new ArrayBuffer(length);
-                const arrayStep = this.BYTES_PER_STEP;
-    
-                this.childrens.forEach(b => {
-                    const element = b.BYTES_PER_ELEMENT;
-                    const step = b.BYTES_PER_STEP;
-                    const offset = b.BYTES_PER_OFFSET;
-                    const view = new b.type(data);
-                    let position = 0;
-                    const bufferData = b.data;
-                    for (let i = 0; i < length; i += arrayStep) {
-                        for (let j = 0; j < step; j += element) {
-                            view[offset + i + j] = bufferData[position++];
-                        }
+            const length = this.BYTES_LENGTH;
+            data = new ArrayBuffer(length);
+            let offset = 0;
+            this.childrens.forEach(updateBuffer);
+
+            function updateBuffer(b) {
+                if(b.childrens.length > 0){
+                    b.childrens.forEach(updateBuffer);
+                }else{
+                    if(b.parent.interleaved){
+
+                    }else{
+                        const view = new b.type(data);
+                        let index = offset / b.BYTES_PER_ELEMENT;
+                        b.data.forEach(v => {
+                            view[index++] = v;
+                        })
+                        offset += b.BYTES_LENGTH;
                     }
-                    b.updated = false;
-                });
-            } else {
-                const length = this.BYTES_LENGTH;
-                console.log(length);
-                data = new ArrayBuffer(length);
-                let offset = 0;
-                this.childrens.forEach(b => {
-                    const view = new b.type(data);
-                    let index = offset / b.BYTES_PER_ELEMENT;
-                    b.data.forEach(v=>{
-                        view[index++] = v;
-                    })
-                    offset += b.BYTES_LENGTH;
-                });
-            }
-            console.log(data, this.childrens);
+                }
+            };
         }
         return data;
     }
@@ -104,9 +91,9 @@ export default class Buffer extends Node {
     }
 
     get offset() {
-        const name = this.interleaved ? 'step' : 'length'
         if (this.parent instanceof Buffer) {
-            return this.parent.childrens
+            const name = this.interleaved ? 'step' : 'length';
+            return this.parent.offset + this.parent.childrens
                 .slice(0, this.parent.childrens.indexOf(this))
                 .reduce((r, b) => { return r + b[name]; }, 0);
         }
@@ -128,9 +115,9 @@ export default class Buffer extends Node {
     }
 
     get BYTES_PER_OFFSET() {
-        const name = this.interleaved ? 'BYTES_PER_STEP' : 'BYTES_LENGTH'
         if (this.parent instanceof Buffer) {
-            return this.parent.childrens
+            const name = this.interleaved ? 'BYTES_PER_STEP' : 'BYTES_LENGTH'
+            return this.parent.BYTES_PER_OFFSET + this.parent.childrens
                 .slice(0, this.parent.childrens.indexOf(this))
                 .reduce((r, b) => { return r + b[name]; }, 0);
         }

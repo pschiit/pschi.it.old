@@ -397,9 +397,9 @@ function render(renderer, renderTarget) {
             if (r.vertexBuffer.index) {
                 const webGLIndex = WebGLBuffer.from(renderer, r.vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
                 if (divisorCount) {
-                    renderer.gl.drawElementsInstanced(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, r.vertexBuffer.index.type), r.vertexBuffer.BYTES_PER_OFFSET, divisorCount);
+                    renderer.gl.drawElementsInstanced(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, r.vertexBuffer.index.type), r.index.vertexBuffer.BYTES_PER_OFFSET, divisorCount);
                 } else {
-                    renderer.gl.drawElements(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, r.vertexBuffer.index.type), r.vertexBuffer.BYTES_PER_OFFSET);
+                    renderer.gl.drawElements(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, r.vertexBuffer.index.type), r.vertexBuffer.index.BYTES_PER_OFFSET);
                 }
             } else if (divisorCount) {
                 renderer.gl.drawArraysInstanced(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.offset, r.vertexBuffer.count, divisorCount);

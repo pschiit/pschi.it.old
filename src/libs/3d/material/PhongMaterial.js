@@ -384,9 +384,7 @@ export default class PhongMaterial extends Material {
         emissiveTexture: Parameter.texture('materialEmissiveTexture', Parameter.qualifier.const),
         shininess: Parameter.number('materialShininess', Parameter.qualifier.const),
     };
-
-
-
+    
     static shaderFunction = {
         calculateLight: () => {
             const lightDirection = Parameter.vector3('lightDirection');

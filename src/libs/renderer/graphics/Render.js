@@ -33,7 +33,7 @@ export default class Render extends GraphicsNode {
         if (this.renderable) {
             if (this.vertexBuffer) {
                 for (const name in this.vertexBuffer.parameters) {
-                    const buffer = this.vertexBuffer.parameters[name]
+                    const buffer = this.vertexBuffer.parameters[name];
                     if (buffer) {
                         const mainBuffer = buffer.mainBuffer;
                         if (!scene.buffers[mainBuffer.id]) {
@@ -41,8 +41,9 @@ export default class Render extends GraphicsNode {
                         }
                     }
                 }
-                if (this.vertexBuffer.index && !scene.indexes[this.vertexBuffer.index.id]) {
-                    scene.indexes[this.vertexBuffer.index.id] = this.vertexBuffer.index;
+                const index = this.vertexBuffer.index?.mainBuffer;
+                if (index && !scene.indexes[index.id]) {
+                    scene.indexes[index.id] = index;
                 }
             }
             if (!scene.materials[this.material.id]) {

@@ -4,10 +4,10 @@ import PerspectiveCamera from './libs/3d/camera/PerspectiveCamera';
 import DirectionalLight from './libs/3d/light/DirectionalLight';
 import PointLight from './libs/3d/light/PointLight';
 import SpotLight from './libs/3d/light/SpotLight';
-import GridMaterial from './libs/3d/material/GridMaterial';
 import PhongMaterial from './libs/3d/material/PhongMaterial';
 import PickingMaterial from './libs/3d/material/PickingMaterial';
 import Node3d from './libs/3d/Node3d';
+import Buffer from './libs/core/Buffer';
 import Color from './libs/core/Color';
 import HtmlNode from './libs/html/HtmlNode';
 import WebGLCanvas from './libs/html/WebGLCanvas';
@@ -17,7 +17,6 @@ import Vector3 from './libs/math/Vector3';
 import Vector4 from './libs/math/Vector4';
 import RenderTarget from './libs/renderer/graphics/RenderTarget';
 import Texture from './libs/renderer/graphics/Texture';
-import Buffer from './libs/core/Buffer';
 
 const defaultStyle = {
     width: '100%',
@@ -114,16 +113,12 @@ plane.uv = [
 
 const mainBuffer = new Buffer();
 const mainIndexBuffer = new Buffer();
-[cube.index, plane.index, reverseCube.index].forEach(b => {
-    if (b instanceof Buffer) {
-        mainIndexBuffer.appendChild(b)
-    }
-})
-cube.buffers.concat(reverseCube.buffers, plane.buffers).forEach(b => {
-    if (b instanceof Buffer) {
-        mainBuffer.appendChild(b)
-    }
-})
+mainBuffer.appendChild(cube.toArrayBuffer());
+mainIndexBuffer.appendChild(cube.index)
+mainBuffer.appendChild(reverseCube.toArrayBuffer());
+mainIndexBuffer.appendChild(reverseCube.index)
+mainBuffer.appendChild(plane.toArrayBuffer());
+mainIndexBuffer.appendChild(plane.index)
 
 const world = new Node3d();
 
@@ -135,8 +130,6 @@ world.appendChild(camera);
 const pickingMaterial = new PickingMaterial();
 const textureMaterial = new PhongMaterial();
 textureMaterial.texture = new Texture(new RenderTarget(camera, 1024, 1024));
-const gridMaterial = new GridMaterial(new Color(0.4, 0.4, 0.4, 1));
-
 const floor = new Node3d();
 floor.material = textureMaterial;
 floor.vertexBuffer = plane;
@@ -219,7 +212,6 @@ spotLight.addEventListener('onclick', (e) => {
 let then = 0;
 
 const renderTarget = canvas.renderTarget;
-
 
 let request = requestAnimationFrame(draw);
 function draw(time) {

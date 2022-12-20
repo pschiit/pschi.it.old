@@ -14,7 +14,6 @@ export default class Color extends Material {
             Operation.equal(
                 Shader.parameters.output,
                 Operation.multiply(
-                    CameraNode.parameters.projectionMatrix,
                     Node3d.parameters.vertexMatrix,
                     VertexBuffer.parameters.position)),
             Operation.equal(vColor, VertexBuffer.parameters.color),]);

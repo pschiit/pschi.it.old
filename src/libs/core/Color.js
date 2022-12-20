@@ -132,13 +132,6 @@ export default class Color extends Vector4 {
         return color;
     }
 
-    static fromHexa(v) {
-        const color = new Color();
-        color.hexa = v;
-
-        return color;
-    }
-
     static random() {
         return Color.fromHex(Math.floor(Math.random() * 16777215));
     }

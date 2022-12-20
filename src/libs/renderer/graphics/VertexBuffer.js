@@ -74,7 +74,7 @@ export default class VertexBuffer extends GraphicsNode {
     }
 
     set color(v) {
-        this.setParameter(VertexBuffer.parameters.color.name, new Uint8Array(v), this.colorLength);
+        this.setParameter(VertexBuffer.parameters.color.name, v, this.colorLength);
     }
 
     get uv() {
@@ -89,11 +89,21 @@ export default class VertexBuffer extends GraphicsNode {
         const result = [];
         for (const name in this.parameters) {
             const parameter = this.parameters[name];
-            if(parameter instanceof Buffer){
+            if (parameter instanceof Buffer) {
                 result.push(parameter);
             }
         }
         return result;
+    }
+
+    toArrayBuffer(interleaved = false){
+        const buffer = new Buffer();
+        buffer.interleaved = interleaved;
+        this.buffers.forEach(b =>{
+            buffer.appendChild(b);
+        });
+
+        return buffer;
     }
 
     setParameter(name, v, step, divisor) {
@@ -106,7 +116,9 @@ export default class VertexBuffer extends GraphicsNode {
                     v = new Float32Array(v);
                 }
                 if (!buffer) {
-                    this.parameters[name] = new Buffer(v, step, divisor);
+                    buffer = new Buffer(v, step, divisor);
+                    this.parameters[name] = buffer;
+
                 } else {
                     buffer.data = v;
                 }
