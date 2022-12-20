@@ -1,8 +1,7 @@
+import RenderTarget from '../RenderTarget';
 import Texture from '../Texture';
-import Render from '../Render';
 import WebGLNode from './WebGLNode';
 import WebGLRenderer from './WebGLRenderer';
-import RenderTarget from '../RenderTarget';
 
 export default class WebGLTexture extends WebGLNode {
     /** Create a WebGLTexture for a WebGLRenderingContext

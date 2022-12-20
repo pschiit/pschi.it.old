@@ -1,4 +1,4 @@
-import Camera from '../../3d/camera/Camera';
+import Color from '../../core/Color';
 import Vector4 from '../../math/Vector4';
 import GraphicsNode from './GraphicsNode';
 import Render from './Render';
@@ -15,6 +15,7 @@ export default class RenderTarget extends GraphicsNode {
         this.data = data;
         this.format = RenderTarget.format.rgba;
         this.type = new Float32Array(0).constructor;
+        this.backgroundColor = Color.black;
         this.scissor = null;
         this.read = null;
         this.texture = null;
@@ -24,9 +25,6 @@ export default class RenderTarget extends GraphicsNode {
     get scene() {
         const scene = new Scene();
         scene.renderTarget = this;
-        if(this.data instanceof Camera){
-            scene.camera = this.data;
-        }
         update(this.data.root);
         if (this.material) {
             scene.materials = {};

@@ -1,22 +1,26 @@
+import Color from '../core/Color';
 import Matrix4 from '../math/Matrix4';
 import Vector3 from '../math/Vector3';
 import Render from '../renderer/graphics/Render';
+import Parameter from '../renderer/graphics/shader/Parameter';
 
 export default class Node3d extends Render {
     /** Create a new Node3d
     */
     constructor() {
         super();
+        const colorId = Node3d.generateColorId(this);
+        this.setParameter(Node3d.parameters.colorId, colorId);
         this.matrix = Matrix4.identityMatrix();
         this._target = new Vector3();
     }
 
     get vertexMatrix() {
-        return this.parameters[Node3d.vertexMatrixName];
+        return this.parameters[Node3d.parameters.vertexMatrix];
     }
 
     get normalMatrix() {
-        return this.parameters[Node3d.normalMatrixName];
+        return this.parameters[Node3d.parameters.normalMatrix];
     }
 
     get worldMatrix() {
@@ -133,16 +137,33 @@ export default class Node3d extends Render {
 
     setScene(scene) {
         super.setScene(scene);
-        const vertexMatrix = this.parent?.parameters[Node3d.vertexMatrixName] instanceof Matrix4 ?
-            this.parent.parameters[Node3d.vertexMatrixName].clone().multiply(this.matrix)
+        const parentMatrix = this.parent?.parameters[Node3d.parameters.vertexMatrix];
+        const vertexMatrix = parentMatrix instanceof Matrix4 ? parentMatrix.clone().multiply(this.matrix)
             : this.matrix.clone();
 
-        this.setParameter(Node3d.vertexMatrixName, vertexMatrix);
+        this.setParameter(Node3d.parameters.vertexMatrix, vertexMatrix);
         if (this.renderable) {
-            this.setParameter(Node3d.normalMatrixName, vertexMatrix.clone().invert().transpose());
+            this.setParameter(Node3d.parameters.normalMatrix, vertexMatrix.clone().invert().transpose());
         }
     }
 
-    static vertexMatrixName = 'vertexMatrix';
-    static normalMatrixName = 'normalMatrix';
+    static search(colorId) {
+        return cache[colorId];
+    }
+    static generateColorId(node) {
+        do {
+            const color = Color.random();
+            if (!cache[color]) {
+                cache[color] = node;
+                return color;
+            }
+        } while (true);
+    }
+
+    static parameters = {
+        vertexMatrix: Parameter.matrix4('vertexMatrix', Parameter.qualifier.const),
+        normalMatrix: Parameter.matrix4('normalMatrix', Parameter.qualifier.const),
+        colorId: Parameter.vector3('colorId', Parameter.qualifier.const),
+    }
 }
+const cache = {};

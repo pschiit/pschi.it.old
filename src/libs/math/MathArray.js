@@ -24,6 +24,34 @@ export default class MathArray extends Float32Array {
         return result;
     }
 
+    toint8(){
+        return new Int8Array(this);
+    }
+
+    toint16(){
+        return new Int16Array(this);
+    }
+
+    toint32(){
+        return new Int32Array(this);
+    }
+
+    toUint8(){
+        return new Uint8Array(this);
+    }
+
+    toUint16(){
+        return new Uint16Array(this);
+    }
+
+    toUint32(){
+        return new Uint32Array(this);
+    }
+
+    toUint8Clamped(){
+        return new Uint8ClampedArray(this);
+    }
+
     static clamp(value, min, max) {
         return Math.max(min, Math.min(max, value));
     }

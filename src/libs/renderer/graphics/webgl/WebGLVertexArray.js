@@ -15,15 +15,15 @@ export default class WebGLVertexArray extends WebGLNode {
         super(renderer, vertexBuffer.id + '_' + material.id);
         this.location = renderer.gl.createVertexArray();
         renderer.vertexArray = this;
+        renderer._arrayBuffer = null;
+        renderer._elementArrayBuffer = null;
         const program = WebGLProgram.from(renderer, material);
         if (vertexBuffer.index) {
             renderer.elementArrayBuffer = WebGLBuffer.from(renderer, vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
         }
-        for (const name in program.parameters) {
-            const buffer = vertexBuffer.getParameter(name);
-            if (buffer) {
-                program.parameters[name](buffer);
-            }
+        for (const name in vertexBuffer.parameters) {
+            const buffer = vertexBuffer.parameters[name];
+            program.setParameter(name, buffer);
         }
         renderer.vertexArray = null;
         renderer.arrayBuffer = null;

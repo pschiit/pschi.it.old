@@ -14,10 +14,10 @@ export default class PlaneBuffer extends VertexBuffer {
             0, 0, -1,
         ];
 
-        if(uv){
+        if (uv) {
             this.uv = uv;
         }
-        if(color){
+        if (color) {
             this.setColor(color);
         }
         this.setPrimitive(primitive);
@@ -49,6 +49,9 @@ export default class PlaneBuffer extends VertexBuffer {
         if (primitive == Render.primitive.triangles) {
             this.index = [
                 0, 1, 2, 2, 3, 0,];
+        } else if (primitive == Render.primitive.lines) {
+            this.index = [
+                0, 1, 1, 2, 2, 3, 3, 0];
         } else {
             this.index = [0, 1, 2, 3];
         }

@@ -4,10 +4,10 @@ import PerspectiveCamera from './libs/3d/camera/PerspectiveCamera';
 import DirectionalLight from './libs/3d/light/DirectionalLight';
 import PointLight from './libs/3d/light/PointLight';
 import SpotLight from './libs/3d/light/SpotLight';
-import GridMaterial from './libs/3d/material/GridMaterial';
 import PhongMaterial from './libs/3d/material/PhongMaterial';
 import PickingMaterial from './libs/3d/material/PickingMaterial';
 import Node3d from './libs/3d/Node3d';
+import Buffer from './libs/core/Buffer';
 import Color from './libs/core/Color';
 import HtmlNode from './libs/html/HtmlNode';
 import WebGLCanvas from './libs/html/WebGLCanvas';
@@ -66,6 +66,7 @@ cube.uv = [
     1, 1,
     1, 0,
 ];
+
 const reverseCube = new BoxBuffer();
 reverseCube.normal.scale(-1);
 reverseCube.setColor(Color.white);
@@ -110,6 +111,15 @@ plane.uv = [
     1, 0,
 ];
 
+const mainBuffer = new Buffer();
+const mainIndexBuffer = new Buffer();
+mainBuffer.appendChild(cube.toArrayBuffer());
+mainIndexBuffer.appendChild(cube.index)
+mainBuffer.appendChild(reverseCube.toArrayBuffer());
+mainIndexBuffer.appendChild(reverseCube.index)
+mainBuffer.appendChild(plane.toArrayBuffer());
+mainIndexBuffer.appendChild(plane.index)
+
 const world = new Node3d();
 
 const camera = new PerspectiveCamera(70, canvas.aspectRatio, 0.1, 100);
@@ -120,8 +130,6 @@ world.appendChild(camera);
 const pickingMaterial = new PickingMaterial();
 const textureMaterial = new PhongMaterial();
 textureMaterial.texture = new Texture(new RenderTarget(camera, 1024, 1024));
-const gridMaterial = new GridMaterial(new Color(0.4, 0.4, 0.4, 1));
-
 const floor = new Node3d();
 floor.material = textureMaterial;
 floor.vertexBuffer = plane;
@@ -177,7 +185,6 @@ spotLight.material = textureMaterial;
 spotLight.vertexBuffer = reverseCube;
 floor.appendChild(spotLight);
 
-
 element.addEventListener('onclick', (e) => {
     console.log('toggle sun');
     sun.toggle();
@@ -206,7 +213,6 @@ let then = 0;
 
 const renderTarget = canvas.renderTarget;
 
-
 let request = requestAnimationFrame(draw);
 function draw(time) {
     element.rotate(0.01, 1, 1, 1);
@@ -216,6 +222,7 @@ function draw(time) {
     canvas.render(camera);
     request = requestAnimationFrame(draw);
 }
+console.log(canvas.context)
 
 const pickingTexture = new Texture(renderTarget);
 canvas.element.onpointerdown = (e) => {

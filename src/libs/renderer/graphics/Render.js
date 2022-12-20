@@ -1,30 +1,50 @@
-import Color from '../../core/Color';
 import GraphicsNode from './GraphicsNode';
-import Scene from './Scene';
 
 export default class Render extends GraphicsNode {
     /** Create a Renderable Node for a Renderer
      */
-    constructor() {
+    constructor(material, vertexBuffer) {
         super();
-        const colorId = Render.generateColorId();
-        Render.cache[colorId] = this;
-        this.setParameter(Render.colorIdName, colorId);
-        this.material = null;
-        this.vertexBuffer = null;
+        this.material = material;
+        this.vertexBuffer = vertexBuffer;
     }
 
     get renderable() {
-        return this.material && this.vertexBuffer?.count > 0;
+        return this.material && this.count;
     }
-    
+
+    set count(v) {
+        this._count = v;
+    }
+
+    get count() {
+        return this.vertexBuffer ? this.vertexBuffer.count : this._count;
+    }
+
+    set primitive(v) {
+        this._primitive = v;
+    }
+
+    get primitive() {
+        return this.vertexBuffer ? this.vertexBuffer.primitive : this._primitive;
+    }
+
     setScene(scene) {
         if (this.renderable) {
-            if (!scene.buffers[this.vertexBuffer.id]) {
-                scene.buffers[this.vertexBuffer.id] = this.vertexBuffer;
-            }
-            if (this.vertexBuffer.index && !scene.indexes[this.vertexBuffer.index.id]) {
-                scene.indexes[this.vertexBuffer.index.id] = this.vertexBuffer.index;
+            if (this.vertexBuffer) {
+                for (const name in this.vertexBuffer.parameters) {
+                    const buffer = this.vertexBuffer.parameters[name];
+                    if (buffer) {
+                        const mainBuffer = buffer.mainBuffer;
+                        if (!scene.buffers[mainBuffer.id]) {
+                            scene.buffers[mainBuffer.id] = mainBuffer;
+                        }
+                    }
+                }
+                const index = this.vertexBuffer.index?.mainBuffer;
+                if (index && !scene.indexes[index.id]) {
+                    scene.indexes[index.id] = index;
+                }
             }
             if (!scene.materials[this.material.id]) {
                 scene.materials[this.material.id] = this.material;
@@ -32,18 +52,6 @@ export default class Render extends GraphicsNode {
             scene.renders.push(this);
         }
     }
-
-    setParameter(name, value) {
-        if (this.parameters[name] != value) {
-            this.parameters[name] = value;
-        }
-    }
-
-    static search(colorId) {
-        return Render.cache[colorId];
-    }
-
-    static cache = {};
 
     static primitive = {
         points: 'POINTS',
@@ -54,17 +62,4 @@ export default class Render extends GraphicsNode {
         lineLoop: 'LINE_FAN',
         lineStrip: 'LINE_STRIP',
     };
-
-    static colorIdName = 'colorId';
-
-    static generateColorId() {
-        do {
-            const color = Color.random();
-            if (!cache[color]) {
-                cache[color] = true;
-                return color;
-            }
-        } while (true);
-    }
 }
-const cache = {};
