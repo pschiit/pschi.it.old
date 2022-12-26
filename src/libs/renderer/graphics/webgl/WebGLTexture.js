@@ -70,6 +70,14 @@ export default class WebGLTexture extends WebGLNode {
      * @returns {WebGLTexture} the WebGLTexture
      */
     static from(renderer, texture) {
-        return renderer.nodes[texture.id] || new WebGLTexture(renderer, texture);
+        if(!renderer.nodes[texture.id]){
+            texture.updated = true;
+        }
+        const result =  renderer.nodes[texture.id] || new WebGLTexture(renderer, texture);
+        if (texture.updated) {
+            result.update(texture);
+            texture.updated = false;
+        };
+        return result;
     }
 }

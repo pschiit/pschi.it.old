@@ -15,7 +15,6 @@ export default class WebGLProgram extends WebGLNode {
     constructor(renderer, material) {
         super(renderer, material.id);
         this.parameters = {};
-        this.parameters = {};
         this.cache = {};
         this.location = renderer.gl.createProgram();
         this.vertexShader = WebGLShader.from(renderer, material.vertexShader);

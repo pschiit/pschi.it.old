@@ -1,4 +1,4 @@
-import Parameter from '../../renderer/graphics/shader/Parameter';
+import LightMaterial from '../material/LightMaterial';
 import LightNode from './LightNode';
 
 export default class PointLight extends LightNode {
@@ -10,19 +10,12 @@ export default class PointLight extends LightNode {
     setScene(scene) {
         super.setScene(scene);
         const parameters = {};
-        parameters[PointLight.parameters.color] = this.color.rgb;
-        parameters[PointLight.parameters.position] = this.vertexMatrix.positionVector;
-        parameters[PointLight.parameters.ambientStrength] = this.ambientStrength;
-        parameters[PointLight.parameters.intensity] = this.intensity;
+        parameters[LightMaterial.parameters.pointLightColor] = this.color.rgb;
+        parameters[LightMaterial.parameters.pointLightPosition] = this.vertexMatrix.positionVector;
+        parameters[LightMaterial.parameters.pointLightAmbientStrength] = this.ambientStrength;
+        parameters[LightMaterial.parameters.pointLightIntensity] = this.intensity;
         scene.addTo(parameters);
 
         return this;
     }
-
-    static parameters = {
-        color: Parameter.vector3('pointLightColor', Parameter.qualifier.const),
-        position: Parameter.vector3('pointLightPosition', Parameter.qualifier.const),
-        ambientStrength: Parameter.number('pointLightAmbientStrength', Parameter.qualifier.const),
-        intensity: Parameter.number('pointLightIntensity', Parameter.qualifier.const),
-    };
 }

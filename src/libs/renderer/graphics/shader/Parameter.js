@@ -26,7 +26,7 @@ export default class Parameter extends ShaderNode {
     static qualifier = {
         const: 'const',
         let: 'let',
-        var: 'var'
+        out: 'out'
     }
 
     static boolean(name, qualifier) {

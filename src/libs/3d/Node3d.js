@@ -1,8 +1,8 @@
 import Color from '../core/Color';
 import Matrix4 from '../math/Matrix4';
 import Vector3 from '../math/Vector3';
+import Material from '../renderer/graphics/Material';
 import Render from '../renderer/graphics/Render';
-import Parameter from '../renderer/graphics/shader/Parameter';
 
 export default class Node3d extends Render {
     /** Create a new Node3d
@@ -10,17 +10,17 @@ export default class Node3d extends Render {
     constructor() {
         super();
         const colorId = Node3d.generateColorId(this);
-        this.setParameter(Node3d.parameters.colorId, colorId);
+        this.setParameter(Material.parameters.colorId, colorId);
         this.matrix = Matrix4.identityMatrix();
         this._target = new Vector3();
     }
 
     get vertexMatrix() {
-        return this.parameters[Node3d.parameters.vertexMatrix];
+        return this.parameters[Material.parameters.vertexMatrix];
     }
 
     get normalMatrix() {
-        return this.parameters[Node3d.parameters.normalMatrix];
+        return this.parameters[Material.parameters.normalMatrix];
     }
 
     get worldMatrix() {
@@ -137,13 +137,13 @@ export default class Node3d extends Render {
 
     setScene(scene) {
         super.setScene(scene);
-        const parentMatrix = this.parent?.parameters[Node3d.parameters.vertexMatrix];
+        const parentMatrix = this.parent?.parameters[Material.parameters.vertexMatrix.name];
         const vertexMatrix = parentMatrix instanceof Matrix4 ? parentMatrix.clone().multiply(this.matrix)
             : this.matrix.clone();
 
-        this.setParameter(Node3d.parameters.vertexMatrix, vertexMatrix);
+        this.setParameter(Material.parameters.vertexMatrix, vertexMatrix);
         if (this.renderable) {
-            this.setParameter(Node3d.parameters.normalMatrix, vertexMatrix.clone().invert().transpose());
+            this.setParameter(Material.parameters.normalMatrix, vertexMatrix.clone().invert().transpose());
         }
     }
 
@@ -161,9 +161,6 @@ export default class Node3d extends Render {
     }
 
     static parameters = {
-        vertexMatrix: Parameter.matrix4('vertexMatrix', Parameter.qualifier.const),
-        normalMatrix: Parameter.matrix4('normalMatrix', Parameter.qualifier.const),
-        colorId: Parameter.vector3('colorId', Parameter.qualifier.const),
     }
 }
 const cache = {};

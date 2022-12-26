@@ -9,14 +9,14 @@ import Node3d from '../Node3d';
 export default class Color extends Material {
     constructor() {
         super();
-        const vColor = Parameter.vector4('v_' + VertexBuffer.parameters.color, Parameter.qualifier.var);
+        const vColor = Parameter.vector4('v_' + Material.parameters.color, Parameter.qualifier.out);
         this.vertexShader = Shader.vertexShader([
             Operation.equal(
                 Shader.parameters.output,
                 Operation.multiply(
-                    Node3d.parameters.vertexMatrix,
-                    VertexBuffer.parameters.position)),
-            Operation.equal(vColor, VertexBuffer.parameters.color),]);
+                    Material.parameters.vertexMatrix,
+                    Material.parameters.position)),
+            Operation.equal(vColor, Material.parameters.color),]);
 
         this.fragmentShader = Shader.fragmentShader(
             Operation.equal(

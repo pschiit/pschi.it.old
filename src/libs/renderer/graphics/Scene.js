@@ -6,12 +6,7 @@ export default class Scene extends GraphicsNode {
         super();
         this.renderTarget = null;
         this.renders = [];
-        this.programs = [];
-        this.buffers = {};
-        this.indexes = {};
-        this.textures = {};
         this.materials = {};
-        this.parameters = {};
     }
 
     addTo(name, value) {

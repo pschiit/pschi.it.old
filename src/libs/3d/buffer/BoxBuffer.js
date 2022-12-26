@@ -6,7 +6,6 @@ import Buffer from '../../core/Buffer';
 export default class BoxBuffer extends VertexBuffer {
     constructor(width = 1, height = 1, depth = 1, color = null, uv = null, primitive = Render.primitive.triangles) {
         super();
-        this.arrayBuffer = new Buffer();
 
         this.setDimensions(width, height, depth);
         this.normal = [

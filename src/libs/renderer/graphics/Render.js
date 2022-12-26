@@ -1,4 +1,6 @@
 import GraphicsNode from './GraphicsNode';
+import Material from './Material';
+import Scene from './Scene';
 
 export default class Render extends GraphicsNode {
     /** Create a Renderable Node for a Renderer
@@ -29,23 +31,30 @@ export default class Render extends GraphicsNode {
         return this.vertexBuffer ? this.vertexBuffer.primitive : this._primitive;
     }
 
+    getScene(renderTarget){
+        const scene = new Scene();
+        scene.setParameter(Material.parameters.backgroundColor, renderTarget.backgroundColor);
+        update(this);
+        if (renderTarget.material) {
+            scene.materials = {};
+            scene.materials[renderTarget.material.id] = renderTarget.material;
+        }
+        for (const id in scene.materials) {
+            scene.materials[id].setScene(scene);
+        }
+        return scene;
+
+        /** Load a Node in the current WebGLRenderer
+         * @param {Render} render Node to load
+         */
+        function update(render) {
+            render.setScene(scene);
+            render.childrens.forEach(update);
+        }
+    }
+
     setScene(scene) {
         if (this.renderable) {
-            if (this.vertexBuffer) {
-                for (const name in this.vertexBuffer.parameters) {
-                    const buffer = this.vertexBuffer.parameters[name];
-                    if (buffer) {
-                        const mainBuffer = buffer.mainBuffer;
-                        if (!scene.buffers[mainBuffer.id]) {
-                            scene.buffers[mainBuffer.id] = mainBuffer;
-                        }
-                    }
-                }
-                const index = this.vertexBuffer.index?.mainBuffer;
-                if (index && !scene.indexes[index.id]) {
-                    scene.indexes[index.id] = index;
-                }
-            }
             if (!scene.materials[this.material.id]) {
                 scene.materials[this.material.id] = this.material;
             }

@@ -1,6 +1,7 @@
 import Frustum from '../../math/Frustum';
 import Matrix4 from '../../math/Matrix4';
 import Plan from '../../math/Plan';
+import Material from '../../renderer/graphics/Material';
 import CameraNode from './CameraNode';
 
 export default class PerspectiveCamera extends CameraNode {
@@ -80,17 +81,20 @@ export default class PerspectiveCamera extends CameraNode {
         return new Frustum(left, rigth, top, bottom, near, far);
     }
 
+    getScene(renderTarget){
+        const aspectRatio = renderTarget.aspectRatio;
+        if(this.aspectRatio != aspectRatio){
+            this.aspectRatio = aspectRatio;
+        }
+        return this.root.getScene(renderTarget);
+    }
+
     setScene(scene){
         super.setScene(scene);
-        const aspectRatio = scene.renderTarget.aspectRatio;
-        if (aspectRatio != this.aspectRatio) {
-            this.aspectRatio = aspectRatio;
-            this.projectionUpdated = true;
-        }
         if (this.projectionUpdated) {
             this._projectionMatrix = this.perspectiveMatrix.clone().multiply(this.vertexMatrix.clone().invert());
             this.projectionUpdated = false;
         }
-        scene.setParameter(CameraNode.parameters.projectionMatrix, this.projectionMatrix);
+        scene.setParameter(Material.parameters.projectionMatrix, this.projectionMatrix);
     }
 }
