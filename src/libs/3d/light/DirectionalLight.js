@@ -1,4 +1,5 @@
-import Parameter from '../../renderer/graphics/shader/Parameter';
+import MathArray from '../../math/MathArray';
+import LightMaterial from '../material/LightMaterial';
 import LightNode from './LightNode';
 
 export default class DirectionalLight extends LightNode {
@@ -7,21 +8,29 @@ export default class DirectionalLight extends LightNode {
         this.translate(position);
         this.target = target;
     }
-    
-    setScene(scene) {
-        super.setScene(scene);
-        const parameters = {};
-        parameters[DirectionalLight.parameters.color] = this.color.rgb.scale(this.intensity);
-        parameters[DirectionalLight.parameters.direction] = this.vertexMatrix.zAxis;
-        parameters[DirectionalLight.parameters.ambientStrength] = this.ambientStrength;
-        scene.addTo(parameters);
+
+    setScene(parameters) {
+        super.setScene(parameters);
+        const lightParameters = {};
+        lightParameters[LightMaterial.parameters.directionalLightColor] = this.color.rgb.scale(this.intensity);
+        lightParameters[LightMaterial.parameters.directionalLightDirection] = this.vertexMatrix.zAxis;
+        lightParameters[LightMaterial.parameters.directionalLightAmbientStrength] = this.ambientStrength;
+        addTo(parameters, lightParameters);
 
         return this;
-    }
 
-    static parameters = {
-        color: Parameter.vector3('directionalLightColor', Parameter.qualifier.const),
-        direction: Parameter.vector3('directionalLightDirection', Parameter.qualifier.const),
-        ambientStrength: Parameter.number('directionalLightAmbientStrength', Parameter.qualifier.const),
-    };
+        function addTo(parameters, lightParameters) {
+            for (const name in lightParameters) {
+                let parameter = lightParameters[name];
+                if (Number.isFinite(parameter)) {
+                    parameter = [parameter];
+                }
+                if (!parameters[name]) {
+                    parameters[name] = new MathArray(parameter);
+                } else {
+                    parameters[name] = parameters[name].concat(parameter);
+                }
+            }
+        }
+    }
 }

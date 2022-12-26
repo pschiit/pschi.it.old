@@ -1,6 +1,6 @@
 import Buffer from '../../core/Buffer';
 import GraphicsNode from './GraphicsNode';
-import Parameter from './shader/Parameter';
+import Material from './Material';
 
 export default class VertexBuffer extends GraphicsNode {
     constructor() {
@@ -53,36 +53,44 @@ export default class VertexBuffer extends GraphicsNode {
         this._offset = v;
     }
 
+    get divisor(){
+        return this.arrayBuffer.divisor;
+    }
+
+    get divisorCount(){
+        return this.arrayBuffer.divisorCount;
+    }
+
     get position() {
-        return this.parameters[VertexBuffer.parameters.position.name];
+        return this.parameters[Material.parameters.position.name];
     }
 
     set position(v) {
-        this.setParameter(VertexBuffer.parameters.position.name, v, this.positionLength);
+        this.setParameter(Material.parameters.position.name, v, this.positionLength);
     }
 
     get normal() {
-        return this.parameters[VertexBuffer.parameters.normal.name];
+        return this.parameters[Material.parameters.normal.name];
     }
 
     set normal(v) {
-        this.setParameter(VertexBuffer.parameters.normal.name, v, this.normalLength);
+        this.setParameter(Material.parameters.normal.name, v, this.normalLength);
     }
 
     get color() {
-        return this.parameters[VertexBuffer.parameters.color.name];
+        return this.parameters[Material.parameters.color.name];
     }
 
     set color(v) {
-        this.setParameter(VertexBuffer.parameters.color.name, v, this.colorLength);
+        this.setParameter(Material.parameters.color.name, v, this.colorLength);
     }
 
     get uv() {
-        return this.parameters[VertexBuffer.parameters.uv.name];
+        return this.parameters[Material.parameters.uv.name];
     }
 
     set uv(v) {
-        this.setParameter(VertexBuffer.parameters.uv.name, v, this.uvLength);
+        this.setParameter(Material.parameters.uv.name, v, this.uvLength);
     }
 
     get buffers() {
@@ -96,14 +104,15 @@ export default class VertexBuffer extends GraphicsNode {
         return result;
     }
 
-    toArrayBuffer(interleaved = false){
-        const buffer = new Buffer();
-        buffer.interleaved = interleaved;
-        this.buffers.forEach(b =>{
-            buffer.appendChild(b);
-        });
-
-        return buffer;
+    get arrayBuffer(){
+        if(!this._arrayBuffer){
+            const buffer = new Buffer();
+            this.buffers.forEach(b =>{
+                buffer.appendChild(b);
+            });
+            this._arrayBuffer = buffer
+        }
+        return this._arrayBuffer;
     }
 
     setParameter(name, v, step, divisor) {
@@ -139,12 +148,5 @@ export default class VertexBuffer extends GraphicsNode {
         if (buffer) {
             buffer.transform(matrix.clone().invert().transpose());
         }
-    }
-
-    static parameters = {
-        position: Parameter.vector4('vertexPosition', Parameter.qualifier.let),
-        normal: Parameter.vector4('vertexNormal', Parameter.qualifier.let),
-        color: Parameter.vector4('vertexColor', Parameter.qualifier.let),
-        uv: Parameter.vector2('vertexUV', Parameter.qualifier.let),
     }
 }

@@ -5,17 +5,12 @@ import Operation from '../../renderer/graphics/shader/Operation';
 import Parameter from '../../renderer/graphics/shader/Parameter';
 import Shader from '../../renderer/graphics/shader/Shader';
 import ShaderFunction from '../../renderer/graphics/shader/ShaderFunction';
-import VertexBuffer from '../../renderer/graphics/VertexBuffer';
-import CameraNode from '../camera/CameraNode';
-import DirectionalLight from '../light/DirectionalLight';
-import LightNode from '../light/LightNode';
-import PointLight from '../light/PointLight';
-import SpotLight from '../light/SpotLight';
-import Node3d from '../Node3d';
 
-export default class PhongMaterial extends Material {
+export default class LightMaterial extends Material {
     constructor() {
         super();
+        this.culling = Material.culling.back;
+        this.depth = Material.depth.less;
         this.ambientColor = Color.white;
         this.diffuseColor = Color.white;
         this.specularColor = Color.white;
@@ -26,43 +21,44 @@ export default class PhongMaterial extends Material {
         this.directionalLigthsCount = 0;
         this.pointLigthsCount = 0;
         this.spotLigthsCount = 0;
-        // this.fog = false;
+
+        const vColor = Parameter.vector4('v_' + Material.parameters.color, Parameter.qualifier.out);
+        const vPosition = Parameter.vector3('v_' + Material.parameters.position, Parameter.qualifier.out);
+        const vNormal = Parameter.vector3('v_' + Material.parameters.normal, Parameter.qualifier.out);
+        const vUV = Parameter.vector2('v_' + Material.parameters.uv, Parameter.qualifier.out);
+        const vDistance = Parameter.number('v_' + Material.parameters.fogDistance, Parameter.qualifier.out);
+        this.vertexShader = Shader.vertexShader([
+            Operation.equal(
+                Shader.parameters.output,
+                Operation.multiply(
+                    Material.parameters.projectionMatrix,
+                    Material.parameters.vertexMatrix,
+                    Material.parameters.position)),
+            Operation.equal(vDistance, Operation.selection(Shader.parameters.output, '.w')),
+            Operation.equal(
+                vNormal,
+                Operation.normalize(
+                    Operation.toVector3(Operation.multiply(
+                        Material.parameters.normalMatrix,
+                        Material.parameters.normal)))),
+            Operation.equal(vPosition, Operation.toVector3(Operation.multiply(
+                Material.parameters.vertexMatrix,
+                Material.parameters.position))),
+            Operation.equal(vColor, Material.parameters.color),
+            Operation.equal(vUV, Material.parameters.uv), 
+        ]);
     }
 
-    updateShader() {
-        if (!this.vertexShader) {
-            const vColor = Parameter.vector4('v_' + VertexBuffer.parameters.color, Parameter.qualifier.var);
-            const vPosition = Parameter.vector3('v_' + VertexBuffer.parameters.position, Parameter.qualifier.var);
-            const vNormal = Parameter.vector3('v_' + VertexBuffer.parameters.normal, Parameter.qualifier.var);
-            const vUV = Parameter.vector2('v_' + VertexBuffer.parameters.uv, Parameter.qualifier.var);
-            const vDistance = Parameter.number('v_' + CameraNode.parameters.fogDistance, Parameter.qualifier.var);
-            this.vertexShader = Shader.vertexShader([
-                Operation.equal(
-                    Shader.parameters.output,
-                    Operation.multiply(
-                        CameraNode.parameters.projectionMatrix,
-                        Node3d.parameters.vertexMatrix,
-                        VertexBuffer.parameters.position)),
-                Operation.equal(vDistance, Operation.selection(Shader.parameters.output, '.w')),
-                Operation.equal(
-                    vNormal,
-                    Operation.normalize(
-                        Operation.toVector3(Operation.multiply(
-                            Node3d.parameters.normalMatrix,
-                            VertexBuffer.parameters.normal)))),
-                Operation.equal(vPosition, Operation.toVector3(Operation.multiply(
-                    Node3d.parameters.vertexMatrix,
-                    VertexBuffer.parameters.position))),
-                Operation.equal(vColor, VertexBuffer.parameters.color),
-                Operation.equal(vUV, VertexBuffer.parameters.uv),
-            ]);
-        }
-        if (!this.fragmentShader) {
-            const vColor = Parameter.vector4('v_' + VertexBuffer.parameters.color, Parameter.qualifier.var);
-            const vPosition = Parameter.vector3('v_' + VertexBuffer.parameters.position, Parameter.qualifier.var);
-            const vNormal = Parameter.vector3('v_' + VertexBuffer.parameters.normal, Parameter.qualifier.var);
-            const vUV = Parameter.vector2('v_' + VertexBuffer.parameters.uv, Parameter.qualifier.var);
-            const vDistance = Parameter.number('v_' + CameraNode.parameters.fogDistance, Parameter.qualifier.var);
+    get fragmentShader(){
+        this.pointLightsCount = this.parameters[LightMaterial.parameters.pointLightAmbientStrength.name]?.length || 0;
+        this.directionalLigthsCount = this.parameters[LightMaterial.parameters.directionalLightAmbientStrength.name]?.length || 0;
+        this.spotLigthsCount = this.parameters[LightMaterial.parameters.spotLightAmbientStrength.name]?.length || 0;
+        if (!this._fragmentShader) {
+            const vColor = Parameter.vector4('v_' + Material.parameters.color, Parameter.qualifier.out);
+            const vPosition = Parameter.vector3('v_' + Material.parameters.position, Parameter.qualifier.out);
+            const vNormal = Parameter.vector3('v_' + Material.parameters.normal, Parameter.qualifier.out);
+            const vUV = Parameter.vector2('v_' + Material.parameters.uv, Parameter.qualifier.out);
+            const vDistance = Parameter.number('v_' + Material.parameters.fogDistance, Parameter.qualifier.out);
             const normal = Parameter.vector3('normal');
             const fragmentColor = Parameter.vector4('fragmentColor');
             const fragmentRGB = Operation.selection(fragmentColor, '.rgb');
@@ -71,57 +67,57 @@ export default class PhongMaterial extends Material {
             const hasLight = this.directionalLigthsCount || this.pointLightsCount || this.spotLigthsCount;
             const operations = [
                 Operation.equal(Operation.declare(normal), Operation.normalize(vNormal)),
-                Operation.equal(Operation.declare(nCameraPosition), Operation.normalize(Operation.substract(CameraNode.parameters.cameraPosition, vPosition))),
+                Operation.equal(Operation.declare(nCameraPosition), Operation.normalize(Operation.substract(Material.parameters.cameraPosition, vPosition))),
                 Operation.equal(Operation.declare(fragmentColor), vColor),
                 Operation.equal(Operation.declare(color), new Vector3())];
             if (this.texture) {
                 operations.push(Operation.addTo(fragmentColor, Operation.read(Material.parameters.texture, vUV)))
             }
             if (hasLight) {
-                const calculateLight = PhongMaterial.shaderFunction.calculateLight();
+                const calculateLight = LightMaterial.shaderFunction.calculateLight();
                 const materialAmbient = Parameter.vector3('materialAmbient');
                 operations.push(Operation.equal(
                     Operation.declare(materialAmbient),
                     this.ambientTexture ?
                         Operation.add(
-                            Operation.selection(Operation.read(PhongMaterial.parameters.ambientTexture, vUV), '.stp'),
-                            PhongMaterial.parameters.ambientColor)
-                        : PhongMaterial.parameters.ambientColor));
+                            Operation.selection(Operation.read(LightMaterial.parameters.ambientTexture, vUV), '.stp'),
+                            LightMaterial.parameters.ambientColor)
+                        : LightMaterial.parameters.ambientColor));
                 const materialDiffuse = Parameter.vector3('materialDiffuse');
                 operations.push(Operation.equal(
                     Operation.declare(materialDiffuse),
                     this.diffuseTexture ?
                         Operation.add(
-                            Operation.selection(Operation.read(PhongMaterial.parameters.diffuseTexture, vUV), '.stp'),
-                            PhongMaterial.parameters.diffuseColor)
-                        : PhongMaterial.parameters.diffuseColor));
+                            Operation.selection(Operation.read(LightMaterial.parameters.diffuseTexture, vUV), '.stp'),
+                            LightMaterial.parameters.diffuseColor)
+                        : LightMaterial.parameters.diffuseColor));
                 const materialEmissive = Parameter.vector3('materialEmissive');
                 operations.push(Operation.equal(
                     Operation.declare(materialEmissive),
                     this.emissiveTexture ?
                         Operation.add(
-                            Operation.selection(Operation.read(PhongMaterial.parameters.emissiveTexture, vUV), '.stp'),
-                            PhongMaterial.parameters.emissiveColor)
-                        : PhongMaterial.parameters.emissiveColor));
+                            Operation.selection(Operation.read(LightMaterial.parameters.emissiveTexture, vUV), '.stp'),
+                            LightMaterial.parameters.emissiveColor)
+                        : LightMaterial.parameters.emissiveColor));
                 const materialSpecular = Parameter.vector3('materialSpecular');
                 operations.push(Operation.equal(
                     Operation.declare(materialSpecular),
                     this.specularTexture ?
                         Operation.add(
-                            Operation.selection(Operation.read(PhongMaterial.parameters.specularTexture, vUV), '.stp'),
-                            PhongMaterial.parameters.specularColor)
-                        : PhongMaterial.parameters.specularColor));
+                            Operation.selection(Operation.read(LightMaterial.parameters.specularTexture, vUV), '.stp'),
+                            LightMaterial.parameters.specularColor)
+                        : LightMaterial.parameters.specularColor));
 
                 if (this.directionalLigthsCount) {
-                    DirectionalLight.parameters.color.length = this.directionalLigthsCount;
-                    DirectionalLight.parameters.direction.length = this.directionalLigthsCount;
-                    DirectionalLight.parameters.ambientStrength.length = this.directionalLigthsCount;
+                    LightMaterial.parameters.directionalLightColor.length = this.directionalLigthsCount;
+                    LightMaterial.parameters.directionalLightDirection.length = this.directionalLigthsCount;
+                    LightMaterial.parameters.directionalLightAmbientStrength.length = this.directionalLigthsCount;
                     operations.push(
                         Operation.for('int i = 0', 'i < ' + this.directionalLigthsCount, 'i++',
                             Operation.addTo(color, Operation.do(calculateLight, [
-                                Operation.selection(DirectionalLight.parameters.direction, '[i]'),
-                                Operation.selection(DirectionalLight.parameters.color, '[i]'),
-                                Operation.selection(DirectionalLight.parameters.ambientStrength, '[i]'),
+                                Operation.selection(LightMaterial.parameters.directionalLightDirection, '[i]'),
+                                Operation.selection(LightMaterial.parameters.directionalLightColor, '[i]'),
+                                Operation.selection(LightMaterial.parameters.directionalLightAmbientStrength, '[i]'),
                                 materialAmbient,
                                 materialDiffuse,
                                 materialSpecular,
@@ -132,20 +128,20 @@ export default class PhongMaterial extends Material {
                         ));
                 }
                 if (this.pointLightsCount) {
-                    PointLight.parameters.color.length = this.pointLightsCount;
-                    PointLight.parameters.position.length = this.pointLightsCount;
-                    PointLight.parameters.ambientStrength.length = this.pointLightsCount;
-                    PointLight.parameters.intensity.length = this.pointLightsCount;
+                    LightMaterial.parameters.pointLightColor.length = this.pointLightsCount;
+                    LightMaterial.parameters.pointLightPosition.length = this.pointLightsCount;
+                    LightMaterial.parameters.pointLightAmbientStrength.length = this.pointLightsCount;
+                    LightMaterial.parameters.pointLightIntensity.length = this.pointLightsCount;
                     const lightDirection = Parameter.vector3('lightDirection');
                     const lightDistance = Parameter.vector3('lightDistance');
                     const attenuation = Parameter.number('attenuation');
-                    const intensity = Operation.selection(PointLight.parameters.intensity, '[i]');
+                    const intensity = Operation.selection(LightMaterial.parameters.pointLightIntensity, '[i]');
                     operations.push(
                         Operation.for('int i = 0', 'i < ' + this.pointLightsCount, 'i++', [
                             Operation.if(Operation.greater(intensity, 0), [
                                 Operation.equal(
                                     Operation.declare(lightDistance),
-                                    Operation.substract(Operation.selection(PointLight.parameters.position, '[i]'), vPosition)
+                                    Operation.substract(Operation.selection(LightMaterial.parameters.pointLightPosition, '[i]'), vPosition)
                                 ),
                                 Operation.equal(
                                     Operation.declare(lightDirection),
@@ -160,8 +156,8 @@ export default class PhongMaterial extends Material {
                                         attenuation,
                                         Operation.do(calculateLight, [
                                             lightDirection,
-                                            Operation.selection(PointLight.parameters.color, '[i]'),
-                                            Operation.selection(PointLight.parameters.ambientStrength, '[i]'),
+                                            Operation.selection(LightMaterial.parameters.pointLightColor, '[i]'),
+                                            Operation.selection(LightMaterial.parameters.pointLightAmbientStrength, '[i]'),
                                             materialAmbient,
                                             materialDiffuse,
                                             materialSpecular,
@@ -176,33 +172,35 @@ export default class PhongMaterial extends Material {
                     );
                 }
                 if (this.spotLigthsCount) {
-                    SpotLight.parameters.color.length = this.spotLigthsCount;
-                    SpotLight.parameters.position.length = this.spotLigthsCount;
-                    SpotLight.parameters.direction.length = this.spotLigthsCount;
-                    SpotLight.parameters.radius.length = this.spotLigthsCount;
-                    SpotLight.parameters.innerRadius.length = this.spotLigthsCount;
-                    SpotLight.parameters.ambientStrength.length = this.spotLigthsCount;
-                    SpotLight.parameters.intensity.length = this.spotLigthsCount;
+                    LightMaterial.parameters.spotLightColor.length = this.spotLigthsCount;
+                    LightMaterial.parameters.spotLightPosition.length = this.spotLigthsCount;
+                    LightMaterial.parameters.spotLightDirection.length = this.spotLigthsCount;
+                    LightMaterial.parameters.spotLightRadius.length = this.spotLigthsCount;
+                    LightMaterial.parameters.spotLightInnerRadius.length = this.spotLigthsCount;
+                    LightMaterial.parameters.spotLightAmbientStrength.length = this.spotLigthsCount;
+                    LightMaterial.parameters.spotLightIntensity.length = this.spotLigthsCount;
                     const r = Parameter.number('r');
                     const lightDistance = Parameter.vector3('lightDistance');
                     const theta = Parameter.number('theta');
                     const smoothing = Parameter.number('smoothing');
                     const attenuation = Parameter.number('attenuation');
-                    const intensity = Operation.selection(SpotLight.parameters.intensity, '[i]');
+                    const intensity = Operation.selection(LightMaterial.parameters.spotLightIntensity, '[i]');
                     operations.push(
                         Operation.for('int i = 0', 'i < ' + this.spotLigthsCount, 'i++', [
                             Operation.if(Operation.greater(intensity, 0), [
                                 Operation.equal(
                                     Operation.declare(lightDistance),
-                                    Operation.substract(Operation.selection(SpotLight.parameters.position, '[i]'), vPosition)
+                                    Operation.substract(Operation.selection(LightMaterial.parameters.spotLightPosition, '[i]'), vPosition)
                                 ),
                                 Operation.equal(
                                     Operation.declare(theta),
-                                    Operation.substract(Operation.dot(Operation.normalize(lightDistance), Operation.selection(SpotLight.parameters.direction, '[i]')), Operation.selection(SpotLight.parameters.radius, '[i]')),
+                                    Operation.substract(
+                                        Operation.dot(Operation.normalize(lightDistance), Operation.selection(LightMaterial.parameters.spotLightDirection, '[i]')), 
+                                            Operation.selection(LightMaterial.parameters.spotLightRadius, '[i]')),
                                 ),
                                 Operation.equal(Operation.declare(r), Operation.substract(
-                                    Operation.selection(SpotLight.parameters.innerRadius, '[i]'),
-                                    Operation.selection(SpotLight.parameters.radius, '[i]')),
+                                    Operation.selection(LightMaterial.parameters.spotLightInnerRadius, '[i]'),
+                                    Operation.selection(LightMaterial.parameters.spotLightRadius, '[i]')),
                                 ),
                                 Operation.equal(
                                     Operation.declare(smoothing),
@@ -219,9 +217,9 @@ export default class PhongMaterial extends Material {
                                     Operation.addTo(color, Operation.multiply(
                                         attenuation,
                                         Operation.do(calculateLight, [
-                                            Operation.selection(SpotLight.parameters.direction, '[i]'),
-                                            Operation.selection(SpotLight.parameters.color, '[i]'),
-                                            Operation.selection(SpotLight.parameters.ambientStrength, '[i]'),
+                                            Operation.selection(LightMaterial.parameters.spotLightDirection, '[i]'),
+                                            Operation.selection(LightMaterial.parameters.spotLightColor, '[i]'),
+                                            Operation.selection(LightMaterial.parameters.spotLightAmbientStrength, '[i]'),
                                             materialAmbient,
                                             materialDiffuse,
                                             materialSpecular,
@@ -241,12 +239,12 @@ export default class PhongMaterial extends Material {
                 operations.push(Operation.addTo(color, fragmentRGB));
             }
             if (this.fog) {
-                const fogDistance = CameraNode.parameters.fogDistance;
+                const fogDistance = Material.parameters.fogDistance;
                 const fogDistanceY = Operation.selection(fogDistance, '.y');
 
                 operations.push(Operation.equal(
                     color, Operation.mix(
-                        CameraNode.parameters.backgroundColor,
+                        Material.parameters.backgroundColor,
                         color,
                         Operation.clamp(
                             Operation.substract(
@@ -255,8 +253,9 @@ export default class PhongMaterial extends Material {
                             , 0, 1))));
             }
             operations.push(Operation.equal(Shader.parameters.output, Operation.toVector4(color, Operation.selection(fragmentColor, '.a'))));
-            this.fragmentShader = Shader.fragmentShader(operations, Shader.precision.high);
+            this._fragmentShader = Shader.fragmentShader(operations, Shader.precision.high);
         }
+        return this._fragmentShader;
     }
 
     get pointLigthsCount() {
@@ -266,7 +265,7 @@ export default class PhongMaterial extends Material {
     set pointLigthsCount(v) {
         if (this.pointLigthsCount != v) {
             this._pointLigthsCount = v;
-            this.fragmentShader = null;
+            this._fragmentShader = null;
         }
     }
 
@@ -277,7 +276,7 @@ export default class PhongMaterial extends Material {
     set spotLigthsCount(v) {
         if (this.spotLigthsCount != v) {
             this._spotLigthsCount = v;
-            this.fragmentShader = null;
+            this._fragmentShader = null;
         }
     }
 
@@ -288,89 +287,80 @@ export default class PhongMaterial extends Material {
     set directionalLigthsCount(v) {
         if (this.directionalLigthsCount != v) {
             this._directionalLigthsCount = v;
-            this.fragmentShader = null;
+            this._fragmentShader = null;
         }
     }
 
     get ambientColor() {
-        return this.parameters[PhongMaterial.parameters.ambientColor];
+        return this.parameters[LightMaterial.parameters.ambientColor];
     }
 
     set ambientColor(v) {
-        this.setParameter(PhongMaterial.parameters.ambientColor, v);
+        this.setParameter(LightMaterial.parameters.ambientColor, v);
     }
 
     get diffuseColor() {
-        return this.parameters[PhongMaterial.parameters.diffuseColor];
+        return this.parameters[LightMaterial.parameters.diffuseColor];
     }
 
     set diffuseColor(v) {
-        this.setParameter(PhongMaterial.parameters.diffuseColor, v);
+        this.setParameter(LightMaterial.parameters.diffuseColor, v);
     }
 
     get specularColor() {
-        return this.parameters[PhongMaterial.parameters.specularColor];
+        return this.parameters[LightMaterial.parameters.specularColor];
     }
 
     set specularColor(v) {
-        this.setParameter(PhongMaterial.parameters.specularColor, v);
+        this.setParameter(LightMaterial.parameters.specularColor, v);
     }
 
     get emissiveColor() {
-        return this.parameters[PhongMaterial.parameters.emissiveColor];
+        return this.parameters[LightMaterial.parameters.emissiveColor];
     }
 
     set emissiveColor(v) {
-        this.setParameter(PhongMaterial.parameters.emissiveColor, v);
+        this.setParameter(LightMaterial.parameters.emissiveColor, v);
     }
 
-
     get ambientTexture() {
-        return this.parameters[PhongMaterial.parameters.ambientTexture];
+        return this.parameters[LightMaterial.parameters.ambientTexture];
     }
 
     set ambientTexture(v) {
-        this.setParameter(PhongMaterial.parameters.ambientTexture, v);
+        this.setParameter(LightMaterial.parameters.ambientTexture, v);
     }
 
     get diffuseTexture() {
-        return this.parameters[PhongMaterial.parameters.diffuseTexture];
+        return this.parameters[LightMaterial.parameters.diffuseTexture];
     }
 
     set diffuseTexture(v) {
-        this.setParameter(PhongMaterial.parameters.diffuseTexture, v);
+        this.setParameter(LightMaterial.parameters.diffuseTexture, v);
     }
 
     get specularTexture() {
-        return this.parameters[PhongMaterial.parameters.specularTexture];
+        return this.parameters[LightMaterial.parameters.specularTexture];
     }
 
     set specularTexture(v) {
-        this.setParameter(PhongMaterial.parameters.specularTexture, v);
+        this.setParameter(LightMaterial.parameters.specularTexture, v);
     }
 
     get emissiveTexture() {
-        return this.parameters[PhongMaterial.parameters.emissiveTexture];
+        return this.parameters[LightMaterial.parameters.emissiveTexture];
     }
 
     set emissiveTexture(v) {
-        this.setParameter(PhongMaterial.parameters.emissiveTexture, v);
+        this.setParameter(LightMaterial.parameters.emissiveTexture, v);
     }
 
     get shininess() {
-        return this.parameters[PhongMaterial.parameters.shininess];
+        return this.parameters[LightMaterial.parameters.shininess];
     }
 
     set shininess(v) {
-        this.setParameter(PhongMaterial.parameters.shininess, v);
-    }
-
-    setScene(scene) {
-        super.setScene(scene);
-        this.pointLightsCount = scene.parameters[PointLight.parameters.ambientStrength.name]?.length || 0;
-        this.directionalLigthsCount = scene.parameters[DirectionalLight.parameters.ambientStrength.name]?.length || 0;
-        this.spotLigthsCount = scene.parameters[SpotLight.parameters.ambientStrength.name]?.length || 0;
-        this.updateShader();
+        this.setParameter(LightMaterial.parameters.shininess, v);
     }
 
     static parameters = {
@@ -383,6 +373,23 @@ export default class PhongMaterial extends Material {
         specularTexture: Parameter.texture('materialSpecularTexture', Parameter.qualifier.const),
         emissiveTexture: Parameter.texture('materialEmissiveTexture', Parameter.qualifier.const),
         shininess: Parameter.number('materialShininess', Parameter.qualifier.const),
+        
+        directionalLightColor: Parameter.vector3('directionalLightColor', Parameter.qualifier.const),
+        directionalLightDirection: Parameter.vector3('directionalLightDirection', Parameter.qualifier.const),
+        directionalLightAmbientStrength: Parameter.number('directionalLightAmbientStrength', Parameter.qualifier.const),
+        
+        pointLightColor: Parameter.vector3('pointLightColor', Parameter.qualifier.const),
+        pointLightPosition: Parameter.vector3('pointLightPosition', Parameter.qualifier.const),
+        pointLightAmbientStrength: Parameter.number('pointLightAmbientStrength', Parameter.qualifier.const),
+        pointLightIntensity: Parameter.number('pointLightIntensity', Parameter.qualifier.const),
+        
+        spotLightColor: Parameter.vector3('spotLightColor', Parameter.qualifier.const),
+        spotLightPosition: Parameter.vector3('spotLightPosition', Parameter.qualifier.const),
+        spotLightDirection: Parameter.vector3('spotLightDirection', Parameter.qualifier.const),
+        spotLightAmbientStrength: Parameter.number('spotLightAmbientStrength', Parameter.qualifier.const),
+        spotLightRadius: Parameter.number('spotLightRadius', Parameter.qualifier.const),
+        spotLightInnerRadius: Parameter.number('spotLightInnerRadius', Parameter.qualifier.const),
+        spotLightIntensity: Parameter.number('spotLightIntensity', Parameter.qualifier.const),
     };
     
     static shaderFunction = {
@@ -435,7 +442,7 @@ export default class PhongMaterial extends Material {
                         ),
                         Operation.equal(
                             Operation.declare(spec),//blinn-phong
-                            Operation.pow(Operation.max(Operation.dot(normal, Operation.normalize(Operation.add(lightDirection, cameraPosition))), 0), PhongMaterial.parameters.shininess)
+                            Operation.pow(Operation.max(Operation.dot(normal, Operation.normalize(Operation.add(lightDirection, cameraPosition))), 0), LightMaterial.parameters.shininess)
                         ),
                         // Operation.equal(
                         //     spec,//phong
@@ -455,5 +462,5 @@ export default class PhongMaterial extends Material {
                 Operation.return(new Vector3())
             ]);
         }
-    }
+    };
 }

@@ -21,22 +21,22 @@ export default class GridMaterial extends Material {
         const planeAxes = this.axes.substring(0, 2);
 
         const position = Parameter.vector3('pos');
-        const vPosition = Parameter.vector3('v_' + VertexBuffer.parameters.position, Parameter.qualifier.var);
+        const vPosition = Parameter.vector3('v_' + Material.parameters.position, Parameter.qualifier.out);
 
         this.vertexShader = Shader.vertexShader([
             Operation.equal(
                 Operation.declare(position),
                 Operation.multiply(
-                    Operation.selection(VertexBuffer.parameters.position, '.' + this.axes),
+                    Operation.selection(Material.parameters.position, '.' + this.axes),
                     GridMaterial.parameters.distance)),
             Operation.addTo(
                 Operation.selection(position, '.' + planeAxes),
-                Operation.selection(CameraNode.parameters.cameraPosition, '.' + planeAxes)),
+                Operation.selection(Material.parameters.cameraPosition, '.' + planeAxes)),
             Operation.equal(
                 Shader.parameters.output,
                 Operation.multiply(
-                    CameraNode.parameters.projectionMatrix,
-                    Node3d.parameters.vertexMatrix,
+                    Material.parameters.projectionMatrix,
+                    Material.parameters.vertexMatrix,
                     Operation.toVector4(position, 1))),
             Operation.equal(
                 vPosition,
@@ -100,7 +100,7 @@ export default class GridMaterial extends Material {
                 Operation.declare(viewPosition),
                 Operation.normalize(
                     Operation.substract(
-                        CameraNode.parameters.cameraPosition,
+                        Material.parameters.cameraPosition,
                         vPosition
                     )
                 )

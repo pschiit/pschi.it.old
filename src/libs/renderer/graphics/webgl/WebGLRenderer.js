@@ -332,36 +332,7 @@ export default class WebGLRenderer extends GraphicsRenderer {
  * @param {RenderTarget} renderTarget to render
  */
 function render(renderer, renderTarget) {
-    const scene = renderTarget.scene;
-    for (const id in scene.buffers) {
-        const buffer = scene.buffers[id];
-        const webGLBuffer = WebGLBuffer.from(renderer, buffer, renderer.gl.ARRAY_BUFFER);
-        webGLBuffer.update(buffer);
-    }
-    for (const id in scene.indexes) {
-        const buffer = scene.indexes[id];
-        const webGLBuffer = WebGLBuffer.from(renderer, buffer, renderer.gl.ELEMENT_ARRAY_BUFFER);
-        webGLBuffer.update(buffer);
-    }
-    for (const id in scene.textures) {
-        const texture = scene.textures[id];
-        const webGLTexture = WebGLTexture.from(renderer, texture);
-        webGLTexture.update(texture);
-    }
-    for (const id in scene.materials) {
-        const material = scene.materials[id];
-        renderer.program = WebGLProgram.from(renderer, material);
-        for (const name in material.parameters) {
-            renderer.program.setParameter(name, material.parameters[name]);
-        }
-        for (const name in scene.parameters) {
-            if (renderer.program.parameters[name]) {
-                const value = scene.parameters[name];
-                renderer.program.setParameter(name, value);
-            }
-        }
-        scene.programs.push(renderer.program);
-    }
+    const renders = renderTarget.data.getScene(renderTarget);
     const viewport = renderTarget.viewport;
     const scissor = renderTarget.scissor;
     const clearColor = renderTarget.backgroundColor || Color.black;
@@ -386,16 +357,28 @@ function render(renderer, renderTarget) {
         renderer.clearColor = clearColor;
     }
     clear();
-    scene.renders.forEach(r => {
-        renderer.material = renderTarget.material ? renderTarget.material : r.material;
+    const cache = {};
+    renders.forEach(r => {
+        const material = renderTarget.material ? renderTarget.material : r.material
+        renderer.material = material;
+        if (!cache[material.id]) {
+            for (const name in material.parameters) {
+                renderer.program.setParameter(name, material.parameters[name]);
+            }
+        }
         for (const name in r.parameters) {
             renderer.program.setParameter(name, r.parameters[name]);
         }
         if (r.vertexBuffer) {
             renderer.vertexArray = WebGLVertexArray.from(renderer, r.vertexBuffer, renderer.material);
+            if (r.vertexBuffer.arrayBuffer.updated) {
+                WebGLBuffer.from(renderer, r.vertexBuffer.arrayBuffer, renderer.gl.ARRAY_BUFFER);
+            }
             const divisorCount = r.vertexBuffer.divisorCount;
             if (r.vertexBuffer.index) {
-                const webGLIndex = WebGLBuffer.from(renderer, r.vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
+                if (r.vertexBuffer.index.updated) {
+                    WebGLBuffer.from(renderer, r.vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
+                }
                 if (divisorCount) {
                     renderer.gl.drawElementsInstanced(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, r.vertexBuffer.index.type), r.index.vertexBuffer.BYTES_PER_OFFSET, divisorCount);
                 } else {

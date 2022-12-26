@@ -12,13 +12,13 @@ export default class PickingMaterial extends Material {
             Operation.equal(
                 Shader.parameters.output,
                 Operation.multiply(
-                    CameraNode.parameters.projectionMatrix,
-                    Node3d.parameters.vertexMatrix,
-                    VertexBuffer.parameters.position)));
+                    Material.parameters.projectionMatrix,
+                    Material.parameters.vertexMatrix,
+                    Material.parameters.position)));
 
         this.fragmentShader = Shader.fragmentShader(
             Operation.equal(
                 Shader.parameters.output,
-                Operation.toVector4(Node3d.parameters.colorId, 1)));
+                Operation.toVector4(Material.parameters.colorId, 1)));
     }
 }

@@ -4,18 +4,32 @@ import Parameter from './shader/Parameter';
 export default class Material extends GraphicsNode {
     /** Create a new Material
     */
-    constructor(vertexShader, fragmentShader){
+    constructor(){
         super();
 
-        this.culling = Material.culling.back;
-        this.depth = Material.depth.less;
-        this.vertexShader = vertexShader;
-        this.fragmentShader = fragmentShader;
+        this.culling = null;
+        this.depth = null;
         this.fog = true;
     }
 
+    get vertexShader(){
+        return this._vertexShader;
+    }
+
+    set vertexShader(v){
+        this._vertexShader = v;
+    }
+
+    get fragmentShader(){
+        return this._fragmentShader;
+    }
+
+    set fragmentShader(v){
+        this._fragmentShader = v;
+    }
+
     get compiled(){
-        return this.vertexShader?.compiled && this.fragmentShader?.compiled;
+        return this.vertexShader?.compiled && this.vertexShader?.compiled;
     }
 
     get texture() {
@@ -25,19 +39,23 @@ export default class Material extends GraphicsNode {
     set texture(v) {
         this.setParameter(Material.parameters.texture, v);
     }
-    
-    setScene(scene){
-        if (!scene.materials[this.id]) {
-            scene.materials[this.id] = this;
-        }
-        const texture = this.texture;
-        if (texture && !scene.textures[texture.id]) {
-            scene.textures[texture.id] = texture;
-        }
-    }
 
     static parameters = {
-        texture: Parameter.texture('texture',Parameter.qualifier.const)
+        texture: Parameter.texture('texture',Parameter.qualifier.const),
+        backgroundColor: Parameter.vector3('backgroundColor', Parameter.qualifier.const),
+        
+        position: Parameter.vector4('vertexPosition', Parameter.qualifier.let),
+        normal: Parameter.vector4('vertexNormal', Parameter.qualifier.let),
+        color: Parameter.vector4('vertexColor', Parameter.qualifier.let),
+        uv: Parameter.vector2('vertexUV', Parameter.qualifier.let),
+        
+        vertexMatrix: Parameter.matrix4('vertexMatrix', Parameter.qualifier.const),
+        normalMatrix: Parameter.matrix4('normalMatrix', Parameter.qualifier.const),
+        colorId: Parameter.vector3('colorId', Parameter.qualifier.const),
+        
+        projectionMatrix: Parameter.matrix4('projectionMatrix', Parameter.qualifier.const),
+        cameraPosition: Parameter.vector3('cameraPosition', Parameter.qualifier.const),
+        fogDistance: Parameter.vector2('fogDistance', Parameter.qualifier.const),
     };
 
     static culling = {
@@ -47,13 +65,13 @@ export default class Material extends GraphicsNode {
     }
 
     static depth = {
-        never: '',
-        always:'',
-        equal:'',
-        notEqual:'',
-        less: '',
-        lessEqual:'',
-        greater: '',
-        greaterEqual:'',
+        never: 'never',
+        always:'always',
+        equal:'equal',
+        notEqual:'notEqual',
+        less: 'less',
+        lessEqual:'lessEqual',
+        greater: 'greater',
+        greaterEqual:'greaterEqual',
     }
 }

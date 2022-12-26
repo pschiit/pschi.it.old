@@ -1,4 +1,5 @@
 import Matrix4 from '../../math/Matrix4';
+import Material from '../../renderer/graphics/Material';
 import CameraNode from './CameraNode';
 
 export default class OrthographicCamera extends CameraNode {
@@ -89,12 +90,12 @@ export default class OrthographicCamera extends CameraNode {
         return this._projectionMatrix;
     }
 
-    setScene(scene){
-        super.setScene(scene);
+    setScene(parameters){
+        super.setScene(parameters);
         if (this.projectionUpdated) {
             this._projectionMatrix = this.orthograpicMatrix.clone().multiply(this.vertexMatrix.clone().invert());
             this.projectionUpdated = false;
         }
-        scene.setParameter(CameraNode.parameters.projectionMatrix, this.projectionMatrix);
+        parameters[Material.parameters.projectionMatrix.name] = this.projectionMatrix;
     }
 }

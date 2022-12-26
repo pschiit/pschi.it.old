@@ -4,7 +4,7 @@ import PerspectiveCamera from './libs/3d/camera/PerspectiveCamera';
 import DirectionalLight from './libs/3d/light/DirectionalLight';
 import PointLight from './libs/3d/light/PointLight';
 import SpotLight from './libs/3d/light/SpotLight';
-import PhongMaterial from './libs/3d/material/PhongMaterial';
+import LightMaterial from './libs/3d/material/LightMaterial';
 import PickingMaterial from './libs/3d/material/PickingMaterial';
 import Node3d from './libs/3d/Node3d';
 import Buffer from './libs/core/Buffer';
@@ -113,12 +113,12 @@ plane.uv = [
 
 const mainBuffer = new Buffer();
 const mainIndexBuffer = new Buffer();
-mainBuffer.appendChild(cube.toArrayBuffer());
-mainIndexBuffer.appendChild(cube.index)
-mainBuffer.appendChild(reverseCube.toArrayBuffer());
-mainIndexBuffer.appendChild(reverseCube.index)
-mainBuffer.appendChild(plane.toArrayBuffer());
-mainIndexBuffer.appendChild(plane.index)
+mainBuffer.appendChild(cube.arrayBuffer);
+mainIndexBuffer.appendChild(cube.index);
+mainBuffer.appendChild(reverseCube.arrayBuffer);
+mainIndexBuffer.appendChild(reverseCube.index);
+mainBuffer.appendChild(plane.arrayBuffer);
+mainIndexBuffer.appendChild(plane.index);
 
 const world = new Node3d();
 
@@ -128,7 +128,7 @@ camera.target = new Vector3(0, 0, 0);
 world.appendChild(camera);
 
 const pickingMaterial = new PickingMaterial();
-const textureMaterial = new PhongMaterial();
+const textureMaterial = new LightMaterial();
 textureMaterial.texture = new Texture(new RenderTarget(camera, 1024, 1024));
 const floor = new Node3d();
 floor.material = textureMaterial;
@@ -222,7 +222,6 @@ function draw(time) {
     canvas.render(camera);
     request = requestAnimationFrame(draw);
 }
-console.log(canvas.context)
 
 const pickingTexture = new Texture(renderTarget);
 canvas.element.onpointerdown = (e) => {

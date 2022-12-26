@@ -1,4 +1,5 @@
-import Parameter from '../../renderer/graphics/shader/Parameter';
+import MathArray from '../../math/MathArray';
+import LightMaterial from '../material/LightMaterial';
 import LightNode from './LightNode';
 
 export default class PointLight extends LightNode {
@@ -7,22 +8,29 @@ export default class PointLight extends LightNode {
         this.translate(position);
     }
 
-    setScene(scene) {
-        super.setScene(scene);
-        const parameters = {};
-        parameters[PointLight.parameters.color] = this.color.rgb;
-        parameters[PointLight.parameters.position] = this.vertexMatrix.positionVector;
-        parameters[PointLight.parameters.ambientStrength] = this.ambientStrength;
-        parameters[PointLight.parameters.intensity] = this.intensity;
-        scene.addTo(parameters);
+    setScene(parameters) {
+        super.setScene(parameters);
+        const lightParameters = {};
+        lightParameters[LightMaterial.parameters.pointLightColor] = this.color.rgb;
+        lightParameters[LightMaterial.parameters.pointLightPosition] = this.vertexMatrix.positionVector;
+        lightParameters[LightMaterial.parameters.pointLightAmbientStrength] = this.ambientStrength;
+        lightParameters[LightMaterial.parameters.pointLightIntensity] = this.intensity;
+        addTo(parameters, lightParameters);
 
         return this;
-    }
 
-    static parameters = {
-        color: Parameter.vector3('pointLightColor', Parameter.qualifier.const),
-        position: Parameter.vector3('pointLightPosition', Parameter.qualifier.const),
-        ambientStrength: Parameter.number('pointLightAmbientStrength', Parameter.qualifier.const),
-        intensity: Parameter.number('pointLightIntensity', Parameter.qualifier.const),
-    };
+        function addTo(parameters, lightParameters) {
+            for (const name in lightParameters) {
+                let parameter = lightParameters[name];
+                if (Number.isFinite(parameter)) {
+                    parameter = [parameter];
+                }
+                if (!parameters[name]) {
+                    parameters[name] = new MathArray(parameter);
+                } else {
+                    parameters[name] = parameters[name].concat(parameter);
+                }
+            }
+        }
+    }
 }

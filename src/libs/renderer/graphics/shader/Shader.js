@@ -10,6 +10,7 @@ export default class Shader extends ShaderNode {
         this.type = type;
         this.operations = operations;
         this.precision = precision || Shader.precision.high;
+        this.source = null;
     }
 
     static vertexShader(operations, precision = Shader.precision.high) {

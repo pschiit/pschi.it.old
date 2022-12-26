@@ -43,12 +43,12 @@ export default class Buffer extends Node {
             this.childrens.forEach(updateBuffer);
 
             function updateBuffer(b) {
-                if(b.childrens.length > 0){
+                if (b.childrens.length > 0) {
                     b.childrens.forEach(updateBuffer);
-                }else{
-                    if(b.parent.interleaved){
+                } else {
+                    if (b.parent.interleaved) {
 
-                    }else{
+                    } else {
                         const view = new b.type(data);
                         let index = offset / b.BYTES_PER_ELEMENT;
                         b.data.forEach(v => {
@@ -66,6 +66,20 @@ export default class Buffer extends Node {
         if (!(this.childrens.length > 0)) {
             this._data = v;
         }
+    }
+
+    get updated() {
+        if (this.childrens.length > 0) {
+            return this.childrens.some(c => c.updated);
+        }
+        return this._updated;
+    }
+
+    set updated(v) {
+        if (this.childrens.length > 0) {
+            this.childrens.forEach(c => c.updated = v);
+        }
+        this._updated = v;
     }
 
     get step() {

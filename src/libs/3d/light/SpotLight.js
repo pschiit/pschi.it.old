@@ -1,4 +1,5 @@
-import Parameter from '../../renderer/graphics/shader/Parameter';
+import MathArray from '../../math/MathArray';
+import LightMaterial from '../material/LightMaterial';
 import LightNode from './LightNode';
 
 export default class SpotLight extends LightNode {
@@ -10,28 +11,32 @@ export default class SpotLight extends LightNode {
         this.target = target;
     }
     
-    setScene(scene) {
-        super.setScene(scene);
-        const parameters = {};
-        parameters[SpotLight.parameters.color] = this.color.rgb;
-        parameters[SpotLight.parameters.position]=  this.vertexMatrix.positionVector;
-        parameters[SpotLight.parameters.direction]= this.vertexMatrix.zAxis;
-        parameters[SpotLight.parameters.innerRadius]= this.innerRadius;
-        parameters[SpotLight.parameters.radius]= this.radius;
-        parameters[SpotLight.parameters.ambientStrength]= this.ambientStrength;
-        parameters[SpotLight.parameters.intensity]= this.intensity;
-        scene.addTo(parameters);
+    setScene(paramters) {
+        super.setScene(paramters);
+        const lightParameters = {};
+        lightParameters[LightMaterial.parameters.spotLightColor] = this.color.rgb;
+        lightParameters[LightMaterial.parameters.spotLightPosition]=  this.vertexMatrix.positionVector;
+        lightParameters[LightMaterial.parameters.spotLightDirection]= this.vertexMatrix.zAxis;
+        lightParameters[LightMaterial.parameters.spotLightInnerRadius]= this.innerRadius;
+        lightParameters[LightMaterial.parameters.spotLightRadius]= this.radius;
+        lightParameters[LightMaterial.parameters.spotLightAmbientStrength]= this.ambientStrength;
+        lightParameters[LightMaterial.parameters.spotLightIntensity]= this.intensity;
+        addTo(paramters, lightParameters);
 
         return this;
-    }
 
-    static parameters = {
-        color: Parameter.vector3('spotLightColor', Parameter.qualifier.const),
-        position: Parameter.vector3('spotLightPosition', Parameter.qualifier.const),
-        direction: Parameter.vector3('spotLightDirection', Parameter.qualifier.const),
-        ambientStrength: Parameter.number('spotLightAmbientStrength', Parameter.qualifier.const),
-        radius: Parameter.number('spotLightRadius', Parameter.qualifier.const),
-        innerRadius: Parameter.number('spotLightInnerRadius', Parameter.qualifier.const),
-        intensity: Parameter.number('spotLightIntensity', Parameter.qualifier.const),
-    };
+        function addTo(parameters, lightParameters) {
+            for (const name in lightParameters) {
+                let parameter = lightParameters[name];
+                if (Number.isFinite(parameter)) {
+                    parameter = [parameter];
+                }
+                if (!parameters[name]) {
+                    parameters[name] = new MathArray(parameter);
+                } else {
+                    parameters[name] = parameters[name].concat(parameter);
+                }
+            }
+        }
+    }
 }

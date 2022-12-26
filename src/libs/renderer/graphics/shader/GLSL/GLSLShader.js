@@ -52,7 +52,7 @@ export default class GLSLShader extends Shader {
     get source() {
         const result = [];
         if (this.precision) {
-            result.push(`precision ${this.precision} float;`);
+            result.push(`precision ${this.precision}p float;`);
         }
         this.parameters.forEach(p => {
             result.push(p.declaration);
@@ -61,7 +61,6 @@ export default class GLSLShader extends Shader {
 
         return result.join('\n');
     }
-
 
     /** Create a new GLSLShader code source from a Shader
      * @param {Shader} shader Shader to convert
@@ -96,7 +95,7 @@ export default class GLSLShader extends Shader {
         main.push('}');
 
         const result = declarations.concat(main).join('\n').replaceAll('};', '}');
-        //console.log(result);
+        
         return result;
 
         function addNode(shaderNode) {
@@ -196,12 +195,6 @@ export default class GLSLShader extends Shader {
                 if (shaderNode === Shader.parameters.pointSize) {
                     return 'gl_PointSize';
                 }
-                // init local variable (non-system or non-qualified variable)
-                if (shaderNode._init) {
-                    const result = shaderNode._init;
-                    shaderNode._init = null;
-                    return result;
-                }
                 return shaderNode;
             }
             return shaderNode instanceof Vector4 ? 'vec4(' + toString(shaderNode[0]) + ', ' + toString(shaderNode[1]) + ', ' + toString(shaderNode[2]) + ', ' + toString(shaderNode[3]) + ')'
@@ -214,7 +207,7 @@ export default class GLSLShader extends Shader {
         function qualifierOf(type) {
             return type == Parameter.qualifier.const ? 'uniform'
                 : type == Parameter.qualifier.let ? 'attribute'
-                    : type == Parameter.qualifier.var ? 'varying'
+                    : type == Parameter.qualifier.out ? 'varying'
                         : null;
         }
 
