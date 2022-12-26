@@ -86,15 +86,15 @@ export default class PerspectiveCamera extends CameraNode {
         if(this.aspectRatio != aspectRatio){
             this.aspectRatio = aspectRatio;
         }
-        return this.root.getScene(renderTarget);
+        return super.getScene(renderTarget);
     }
 
-    setScene(scene){
-        super.setScene(scene);
+    setScene(parameters){
+        super.setScene(parameters);
         if (this.projectionUpdated) {
             this._projectionMatrix = this.perspectiveMatrix.clone().multiply(this.vertexMatrix.clone().invert());
             this.projectionUpdated = false;
         }
-        scene.setParameter(Material.parameters.projectionMatrix, this.projectionMatrix);
+        parameters[Material.parameters.projectionMatrix.name] = this.projectionMatrix;
     }
 }

@@ -4,18 +4,32 @@ import Parameter from './shader/Parameter';
 export default class Material extends GraphicsNode {
     /** Create a new Material
     */
-    constructor(vertexShader, fragmentShader){
+    constructor(){
         super();
 
         this.culling = null;
         this.depth = null;
-        this.vertexShader = vertexShader;
-        this.fragmentShader = fragmentShader;
         this.fog = true;
     }
 
+    get vertexShader(){
+        return this._vertexShader;
+    }
+
+    set vertexShader(v){
+        this._vertexShader = v;
+    }
+
+    get fragmentShader(){
+        return this._fragmentShader;
+    }
+
+    set fragmentShader(v){
+        this._fragmentShader = v;
+    }
+
     get compiled(){
-        return this.vertexShader?.compiled && this.fragmentShader?.compiled;
+        return this.vertexShader?.compiled && this.vertexShader?.compiled;
     }
 
     get texture() {
@@ -24,12 +38,6 @@ export default class Material extends GraphicsNode {
 
     set texture(v) {
         this.setParameter(Material.parameters.texture, v);
-    }
-    
-    setScene(scene){
-        if (!scene.materials[this.id]) {
-            scene.materials[this.id] = this;
-        }
     }
 
     static parameters = {

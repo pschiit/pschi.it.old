@@ -332,20 +332,7 @@ export default class WebGLRenderer extends GraphicsRenderer {
  * @param {RenderTarget} renderTarget to render
  */
 function render(renderer, renderTarget) {
-    const scene = renderTarget.data.getScene(renderTarget);
-    for (const id in scene.materials) {
-        const material = scene.materials[id];
-        renderer.program = WebGLProgram.from(renderer, material);
-        for (const name in material.parameters) {
-            renderer.program.setParameter(name, material.parameters[name]);
-        }
-        for (const name in scene.parameters) {
-            if (renderer.program.parameters[name]) {
-                const value = scene.parameters[name];
-                renderer.program.setParameter(name, value);
-            }
-        }
-    }
+    const renders = renderTarget.data.getScene(renderTarget);
     const viewport = renderTarget.viewport;
     const scissor = renderTarget.scissor;
     const clearColor = renderTarget.backgroundColor || Color.black;
@@ -370,8 +357,15 @@ function render(renderer, renderTarget) {
         renderer.clearColor = clearColor;
     }
     clear();
-    scene.renders.forEach(r => {
-        renderer.material = renderTarget.material ? renderTarget.material : r.material;
+    const cache = {};
+    renders.forEach(r => {
+        const material = renderTarget.material ? renderTarget.material : r.material
+        renderer.material = material;
+        if (!cache[material.id]) {
+            for (const name in material.parameters) {
+                renderer.program.setParameter(name, material.parameters[name]);
+            }
+        }
         for (const name in r.parameters) {
             renderer.program.setParameter(name, r.parameters[name]);
         }
@@ -382,7 +376,7 @@ function render(renderer, renderTarget) {
             }
             const divisorCount = r.vertexBuffer.divisorCount;
             if (r.vertexBuffer.index) {
-                if(r.vertexBuffer.index.updated){
+                if (r.vertexBuffer.index.updated) {
                     WebGLBuffer.from(renderer, r.vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
                 }
                 if (divisorCount) {

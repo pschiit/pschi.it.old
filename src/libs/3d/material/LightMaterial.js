@@ -21,37 +21,39 @@ export default class LightMaterial extends Material {
         this.directionalLigthsCount = 0;
         this.pointLigthsCount = 0;
         this.spotLigthsCount = 0;
+
+        const vColor = Parameter.vector4('v_' + Material.parameters.color, Parameter.qualifier.out);
+        const vPosition = Parameter.vector3('v_' + Material.parameters.position, Parameter.qualifier.out);
+        const vNormal = Parameter.vector3('v_' + Material.parameters.normal, Parameter.qualifier.out);
+        const vUV = Parameter.vector2('v_' + Material.parameters.uv, Parameter.qualifier.out);
+        const vDistance = Parameter.number('v_' + Material.parameters.fogDistance, Parameter.qualifier.out);
+        this.vertexShader = Shader.vertexShader([
+            Operation.equal(
+                Shader.parameters.output,
+                Operation.multiply(
+                    Material.parameters.projectionMatrix,
+                    Material.parameters.vertexMatrix,
+                    Material.parameters.position)),
+            Operation.equal(vDistance, Operation.selection(Shader.parameters.output, '.w')),
+            Operation.equal(
+                vNormal,
+                Operation.normalize(
+                    Operation.toVector3(Operation.multiply(
+                        Material.parameters.normalMatrix,
+                        Material.parameters.normal)))),
+            Operation.equal(vPosition, Operation.toVector3(Operation.multiply(
+                Material.parameters.vertexMatrix,
+                Material.parameters.position))),
+            Operation.equal(vColor, Material.parameters.color),
+            Operation.equal(vUV, Material.parameters.uv), 
+        ]);
     }
 
-    updateShader() {
-        if (!this.vertexShader) {
-            const vColor = Parameter.vector4('v_' + Material.parameters.color, Parameter.qualifier.out);
-            const vPosition = Parameter.vector3('v_' + Material.parameters.position, Parameter.qualifier.out);
-            const vNormal = Parameter.vector3('v_' + Material.parameters.normal, Parameter.qualifier.out);
-            const vUV = Parameter.vector2('v_' + Material.parameters.uv, Parameter.qualifier.out);
-            const vDistance = Parameter.number('v_' + Material.parameters.fogDistance, Parameter.qualifier.out);
-            this.vertexShader = Shader.vertexShader([
-                Operation.equal(
-                    Shader.parameters.output,
-                    Operation.multiply(
-                        Material.parameters.projectionMatrix,
-                        Material.parameters.vertexMatrix,
-                        Material.parameters.position)),
-                Operation.equal(vDistance, Operation.selection(Shader.parameters.output, '.w')),
-                Operation.equal(
-                    vNormal,
-                    Operation.normalize(
-                        Operation.toVector3(Operation.multiply(
-                            Material.parameters.normalMatrix,
-                            Material.parameters.normal)))),
-                Operation.equal(vPosition, Operation.toVector3(Operation.multiply(
-                    Material.parameters.vertexMatrix,
-                    Material.parameters.position))),
-                Operation.equal(vColor, Material.parameters.color),
-                Operation.equal(vUV, Material.parameters.uv),
-            ]);
-        }
-        if (!this.fragmentShader) {
+    get fragmentShader(){
+        this.pointLightsCount = this.parameters[LightMaterial.parameters.pointLightAmbientStrength.name]?.length || 0;
+        this.directionalLigthsCount = this.parameters[LightMaterial.parameters.directionalLightAmbientStrength.name]?.length || 0;
+        this.spotLigthsCount = this.parameters[LightMaterial.parameters.spotLightAmbientStrength.name]?.length || 0;
+        if (!this._fragmentShader) {
             const vColor = Parameter.vector4('v_' + Material.parameters.color, Parameter.qualifier.out);
             const vPosition = Parameter.vector3('v_' + Material.parameters.position, Parameter.qualifier.out);
             const vNormal = Parameter.vector3('v_' + Material.parameters.normal, Parameter.qualifier.out);
@@ -251,8 +253,9 @@ export default class LightMaterial extends Material {
                             , 0, 1))));
             }
             operations.push(Operation.equal(Shader.parameters.output, Operation.toVector4(color, Operation.selection(fragmentColor, '.a'))));
-            this.fragmentShader = Shader.fragmentShader(operations, Shader.precision.high);
+            this._fragmentShader = Shader.fragmentShader(operations, Shader.precision.high);
         }
+        return this._fragmentShader;
     }
 
     get pointLigthsCount() {
@@ -262,7 +265,7 @@ export default class LightMaterial extends Material {
     set pointLigthsCount(v) {
         if (this.pointLigthsCount != v) {
             this._pointLigthsCount = v;
-            this.fragmentShader = null;
+            this._fragmentShader = null;
         }
     }
 
@@ -273,7 +276,7 @@ export default class LightMaterial extends Material {
     set spotLigthsCount(v) {
         if (this.spotLigthsCount != v) {
             this._spotLigthsCount = v;
-            this.fragmentShader = null;
+            this._fragmentShader = null;
         }
     }
 
@@ -284,7 +287,7 @@ export default class LightMaterial extends Material {
     set directionalLigthsCount(v) {
         if (this.directionalLigthsCount != v) {
             this._directionalLigthsCount = v;
-            this.fragmentShader = null;
+            this._fragmentShader = null;
         }
     }
 
@@ -319,7 +322,6 @@ export default class LightMaterial extends Material {
     set emissiveColor(v) {
         this.setParameter(LightMaterial.parameters.emissiveColor, v);
     }
-
 
     get ambientTexture() {
         return this.parameters[LightMaterial.parameters.ambientTexture];
@@ -359,14 +361,6 @@ export default class LightMaterial extends Material {
 
     set shininess(v) {
         this.setParameter(LightMaterial.parameters.shininess, v);
-    }
-
-    setScene(scene) {
-        super.setScene(scene);
-        this.pointLightsCount = scene.parameters[LightMaterial.parameters.pointLightAmbientStrength.name]?.length || 0;
-        this.directionalLigthsCount = scene.parameters[LightMaterial.parameters.directionalLightAmbientStrength.name]?.length || 0;
-        this.spotLigthsCount = scene.parameters[LightMaterial.parameters.spotLightAmbientStrength.name]?.length || 0;
-        this.updateShader();
     }
 
     static parameters = {
@@ -468,5 +462,5 @@ export default class LightMaterial extends Material {
                 Operation.return(new Vector3())
             ]);
         }
-    }
+    };
 }

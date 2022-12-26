@@ -2,9 +2,6 @@ import Material from '../../renderer/graphics/Material';
 import Operation from '../../renderer/graphics/shader/Operation';
 import Parameter from '../../renderer/graphics/shader/Parameter';
 import Shader from '../../renderer/graphics/shader/Shader';
-import VertexBuffer from '../../renderer/graphics/VertexBuffer';
-import CameraNode from '../camera/CameraNode';
-import Node3d from '../Node3d';
 
 export default class Color extends Material {
     constructor() {
