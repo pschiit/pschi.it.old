@@ -55,6 +55,7 @@ export default class Material extends GraphicsNode {
         
         projectionMatrix: Parameter.matrix4('projectionMatrix', Parameter.qualifier.const),
         cameraPosition: Parameter.vector3('cameraPosition', Parameter.qualifier.const),
+        cameraTarget: Parameter.vector3('cameraTarget', Parameter.qualifier.const),
         fogDistance: Parameter.vector2('fogDistance', Parameter.qualifier.const),
     };
 

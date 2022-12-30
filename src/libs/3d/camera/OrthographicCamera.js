@@ -11,7 +11,7 @@ export default class OrthographicCamera extends CameraNode {
         this._top = top;
         this._near = near;
         this._far = far;
-        this._orthograpicUpdated = true;
+        this.orthograpicUpdated = true;
     }
 
     get left() {
@@ -76,6 +76,7 @@ export default class OrthographicCamera extends CameraNode {
 
     get orthograpicMatrix() {
         if (this.orthograpicUpdated) {
+            console.log(Matrix4.orthographicMatrix(this.left, this.right, this.bottom, this.top, this.near, this.far));
             this._orthograpicMatrix =  Matrix4.orthographicMatrix(this.left, this.right, this.bottom, this.top, this.near, this.far);
             this.orthograpicUpdated = false;
         }
@@ -88,14 +89,5 @@ export default class OrthographicCamera extends CameraNode {
             this.projectionUpdated = false;
         }
         return this._projectionMatrix;
-    }
-
-    setScene(parameters){
-        super.setScene(parameters);
-        if (this.projectionUpdated) {
-            this._projectionMatrix = this.orthograpicMatrix.clone().multiply(this.vertexMatrix.clone().invert());
-            this.projectionUpdated = false;
-        }
-        parameters[Material.parameters.projectionMatrix.name] = this.projectionMatrix;
     }
 }

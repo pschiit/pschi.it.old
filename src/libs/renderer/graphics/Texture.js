@@ -8,8 +8,10 @@ export default class Texture extends GraphicsNode {
         this.updated = true;
         this.width = null;
         this.height = null;
+        this.level = 0;
         this.format = RenderTarget.format.rgba;
         this.type = Uint8Array.constructor;
+        this.mipmap = false;
     }
 
     get type(){

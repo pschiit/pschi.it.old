@@ -305,13 +305,14 @@ function createUniform(renderer, program, uniform) {
                 program.parameters[name] = (v) => {
                     if (v && !renderer.framebuffer?.is(v)) {
                         var texture = WebGLTexture.from(renderer, v);
-                        if (program.cache[name] != texture.unit) {
+                        if (program.cache[name] != texture) {
                             renderer.gl.uniform1i(location, texture.unit);
                             renderer.gl.activeTexture(renderer.gl.TEXTURE0 + texture.unit);
                             renderer.texture2d = texture;
-                            program.cache[name] = texture.unit;
+                            program.cache[name] = texture;
                         }
                     } else if (program.cache[name] != null) {
+                        program.cache[name].unit = null;
                         renderer.gl.uniform1i(location, null);
                         program.cache[name] = null;
                     };

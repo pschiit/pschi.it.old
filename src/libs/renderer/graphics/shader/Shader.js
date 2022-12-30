@@ -32,6 +32,7 @@ export default class Shader extends ShaderNode {
     static parameters = {
         output: Parameter.vector4('output'),
         pointSize:Parameter.number('pointSize'),
+        fragmentCoordinate: Parameter.vector4('fragmentCoordinate'),
     };
 
     /** Shader type value

@@ -16,6 +16,8 @@ export default class LightMaterial extends Material {
         this.specularColor = Color.white;
         this.emissiveColor = Color.black;
 
+        this.shadowMap = null;
+
         this.shininess = 32;
 
         this.directionalLigthsCount = 0;
@@ -239,16 +241,20 @@ export default class LightMaterial extends Material {
                 operations.push(Operation.addTo(color, fragmentRGB));
             }
             if (this.fog) {
+                const distance = Parameter.number('distance');
                 const fogDistance = Material.parameters.fogDistance;
                 const fogDistanceY = Operation.selection(fogDistance, '.y');
-
+                operations.push(Operation.equal(
+                    Operation.declare(distance),
+                    Operation.substract(fogDistanceY, vDistance)
+                ));
                 operations.push(Operation.equal(
                     color, Operation.mix(
                         Material.parameters.backgroundColor,
                         color,
                         Operation.clamp(
                             Operation.substract(
-                                Operation.divide(Operation.substract(fogDistanceY, vDistance), fogDistanceY),
+                                Operation.divide(distance, fogDistanceY),
                                 Operation.selection(fogDistance, '.x'))
                             , 0, 1))));
             }

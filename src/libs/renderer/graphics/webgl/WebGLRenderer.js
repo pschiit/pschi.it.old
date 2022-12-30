@@ -390,7 +390,7 @@ function render(renderer, renderTarget) {
                 renderer.gl.drawArrays(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.offset, r.vertexBuffer.count);
             }
         } else {
-            renderer.gl.drawArrays(renderer.gl[r.primitive], 0, r.count);
+            renderer.gl.drawArrays(renderer.gl[r.primitive], r.offset, r.count);
         }
     });
     renderer.vertexArray = null;

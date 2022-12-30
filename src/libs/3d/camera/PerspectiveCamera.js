@@ -88,13 +88,4 @@ export default class PerspectiveCamera extends CameraNode {
         }
         return super.getScene(renderTarget);
     }
-
-    setScene(parameters){
-        super.setScene(parameters);
-        if (this.projectionUpdated) {
-            this._projectionMatrix = this.perspectiveMatrix.clone().multiply(this.vertexMatrix.clone().invert());
-            this.projectionUpdated = false;
-        }
-        parameters[Material.parameters.projectionMatrix.name] = this.projectionMatrix;
-    }
 }

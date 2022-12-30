@@ -6,7 +6,7 @@ import Node3d from '../Node3d';
 export default class CameraNode extends Node3d {
     constructor() {
         super();
-        this.fog = new Vector2(0, 10);
+        this.fog = new Vector2(0, 50);
         this.projectionUpdated = true;
     }
 
@@ -17,14 +17,18 @@ export default class CameraNode extends Node3d {
     getScene(renderTarget) {
         const parameters = {};
         const materials = {};
-        const lights = [];
         const renders = [];
         if(renderTarget.material){
             materials[renderTarget.material.id] = renderTarget.material;
         }
-        this.parameters[Material.parameters.backgroundColor] = renderTarget.backgroundColor;
 
         update(this.root);
+
+        parameters[Material.parameters.backgroundColor] = renderTarget.backgroundColor;
+        parameters[Material.parameters.fogDistance.name] = this.fog;
+        parameters[Material.parameters.cameraPosition.name] = this.vertexMatrix.positionVector;
+        parameters[Material.parameters.projectionMatrix.name] = this.projectionMatrix;
+
         for (const id in materials) {
             const material = materials[id];
             for (const name in parameters) {
@@ -48,11 +52,5 @@ export default class CameraNode extends Node3d {
             render.setScene(parameters);
             render.childrens.forEach(update);
         }
-    }
-
-    setScene(parameters) {
-        super.setScene(parameters);
-        parameters[Material.parameters.fogDistance.name] = this.fog;
-        parameters[Material.parameters.cameraPosition.name] = this.vertexMatrix.positionVector;
     }
 }

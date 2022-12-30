@@ -13,10 +13,10 @@ export default class WebGLTexture extends WebGLNode {
         this.target = renderer.gl.TEXTURE_2D;
         this.location = renderer.gl.createTexture();
 
-        this.unit = renderer.textureUnit++;
-        this.level = 0;
         renderer.texture2d = this;
-        //renderer.gl.generateMipmap(this.target);
+        if(texture.mipmap){
+            renderer.gl.generateMipmap(this.target);
+        }
         //renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_WRAP_S, renderer.gl.CLAMP_TO_EDGE);
         //renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_WRAP_T, renderer.gl.CLAMP_TO_EDGE);
         //renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_MAG_FILTER, renderer.gl.LINEAR);
@@ -29,16 +29,16 @@ export default class WebGLTexture extends WebGLNode {
                     if (texture.data instanceof RenderTarget) {
                         const format = WebGLRenderer.formatFrom(renderer, texture.data.format);
                         const type = WebGLRenderer.typeFrom(renderer, texture.data.type);
-                        renderer.gl.texImage2D(this.target, this.level, format, texture.data.width, texture.data.height, 0, format, type, null);
+                        renderer.gl.texImage2D(this.target, texture.level, format, texture.data.width, texture.data.height, 0, format, type, null);
                         texture.updated = false;
                     } else {
                         const format = WebGLRenderer.formatFrom(renderer, texture.format);
                         const type = WebGLRenderer.typeFrom(renderer, texture.type);
                         if (texture.width && texture.height) {
-                            renderer.gl.texImage2D(this.target, this.level, format, texture.width, texture.height, 0, format, type, texture.data);
+                            renderer.gl.texImage2D(this.target, texture.level, format, texture.width, texture.height, 0, format, type, texture.data);
 
                         } else {
-                            renderer.gl.texImage2D(this.target, this.level, format, format, type, texture.data);
+                            renderer.gl.texImage2D(this.target, texture.level, format, format, type, texture.data);
                         }
                     }
                     texture.updated = false;
@@ -50,10 +50,24 @@ export default class WebGLTexture extends WebGLNode {
                     const format = WebGLRenderer.formatFrom(renderer, texture.format);
                     const type = WebGLRenderer.typeFrom(renderer, texture.type);
                     renderer.gl.bindTexture(this.target, this.location);
-                    renderer.gl.texImage2D(this.target, this.level, format, format, type, texture.data);
+                    renderer.gl.texImage2D(this.target, texture.level, format, format, type, texture.data);
                 };
                 texture.updated = false;
             }
+        }
+    }
+
+    get unit() {
+        if (!this._unit) {
+            this._unit = unitAvailables.pop() ?? unit++;
+        }
+        return this._unit;
+    }
+
+    set unit(v) {
+        if (!v && this._unit) {
+            unitAvailables.push(this._unit);
+            this._unit = null;
         }
     }
 
@@ -70,10 +84,10 @@ export default class WebGLTexture extends WebGLNode {
      * @returns {WebGLTexture} the WebGLTexture
      */
     static from(renderer, texture) {
-        if(!renderer.nodes[texture.id]){
+        if (!renderer.nodes[texture.id]) {
             texture.updated = true;
         }
-        const result =  renderer.nodes[texture.id] || new WebGLTexture(renderer, texture);
+        const result = renderer.nodes[texture.id] || new WebGLTexture(renderer, texture);
         if (texture.updated) {
             result.update(texture);
             texture.updated = false;
@@ -81,3 +95,6 @@ export default class WebGLTexture extends WebGLNode {
         return result;
     }
 }
+
+let unit = 0;
+const unitAvailables = [];
