@@ -1,4 +1,5 @@
 import MathArray from '../../math/MathArray';
+import OrthographicCamera from '../camera/OrthographicCamera';
 import LightMaterial from '../material/LightMaterial';
 import LightNode from './LightNode';
 
@@ -7,6 +8,7 @@ export default class DirectionalLight extends LightNode {
         super(color);
         this.translate(position);
         this.target = target;
+        this.camera = new OrthographicCamera(-10, 10, -10, 10, 0.1, 100);
     }
 
     setScene(parameters) {

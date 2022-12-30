@@ -33,7 +33,9 @@ export default class CameraNode extends Node3d {
             const material = materials[id];
             for (const name in parameters) {
                 const parameter = parameters[name];
-                material.parameters[name] = parameter;
+                if(material.parameters.hasOwnProperty(name)){
+                    material.setParameter(name, parameter);
+                }
             }
         }
 

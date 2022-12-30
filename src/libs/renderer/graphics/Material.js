@@ -9,7 +9,6 @@ export default class Material extends GraphicsNode {
 
         this.culling = null;
         this.depth = null;
-        this.fog = true;
     }
 
     get vertexShader(){
@@ -30,14 +29,6 @@ export default class Material extends GraphicsNode {
 
     get compiled(){
         return this.vertexShader?.compiled && this.vertexShader?.compiled;
-    }
-
-    get texture() {
-        return this.parameters[Material.parameters.texture];
-    }
-
-    set texture(v) {
-        this.setParameter(Material.parameters.texture, v);
     }
 
     static parameters = {

@@ -11,14 +11,41 @@ export default class LightMaterial extends Material {
         super();
         this.culling = Material.culling.back;
         this.depth = Material.depth.less;
+
+        this.shininess = 32;
         this.ambientColor = Color.white;
         this.diffuseColor = Color.white;
         this.specularColor = Color.white;
         this.emissiveColor = Color.black;
 
-        this.shadowMap = null;
+        this.setParameter(LightMaterial.parameters.ambientTexture);
+        this.setParameter(LightMaterial.parameters.diffuseTexture);
+        this.setParameter(LightMaterial.parameters.specularTexture);
+        this.setParameter(LightMaterial.parameters.emissiveTexture);
+        this.setParameter(Material.parameters.texture);
+        this.setParameter(Material.parameters.fogDistance);
+        this.setParameter(Material.parameters.cameraPosition);
+        this.setParameter(Material.parameters.projectionMatrix);
+        this.setParameter(Material.parameters.backgroundColor);
+        this.setParameter(Material.parameters.backgroundColor.name);
+        this.setParameter(LightMaterial.parameters.directionalLightColor);
+        this.setParameter(LightMaterial.parameters.directionalLightDirection);
+        this.setParameter(LightMaterial.parameters.directionalLightAmbientStrength);
+        this.setParameter(LightMaterial.parameters.pointLightColor);
+        this.setParameter(LightMaterial.parameters.pointLightPosition);
+        this.setParameter(LightMaterial.parameters.pointLightAmbientStrength);
+        this.setParameter(LightMaterial.parameters.pointLightIntensity);
+        this.setParameter(LightMaterial.parameters.spotLightColor);
+        this.setParameter(LightMaterial.parameters.spotLightDirection);
+        this.setParameter(LightMaterial.parameters.spotLightPosition);
+        this.setParameter(LightMaterial.parameters.spotLightRadius);
+        this.setParameter(LightMaterial.parameters.spotLightInnerRadius);
+        this.setParameter(LightMaterial.parameters.spotLightAmbientStrength);
+        this.setParameter(LightMaterial.parameters.spotLightIntensity);
 
-        this.shininess = 32;
+        this.fog = true;
+
+        this.shadowMap = null;
 
         this.directionalLigthsCount = 0;
         this.pointLigthsCount = 0;
@@ -47,11 +74,11 @@ export default class LightMaterial extends Material {
                 Material.parameters.vertexMatrix,
                 Material.parameters.position))),
             Operation.equal(vColor, Material.parameters.color),
-            Operation.equal(vUV, Material.parameters.uv), 
+            Operation.equal(vUV, Material.parameters.uv),
         ]);
     }
 
-    get fragmentShader(){
+    get fragmentShader() {
         this.pointLightsCount = this.parameters[LightMaterial.parameters.pointLightAmbientStrength.name]?.length || 0;
         this.directionalLigthsCount = this.parameters[LightMaterial.parameters.directionalLightAmbientStrength.name]?.length || 0;
         this.spotLigthsCount = this.parameters[LightMaterial.parameters.spotLightAmbientStrength.name]?.length || 0;
@@ -197,8 +224,8 @@ export default class LightMaterial extends Material {
                                 Operation.equal(
                                     Operation.declare(theta),
                                     Operation.substract(
-                                        Operation.dot(Operation.normalize(lightDistance), Operation.selection(LightMaterial.parameters.spotLightDirection, '[i]')), 
-                                            Operation.selection(LightMaterial.parameters.spotLightRadius, '[i]')),
+                                        Operation.dot(Operation.normalize(lightDistance), Operation.selection(LightMaterial.parameters.spotLightDirection, '[i]')),
+                                        Operation.selection(LightMaterial.parameters.spotLightRadius, '[i]')),
                                 ),
                                 Operation.equal(Operation.declare(r), Operation.substract(
                                     Operation.selection(LightMaterial.parameters.spotLightInnerRadius, '[i]'),
@@ -298,7 +325,7 @@ export default class LightMaterial extends Material {
     }
 
     get ambientColor() {
-        return this.parameters[LightMaterial.parameters.ambientColor];
+        return this.parameters[LightMaterial.parameters.ambientColor.name];
     }
 
     set ambientColor(v) {
@@ -306,7 +333,7 @@ export default class LightMaterial extends Material {
     }
 
     get diffuseColor() {
-        return this.parameters[LightMaterial.parameters.diffuseColor];
+        return this.parameters[LightMaterial.parameters.diffuseColor.name];
     }
 
     set diffuseColor(v) {
@@ -314,7 +341,7 @@ export default class LightMaterial extends Material {
     }
 
     get specularColor() {
-        return this.parameters[LightMaterial.parameters.specularColor];
+        return this.parameters[LightMaterial.parameters.specularColor.name];
     }
 
     set specularColor(v) {
@@ -322,7 +349,7 @@ export default class LightMaterial extends Material {
     }
 
     get emissiveColor() {
-        return this.parameters[LightMaterial.parameters.emissiveColor];
+        return this.parameters[LightMaterial.parameters.emissiveColor.name];
     }
 
     set emissiveColor(v) {
@@ -330,7 +357,7 @@ export default class LightMaterial extends Material {
     }
 
     get ambientTexture() {
-        return this.parameters[LightMaterial.parameters.ambientTexture];
+        return this.parameters[LightMaterial.parameters.ambientTexture.name];
     }
 
     set ambientTexture(v) {
@@ -338,7 +365,7 @@ export default class LightMaterial extends Material {
     }
 
     get diffuseTexture() {
-        return this.parameters[LightMaterial.parameters.diffuseTexture];
+        return this.parameters[LightMaterial.parameters.diffuseTexture.name];
     }
 
     set diffuseTexture(v) {
@@ -346,7 +373,7 @@ export default class LightMaterial extends Material {
     }
 
     get specularTexture() {
-        return this.parameters[LightMaterial.parameters.specularTexture];
+        return this.parameters[LightMaterial.parameters.specularTexture.name];
     }
 
     set specularTexture(v) {
@@ -354,7 +381,7 @@ export default class LightMaterial extends Material {
     }
 
     get emissiveTexture() {
-        return this.parameters[LightMaterial.parameters.emissiveTexture];
+        return this.parameters[LightMaterial.parameters.emissiveTexture.name];
     }
 
     set emissiveTexture(v) {
@@ -362,11 +389,19 @@ export default class LightMaterial extends Material {
     }
 
     get shininess() {
-        return this.parameters[LightMaterial.parameters.shininess];
+        return this.parameters[LightMaterial.parameters.shininess.name];
     }
 
     set shininess(v) {
         this.setParameter(LightMaterial.parameters.shininess, v);
+    }
+
+    get texture() {
+        return this.parameters[Material.parameters.texture.name];
+    }
+
+    set texture(v) {
+        this.setParameter(Material.parameters.texture, v);
     }
 
     static parameters = {
@@ -379,16 +414,16 @@ export default class LightMaterial extends Material {
         specularTexture: Parameter.texture('materialSpecularTexture', Parameter.qualifier.const),
         emissiveTexture: Parameter.texture('materialEmissiveTexture', Parameter.qualifier.const),
         shininess: Parameter.number('materialShininess', Parameter.qualifier.const),
-        
+
         directionalLightColor: Parameter.vector3('directionalLightColor', Parameter.qualifier.const),
         directionalLightDirection: Parameter.vector3('directionalLightDirection', Parameter.qualifier.const),
         directionalLightAmbientStrength: Parameter.number('directionalLightAmbientStrength', Parameter.qualifier.const),
-        
+
         pointLightColor: Parameter.vector3('pointLightColor', Parameter.qualifier.const),
         pointLightPosition: Parameter.vector3('pointLightPosition', Parameter.qualifier.const),
         pointLightAmbientStrength: Parameter.number('pointLightAmbientStrength', Parameter.qualifier.const),
         pointLightIntensity: Parameter.number('pointLightIntensity', Parameter.qualifier.const),
-        
+
         spotLightColor: Parameter.vector3('spotLightColor', Parameter.qualifier.const),
         spotLightPosition: Parameter.vector3('spotLightPosition', Parameter.qualifier.const),
         spotLightDirection: Parameter.vector3('spotLightDirection', Parameter.qualifier.const),
@@ -397,7 +432,7 @@ export default class LightMaterial extends Material {
         spotLightInnerRadius: Parameter.number('spotLightInnerRadius', Parameter.qualifier.const),
         spotLightIntensity: Parameter.number('spotLightIntensity', Parameter.qualifier.const),
     };
-    
+
     static shaderFunction = {
         calculateLight: () => {
             const lightDirection = Parameter.vector3('lightDirection');

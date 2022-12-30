@@ -1,5 +1,4 @@
 import Matrix4 from '../../math/Matrix4';
-import Material from '../../renderer/graphics/Material';
 import CameraNode from './CameraNode';
 
 export default class OrthographicCamera extends CameraNode {
@@ -76,7 +75,6 @@ export default class OrthographicCamera extends CameraNode {
 
     get orthograpicMatrix() {
         if (this.orthograpicUpdated) {
-            console.log(Matrix4.orthographicMatrix(this.left, this.right, this.bottom, this.top, this.near, this.far));
             this._orthograpicMatrix =  Matrix4.orthographicMatrix(this.left, this.right, this.bottom, this.top, this.near, this.far);
             this.orthograpicUpdated = false;
         }

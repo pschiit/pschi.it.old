@@ -1,3 +1,4 @@
+import Operation from './Operation';
 import Parameter from './Parameter';
 import ShaderNode from './ShaderNode';
 
@@ -11,6 +12,23 @@ export default class Shader extends ShaderNode {
         this.operations = operations;
         this.precision = precision || Shader.precision.high;
         this.source = null;
+    }
+
+    get constants(){
+        const result = [];
+        this.operations.forEach(findParameter);
+        return result;
+
+        function findParameter(node){
+            if(Array.isArray(node)){
+                node.forEach(findParameter);
+            }
+            if(node instanceof Parameter && node.qualifier == Parameter.qualifier.const){
+                result.push(node);
+            }else if(node instanceof Operation){
+                node.parameters.forEach(findParameter);
+            }
+        }
     }
 
     static vertexShader(operations, precision = Shader.precision.high) {

@@ -5,6 +5,8 @@ import Shader from '../../renderer/graphics/shader/Shader';
 export default class ShadowMaterial extends Material {
     constructor() {
         super();
+        
+        this.setParameter(Material.parameters.projectionMatrix);
 
         this.vertexShader = Shader.vertexShader(
             Operation.equal(

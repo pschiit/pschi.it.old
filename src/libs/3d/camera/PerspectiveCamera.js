@@ -1,7 +1,6 @@
 import Frustum from '../../math/Frustum';
 import Matrix4 from '../../math/Matrix4';
 import Plan from '../../math/Plan';
-import Material from '../../renderer/graphics/Material';
 import CameraNode from './CameraNode';
 
 export default class PerspectiveCamera extends CameraNode {

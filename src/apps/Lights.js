@@ -294,6 +294,7 @@ export default class Lights extends App {
         this.then = time;
         this.rotatingBox.rotate(0.01, 1, 1, 1);
 
+        this.canvas.render(this.lightMaterial.shadowMap);
         this.canvas.render(this.lightMaterial.texture);
         this.canvas.render(this.camera);
         this.animationFrame = requestAnimationFrame(this.draw.bind(this));

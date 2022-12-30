@@ -1,6 +1,7 @@
 import Matrix4 from '../../math/Matrix4';
 import Material from '../../renderer/graphics/Material';
 import Render from '../../renderer/graphics/Render';
+import ShadowMaterial from '../material/ShadowMaterial';
 import Node3d from '../Node3d';
 
 export default class LightNode extends Node3d {
@@ -11,16 +12,27 @@ export default class LightNode extends Node3d {
         this.ambientStrength = 0.1;
         this.intensity = 1;
         this.camera = null;
+        this.shadowMaterial = LightNode.shadowMaterial;
     }
 
     get on() {
         return this.intensity > 0;
     }
 
+    get projectionMatrix(){
+        if(this.camera.position)
+        return this.camera.projectionMatrix;
+    }
+
     getScene(renderTarget) {
         const renders = [];
-        renderTarget.material.parameters[Material.parameters.projectionMatrix.name] = this.camera.projectionMatrix;
+        if(renderTarget.material != this.shadowMaterial){
+            renderTarget.material = this.shadowMaterial;
+        }
         update(this.root);
+        this.camera.matrix = this.vertexMatrix;
+        this.camera.projectionUpdated = true;
+        renderTarget.material.setParameter(Material.parameters.projectionMatrix, this.camera.projectionMatrix);
 
         return renders;
 
@@ -33,7 +45,7 @@ export default class LightNode extends Node3d {
             }
             const parentMatrix = render.parent?.vertexMatrix;
             const vertexMatrix = parentMatrix instanceof Matrix4 ? parentMatrix.clone().multiply(render.matrix)
-                : this.matrix.clone();
+                : render.matrix.clone();
             render.setParameter(Material.parameters.vertexMatrix, vertexMatrix);
             
             render.childrens.forEach(update);
@@ -46,9 +58,5 @@ export default class LightNode extends Node3d {
         this.intensity = cache;
     }
 
-    setScene(scene) {
-        super.setScene(scene);
-
-        return this;
-    }
+    static shadowMaterial = new ShadowMaterial();
 }
