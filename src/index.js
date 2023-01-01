@@ -1,19 +1,44 @@
 import Lights from './apps/Lights';
+import HtmlNode from './libs/html/HtmlNode';
+import WebGLCanvas from './libs/html/WebGLCanvas';
 
-let currentApp;
-startApp(window.location.pathname.replace('/', ''));
+const defaultStyle = {
+    width: '100%',
+    height: '100%',
+    margin: 0,
+    background: '#000000'
+};
+HtmlNode.document.style = defaultStyle;
+const body = HtmlNode.body;
+body.style = defaultStyle;
+const canvas = new WebGLCanvas();
+body.appendChild(canvas);
+canvas.style = defaultStyle;
+canvas.fitParent();
 
-function startApp(name) {
-    if (currentApp) {
-        currentApp.stop();
+window.onresize = (e) => {
+    canvas.fitParent();
+};
+
+let app = getApp(window.location.pathname.replace('/', ''));
+let animationFrame = requestAnimationFrame(run);
+let then = 0;
+
+function getApp(name) {
+    if(app){
+        app.stop();
     }
     switch (name) {
         case 'lights':
         default:
-            currentApp = new Lights();
-            break;
+            return new Lights(canvas.context, document);
     }
+}
 
-    currentApp.start();
-    return currentApp;
+function run(time){
+    time *= 0.001;
+    canvas.element.setAttribute('fps', Math.round(1 / (time - then)).toString());
+    then = time;
+    app.run();
+    animationFrame = requestAnimationFrame(run);
 }

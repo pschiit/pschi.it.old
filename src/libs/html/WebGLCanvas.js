@@ -29,10 +29,6 @@ export default class WebGLCanvas extends Canvas {
             }
         });
 
-        window.onresize = (e) => {
-            this.fitParent();
-        };
-
         function initContext(webGLCanvas, contextOptions) {
             const newContext = new WebGLRenderer(webGLCanvas.element.getContext('webgl', contextOptions) || webGLCanvas.element.getContext('experimental-webgl', contextOptions));
             if (!newContext) {

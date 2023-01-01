@@ -1,14 +1,30 @@
-import GraphicsRenderer from '../renderer/graphics/GraphicsRenderer';
-
 export default class App {
     /** Create a new app 
     */
-    constructor(){
+    constructor(graphicRenderer, eventInterface) {
+        this.graphicsRenderer = graphicRenderer;
+        this.eventInterface = eventInterface;
+        this.then = 0;
     }
 
-    start(){
+    get renderTarget() {
+        return this.graphicsRenderer.parent.renderTarget;
     }
 
-    stop(){
+    addEventListener(event, callback) {
+        this.eventInterface.addEventListener(event, callback);
+    }
+
+    getPointerPosition(e) {
+        return this.graphicsRenderer.parent.getPointerPosition(e);
+    }
+
+    run() {
+
+    }
+
+    stop() {
+        this.then = 0;
+        this.graphicsRenderer.childrens.forEach(c => this.graphicsRenderer.removeChild(c));
     }
 }

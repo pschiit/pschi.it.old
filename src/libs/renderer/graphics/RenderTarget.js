@@ -51,14 +51,6 @@ export default class RenderTarget extends GraphicsNode {
         this.viewport[3] = v;
     }
 
-    get fullWidth (){
-        return this.width + this.x;
-    }
-
-    get fullHeight (){
-        return this.height + this.y;
-    }
-
     get format() {
         return this._format;
     }
