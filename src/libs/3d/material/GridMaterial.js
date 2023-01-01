@@ -6,7 +6,7 @@ import Parameter from '../../renderer/graphics/shader/Parameter';
 import Shader from '../../renderer/graphics/shader/Shader';
 import ShaderFunction from '../../renderer/graphics/shader/ShaderFunction';
 import VertexBuffer from '../../renderer/graphics/VertexBuffer';
-import CameraNode from '../camera/CameraNode';
+import Camera from '../camera/Camera';
 import Node3d from '../Node3d';
 
 export default class GridMaterial extends Material {

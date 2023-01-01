@@ -18,20 +18,18 @@ export default class Node3d extends Render {
     }
 
     get vertexMatrix() {
+        if(!this.parameters[Material.parameters.vertexMatrix]){
+            const parentMatrix = this.parent?.vertexMatrix;
+            const vertexMatrix = parentMatrix instanceof Matrix4 ? parentMatrix.clone().multiply(this.matrix)
+                : this.matrix.clone();
+    
+            this.setParameter(Material.parameters.vertexMatrix, vertexMatrix);
+        }
         return this.parameters[Material.parameters.vertexMatrix];
     }
 
     get normalMatrix() {
         return this.parameters[Material.parameters.normalMatrix];
-    }
-
-    get worldMatrix() {
-        return this.parent instanceof Node3d ? this.parent.worldMatrix.multiply(this.matrix)
-            : this.matrix.clone();
-    }
-
-    get invertMatrix() {
-        return this.matrix.clone().invert();
     }
 
     /** Return a Vector3 reflecting the x axis from the current Node3d
@@ -66,6 +64,7 @@ export default class Node3d extends Render {
     */
     set position(v) {
         this.matrix.positionVector = v;
+        this.clearVertexMatrix();
     }
 
     /** Return a Vector3 reflecting the scale of the current Node3d
@@ -88,6 +87,7 @@ export default class Node3d extends Render {
     set target(v) {
         this._target = v;
         this.matrix.target(this._target);
+        this.clearVertexMatrix();
     }
 
     /** Translate the Node3d by a Vector3 array
@@ -98,6 +98,7 @@ export default class Node3d extends Render {
     */
     translate(x = 0, y = 0, z = 0) {
         this.matrix.translate(x instanceof Vector3 ? x : new Vector3(x, y, z));
+        this.clearVertexMatrix();
 
         return this;
     }
@@ -110,6 +111,7 @@ export default class Node3d extends Render {
     */
     rescale(x = 0, y = 0, z = 0) {
         this.matrix.scale(x instanceof Vector3 ? x : new Vector3(x, y, z));
+        this.clearVertexMatrix();
 
         return this;
     }
@@ -123,6 +125,7 @@ export default class Node3d extends Render {
     */
     rotate(radians, x = 0, y = 0, z = 0) {
         this.matrix.rotate(radians, x instanceof Vector3 ? x : new Vector3(x, y, z));
+        this.clearVertexMatrix();
 
         return this;
     }
@@ -133,18 +136,25 @@ export default class Node3d extends Render {
     */
     transform(matrix) {
         this.matrix.multiply(matrix);
+        this.clearVertexMatrix();
 
         return this;
     }
 
-    setScene(parameters) {
-        const parentMatrix = this.parent?.parameters[Material.parameters.vertexMatrix.name];
-        const vertexMatrix = parentMatrix instanceof Matrix4 ? parentMatrix.clone().multiply(this.matrix)
-            : this.matrix.clone();
+    clearVertexMatrix(){
+        if(this.vertexMatrix){
+            this.parameters[Material.parameters.vertexMatrix] = null;
+            this.childrens.forEach(c => {
+                if(c instanceof Node3d){
+                    c.clearVertexMatrix();
+                }
+            });
+        }
+    }
 
-        this.setParameter(Material.parameters.vertexMatrix, vertexMatrix);
-        if (this.renderable) {
-            this.setParameter(Material.parameters.normalMatrix, vertexMatrix.clone().invert().transpose());
+    setScene(parameters) {
+        if (this.vertexMatrix) {
+            this.setParameter(Material.parameters.normalMatrix, this.vertexMatrix.clone().invert().transpose());
         }
     }
 

@@ -19,6 +19,6 @@ export default class ShadowMaterial extends Material {
         this.fragmentShader = Shader.fragmentShader(
             Operation.equal(
                 Shader.parameters.output,
-                Operation.toVector4(Operation.selection(Shader.parameters.fragmentCoordinate, '.z'), 0)));
+                Operation.toVector4(Operation.selection(Shader.parameters.fragmentCoordinate, '.z'), 0, 0, 0)));
     }
 }

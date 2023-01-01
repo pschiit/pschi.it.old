@@ -18,14 +18,18 @@ import Angle from '../libs/math/Angle';
 import Vector4 from '../libs/math/Vector4';
 import WebGLCanvas from '../libs/html/WebGLCanvas';
 import HtmlNode from '../libs/html/HtmlNode';
+import OrthographicCamera from '../libs/3d/camera/OrthographicCamera';
 
 export default class Lights extends App {
     constructor() {
         super();
+        this.width = 0;
+        this.height = 0;
     }
 
     init() {
         this.then = 0;
+        this.toRender = [];
         const defaultStyle = {
             width: '100%',
             height: '100%',
@@ -40,7 +44,7 @@ export default class Lights extends App {
         this.canvas.style = defaultStyle;
         this.canvas.fitParent();
 
-        this.lightMaterial = new LightMaterial();
+        const lightMaterial = new LightMaterial();
 
         const mainBuffer = new Buffer();
         const mainIndexBuffer = new Buffer();
@@ -132,77 +136,71 @@ export default class Lights extends App {
 
         const world = new Node3d();
 
-        this.camera = new PerspectiveCamera(70, this.canvas.aspectRatio, 0.1, 100);
-        this.camera.translate(7, 5, 7);
-        this.camera.target = new Vector3(0, 0, 0);
-        world.appendChild(this.camera);
-        this.lightMaterial.texture = new Texture(new RenderTarget(this.camera, 1024, 1024));
-
         const floor = new Node3d();
-        floor.material = this.lightMaterial;
+        floor.material = lightMaterial;
         floor.vertexBuffer = plane;
         world.appendChild(floor);
 
         this.rotatingBox = new Node3d();
-        this.rotatingBox.material = this.lightMaterial;
+        this.rotatingBox.material = lightMaterial;
         this.rotatingBox.translate(0, 1, 0);
         this.rotatingBox.vertexBuffer = cube;
         floor.appendChild(this.rotatingBox);
-
-        const redLight = new PointLight(
-            Color.red,
-            new Vector3(5, 3, -5));
-        redLight.material = this.lightMaterial;
-        redLight.vertexBuffer = reverseCube;
-        floor.appendChild(redLight);
-        redLight.addEventListener('onclick', (e) => {
-            console.log('toggle red');
-            redLight.toggle();
-        });
-
-        const greenLight = new PointLight(
-            Color.green,
-            new Vector3(-5, 3, -5));
-        greenLight.material = this.lightMaterial;
-        greenLight.vertexBuffer = reverseCube;
-        floor.appendChild(greenLight);
-        greenLight.addEventListener('onclick', (e) => {
-            console.log('toggle green');
-            greenLight.toggle();
-        });
-
-        const blueLight = new PointLight(
-            Color.blue,
-            new Vector3(-5, 3, 5));
-        blueLight.material = this.lightMaterial;
-        blueLight.vertexBuffer = reverseCube;
-        floor.appendChild(blueLight);
-        blueLight.addEventListener('onclick', (e) => {
-            console.log('toggle blue');
-            blueLight.toggle();
-        });
-
-        const whiteLight = new PointLight(
-            Color.white,
-            new Vector3(5, 3, 5));
-        whiteLight.material = this.lightMaterial;
-        whiteLight.vertexBuffer = reverseCube;
-        floor.appendChild(whiteLight);
-        whiteLight.addEventListener('onclick', (e) => {
-            console.log('toggle white');
-            whiteLight.toggle();
-        });
 
         const sun = new DirectionalLight(
             Color.white.scale(0.5),
             new Vector3(10, 20, 10),
             new Vector3(0, 0, 0));
         floor.appendChild(sun);
-        this.lightMaterial.shadowMap = new Texture(new RenderTarget(sun, 1024, 1024));
         this.rotatingBox.addEventListener('onclick', (e) => {
             console.log('toggle sun');
-            sun.toggle();
+            sun.light.toggle();
         });
+
+        const redLight = new PointLight(
+            Color.red,
+            new Vector3(5, 3, -5));
+        redLight.material = lightMaterial;
+        redLight.vertexBuffer = reverseCube;
+        floor.appendChild(redLight);
+        redLight.addEventListener('onclick', (e) => {
+            console.log('toggle red');
+            redLight.light.toggle();
+        });
+
+        const greenLight = new PointLight(
+            Color.green,
+            new Vector3(-5, 3, -5));
+        greenLight.material = lightMaterial;
+        greenLight.vertexBuffer = reverseCube;
+        floor.appendChild(greenLight);
+        greenLight.addEventListener('onclick', (e) => {
+            console.log('toggle green');
+            greenLight.light.toggle();
+        });
+
+        const blueLight = new PointLight(
+            Color.blue,
+            new Vector3(-5, 3, 5));
+        blueLight.material = lightMaterial;
+        blueLight.vertexBuffer = reverseCube;
+        floor.appendChild(blueLight);
+        blueLight.addEventListener('onclick', (e) => {
+            console.log('toggle blue');
+            blueLight.light.toggle();
+        });
+
+        const whiteLight = new PointLight(
+            Color.white,
+            new Vector3(5, 3, 5));
+        whiteLight.material = lightMaterial;
+        whiteLight.vertexBuffer = reverseCube;
+        floor.appendChild(whiteLight);
+        whiteLight.addEventListener('onclick', (e) => {
+            console.log('toggle white');
+            whiteLight.light.toggle();
+        });
+
 
         const spotLight = new SpotLight(
             Color.magenta,
@@ -210,30 +208,59 @@ export default class Lights extends App {
             new Vector3(-3, 2, -3),
             new Vector3(0, 0, 0));
         spotLight.innerRadius = Math.cos(Angle.toRadian(40));
-        spotLight.material = this.lightMaterial;
+        spotLight.material = lightMaterial;
         spotLight.vertexBuffer = reverseCube;
         floor.appendChild(spotLight);
         spotLight.addEventListener('onclick', (e) => {
             console.log('toggle spot');
-            spotLight.toggle();
+            spotLight.light.toggle();
         });
 
+        const perspectiveCamera = new PerspectiveCamera(70, 1, 0.1, 100);
+        perspectiveCamera.translate(7, 5, 7);
+        perspectiveCamera.target = new Vector3(0, 0, 0);
+        world.appendChild(perspectiveCamera);
+        this.perspectiveRenderTarget = new RenderTarget(perspectiveCamera);
+        this.toRender.push(this.perspectiveRenderTarget);
+
+        const orthographicCamera = new OrthographicCamera(-4, 4, -4, 4, 0.1, 100);
+        perspectiveCamera.appendChild(orthographicCamera);
+        this.orthographicRenderTarget = new RenderTarget(orthographicCamera);
+        this.toRender.push(this.orthographicRenderTarget);
+
+        //this.toRender.unshift(sun.shadowMap);
+
+        lightMaterial.texture = new Texture(new RenderTarget(orthographicCamera, 1024, 1024));
+        this.toRender.unshift(lightMaterial.texture);
+
         const pickingMaterial = new PickingMaterial();
-        const pickingTexture = new Texture(this.canvas.renderTarget);
+        const pickingTexture = new Texture();
         this.canvas.element.onpointerdown = (e) => {
             const mousePosition = this.canvas.getPointerPosition(e);
 
-            this.canvas.renderTarget.read = new Vector4(mousePosition[0], mousePosition[1], 1, 1);
-            this.canvas.renderTarget.material = pickingMaterial;
+            const renderTarget = this.perspectiveRenderTarget.isIn(mousePosition) ?
+                this.perspectiveRenderTarget :
+                this.orthographicRenderTarget;
+
+            renderTarget.read = new Vector4(mousePosition[0], mousePosition[1], 1, 1);
+            renderTarget.material = pickingMaterial;
+
+            pickingTexture.data = renderTarget;
+            if (this.width != pickingTexture.width
+                || this.height != pickingTexture.height) {
+                pickingTexture.width = this.width;
+                pickingTexture.height = this.height;
+            }
+
 
             this.canvas.render(pickingTexture);
-            const color = new Color(this.canvas.renderTarget.output);
+            const color = new Color(renderTarget.output);
             const node = Node3d.search(color);
             if (node) {
                 node.dispatchEvent({ type: 'onclick' });
             }
-            this.canvas.renderTarget.read = null;
-            this.canvas.renderTarget.material = null;
+            renderTarget.read = null;
+            renderTarget.material = null;
         }
 
         document.onkeydown = e => {
@@ -242,44 +269,44 @@ export default class Lights extends App {
                 case 'a':
                 case 'KeyA':
                 case 'ArrowLeft':
-                    this.camera.rotate(step * 0.1, 0, 1, 0);
-                    this.camera.projectionUpdated = true;
+                    this.perspectiveCamera.rotate(step * 0.1, 0, 1, 0);
+                    this.perspectiveCamera.projectionUpdated = true;
                     break;
                 case 'd':
                 case 'KeyD':
                 case 'ArrowRight':
-                    this.camera.rotate(step * 0.1, 0, -1, 0);
-                    this.camera.projectionUpdated = true;
+                    this.perspectiveCamera.rotate(step * 0.1, 0, -1, 0);
+                    this.perspectiveCamera.projectionUpdated = true;
                     break;
                 case 'w':
                 case 'KeyW':
                 case 'ArrowUp':
-                    this.camera.translate(0, 0, -step);
-                    this.camera.projectionUpdated = true;
+                    this.perspectiveCamera.translate(0, 0, -step);
+                    this.perspectiveCamera.projectionUpdated = true;
                     break;
                 case 's':
                 case 'KeyS':
                 case 'ArrowDown':
-                    this.camera.translate(0, 0, step);
-                    this.camera.projectionUpdated = true;
+                    this.perspectiveCamera.translate(0, 0, step);
+                    this.perspectiveCamera.projectionUpdated = true;
                     break;
                 case 'ControlLeft':
-                    this.camera.rotate(step * 0.1, -1, 0, 0);
-                    this.camera.projectionUpdated = true;
+                    this.perspectiveCamera.rotate(step * 0.1, -1, 0, 0);
+                    this.perspectiveCamera.projectionUpdated = true;
                     break;
                 case 'Space':
-                    this.camera.rotate(step * 0.1, 1, 0, 0);
-                    this.camera.projectionUpdated = true;
+                    this.perspectiveCamera.rotate(step * 0.1, 1, 0, 0);
+                    this.perspectiveCamera.projectionUpdated = true;
                     break;
                 case 'q':
                 case 'KeyQ':
-                    this.camera.rotate(step * 0.1, 0, 0, 1,);
-                    this.camera.projectionUpdated = true;
+                    this.perspectiveCamera.rotate(step * 0.1, 0, 0, 1,);
+                    this.perspectiveCamera.projectionUpdated = true;
                     break;
                 case 'e':
                 case 'KeyE':
-                    this.camera.rotate(step * 0.1, 0, 0, -1);
-                    this.camera.projectionUpdated = true;
+                    this.perspectiveCamera.rotate(step * 0.1, 0, 0, -1);
+                    this.perspectiveCamera.projectionUpdated = true;
                     break;
                 default:
                     return;
@@ -287,26 +314,37 @@ export default class Lights extends App {
         }
     }
 
+
     draw(time) {
-        time  *= 0.001;
+        if (this.width != this.canvas.clientWidth) {
+            this.width = this.canvas.clientWidth;
+            this.perspectiveRenderTarget.viewport = new Vector4(0, 0, this.width / 2, this.height);
+            this.perspectiveRenderTarget.scissor = this.perspectiveRenderTarget.viewport;
+            this.orthographicRenderTarget.viewport = new Vector4(this.width / 2, 0, this.width / 2, this.height);
+            this.orthographicRenderTarget.scissor = this.orthographicRenderTarget.viewport;
+        }
+        if (this.height != this.canvas.clientHeight) {
+            this.height = this.canvas.clientHeight;
+            this.perspectiveRenderTarget.height = this.height;
+            this.orthographicRenderTarget.height = this.height;
+        }
+
+        time *= 0.001;
         this.fps = Math.round(1 / (time - this.then));
         this.canvas.element.setAttribute('fps', this.fps.toString());
         this.then = time;
         this.rotatingBox.rotate(0.01, 1, 1, 1);
 
-        this.canvas.render(this.lightMaterial.shadowMap);
-        this.canvas.render(this.lightMaterial.texture);
-        this.canvas.render(this.camera);
+        this.toRender.forEach(t => this.canvas.render(t));
         this.animationFrame = requestAnimationFrame(this.draw.bind(this));
     }
 
-    start(){
+    start() {
         this.init();
         this.animationFrame = requestAnimationFrame(this.draw.bind(this));
     }
 
-    stop(){
-        this.lightMaterial = null;
+    stop() {
         this.rotatingBox = null;
         this.canvas = null;
     }

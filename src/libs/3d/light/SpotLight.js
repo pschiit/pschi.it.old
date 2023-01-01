@@ -1,42 +1,29 @@
 import MathArray from '../../math/MathArray';
 import LightMaterial from '../material/LightMaterial';
-import LightNode from './LightNode';
+import Node3d from '../Node3d';
+import Light from '../../renderer/graphics/Light';
 
-export default class SpotLight extends LightNode {
+export default class SpotLight extends Node3d {
     constructor(color, radius, position, target) {
-        super(color);
+        super();
+        this.light = new Light(color);
         this.translate(position);
         this.radius = radius;
         this.innerRadius = radius;
         this.target = target;
     }
     
-    setScene(paramters) {
-        super.setScene(paramters);
-        const lightParameters = {};
-        lightParameters[LightMaterial.parameters.spotLightColor] = this.color.rgb;
-        lightParameters[LightMaterial.parameters.spotLightPosition]=  this.vertexMatrix.positionVector;
-        lightParameters[LightMaterial.parameters.spotLightDirection]= this.vertexMatrix.zAxis;
-        lightParameters[LightMaterial.parameters.spotLightInnerRadius]= this.innerRadius;
-        lightParameters[LightMaterial.parameters.spotLightRadius]= this.radius;
-        lightParameters[LightMaterial.parameters.spotLightAmbientStrength]= this.ambientStrength;
-        lightParameters[LightMaterial.parameters.spotLightIntensity]= this.intensity;
-        addTo(paramters, lightParameters);
+    setScene(parameters) {
+        super.setScene(parameters);
+        this.light.setParameter(LightMaterial.parameters.spotLightColor,this.light.color.rgb);
+        this.light.setParameter(LightMaterial.parameters.spotLightPosition, this.vertexMatrix.positionVector);
+        this.light.setParameter(LightMaterial.parameters.spotLightDirection,this.vertexMatrix.zAxis);
+        this.light.setParameter(LightMaterial.parameters.spotLightInnerRadius,this.innerRadius);
+        this.light.setParameter(LightMaterial.parameters.spotLightRadius,this.radius);
+        this.light.setParameter(LightMaterial.parameters.spotLightAmbientStrength,this.light.ambientStrength);
+        this.light.setParameter(LightMaterial.parameters.spotLightIntensity,this.light.intensity);
+        this.light.setScene(parameters);
 
         return this;
-
-        function addTo(parameters, lightParameters) {
-            for (const name in lightParameters) {
-                let parameter = lightParameters[name];
-                if (Number.isFinite(parameter)) {
-                    parameter = [parameter];
-                }
-                if (!parameters[name]) {
-                    parameters[name] = new MathArray(parameter);
-                } else {
-                    parameters[name] = parameters[name].concat(parameter);
-                }
-            }
-        }
     }
 }

@@ -195,6 +195,9 @@ export default class GLSLShader extends Shader {
                 if (shaderNode === Shader.parameters.pointSize) {
                     return 'gl_PointSize';
                 }
+                if (shaderNode === Shader.parameters.fragmentCoordinate) {
+                    return 'gl_FragCoord';
+                }
                 return shaderNode;
             }
             return shaderNode instanceof Vector4 ? 'vec4(' + toString(shaderNode[0]) + ', ' + toString(shaderNode[1]) + ', ' + toString(shaderNode[2]) + ', ' + toString(shaderNode[3]) + ')'

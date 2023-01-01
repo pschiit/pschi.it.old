@@ -51,6 +51,14 @@ export default class RenderTarget extends GraphicsNode {
         this.viewport[3] = v;
     }
 
+    get fullWidth (){
+        return this.width + this.x;
+    }
+
+    get fullHeight (){
+        return this.height + this.y;
+    }
+
     get format() {
         return this._format;
     }
@@ -95,6 +103,21 @@ export default class RenderTarget extends GraphicsNode {
 
     get aspectRatio() {
         return this.width / this.height;
+    }
+
+    /* Return wheter the Vector2 is inside the RenderTarget 
+    * @param {Number|Number[]} x first coordinate or vector array
+    * @param {Number} y second coordinate
+   */
+    isIn(x, y) {
+        if (x.length > 1) {
+            y = x[1];
+            x = x[0];
+        }
+        return x > this.x
+            && x < this.x + this.width
+            && y > this.y
+            && x < this.y + this.height;
     }
 
     static format = {

@@ -9,26 +9,12 @@ export default class Material extends GraphicsNode {
 
         this.culling = null;
         this.depth = null;
-    }
-
-    get vertexShader(){
-        return this._vertexShader;
-    }
-
-    set vertexShader(v){
-        this._vertexShader = v;
-    }
-
-    get fragmentShader(){
-        return this._fragmentShader;
-    }
-
-    set fragmentShader(v){
-        this._fragmentShader = v;
+        this.vertexShader = null;
+        this.fragmentShader = null
     }
 
     get compiled(){
-        return this.vertexShader?.compiled && this.vertexShader?.compiled;
+        return this.vertexShader?.compiled && this.fragmentShader?.compiled;
     }
 
     static parameters = {
@@ -44,7 +30,7 @@ export default class Material extends GraphicsNode {
         normalMatrix: Parameter.matrix4('normalMatrix', Parameter.qualifier.const),
         colorId: Parameter.vector3('colorId', Parameter.qualifier.const),
         
-        projectionMatrix: Parameter.matrix4('projectionMatrix', Parameter.qualifier.const),
+        projectionMatrix: Parameter.matrix4('cameraMatrix', Parameter.qualifier.const),
         cameraPosition: Parameter.vector3('cameraPosition', Parameter.qualifier.const),
         cameraTarget: Parameter.vector3('cameraTarget', Parameter.qualifier.const),
         fogDistance: Parameter.vector2('fogDistance', Parameter.qualifier.const),

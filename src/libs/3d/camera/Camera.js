@@ -3,7 +3,7 @@ import Material from '../../renderer/graphics/Material';
 import Render from '../../renderer/graphics/Render';
 import Node3d from '../Node3d';
 
-export default class CameraNode extends Node3d {
+export default class Camera extends Node3d {
     constructor() {
         super();
         this.fog = new Vector2(0, 50);
@@ -11,7 +11,7 @@ export default class CameraNode extends Node3d {
     }
 
     get projectionMatrix() {
-        return this.invertMatrix;
+        return this.vertexMatrix.clone().invert();
     }
 
     getScene(renderTarget) {

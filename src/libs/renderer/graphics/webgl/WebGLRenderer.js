@@ -85,49 +85,6 @@ export default class WebGLRenderer extends GraphicsRenderer {
         });
     }
 
-    /** Render a GraphicsNode in the current WebGLRenderer
-     * @param {GraphicsNode} node Node to render
-     * @returns {WebGLRenderer} the current WebGLRenderer
-     */
-    render(node) {
-        let renderTarget = this.parent.renderTarget;
-        if (node instanceof Render && renderTarget.data != node) {
-            renderTarget.data = node;
-        } else if (node instanceof Texture) {
-            if (!this.framebuffer?.is(node)) {
-                this.framebuffer = WebGLFramebuffer.from(this, node);
-            }
-            if (this.texture2d?.is(node)) {
-                this.texture2d = null;
-            }
-            renderTarget = node.data;
-        } else if (node instanceof RenderTarget) {
-            renderTarget = node;
-        }
-
-        render(this, renderTarget);
-        const read = renderTarget.read;
-        if (read) {
-            this.gl.readPixels(read[0], read[1], read[2], read[3], WebGLRenderer.formatFrom(this, renderTarget.format), WebGLRenderer.typeFrom(this, renderTarget.type), renderTarget.output);
-        }
-        if (this.framebuffer) {
-            this.framebuffer = null;
-        }
-
-        return this;
-    }
-
-    /** Remove all dependencies from GraphicsNode in the current WebGLRenderer
-     * @param {GraphicsNode} node GraphicsNode to render
-     * @returns {WebGLRenderer} the current WebGLRenderer
-     */
-    remove(node) {
-        const toRemove = this.childrens.filter(c => c.is(node));
-        toRemove.forEach(this.removeChild.bind(this));
-
-        return this;
-    }
-
     /** Return the WebGLProgram currently used by the WebGLRenderer
      * @return {WebGLProgram} the WebGLProgram used
      */
@@ -309,6 +266,49 @@ export default class WebGLRenderer extends GraphicsRenderer {
                 this.program = null;
             }
         }
+    }
+
+    /** Render a GraphicsNode in the current WebGLRenderer
+     * @param {GraphicsNode} node Node to render
+     * @returns {WebGLRenderer} the current WebGLRenderer
+     */
+    render(node) {
+        let renderTarget = this.parent.renderTarget;
+        if (node instanceof Render && renderTarget.data != node) {
+            renderTarget.data = node;
+        } else if (node instanceof Texture) {
+            if (!this.framebuffer?.is(node)) {
+                this.framebuffer = WebGLFramebuffer.from(this, node);
+            }
+            if (this.texture2d?.is(node)) {
+                this.texture2d = null;
+            }
+            renderTarget = node.data;
+        } else if (node instanceof RenderTarget) {
+            renderTarget = node;
+        }
+
+        render(this, renderTarget);
+        const read = renderTarget.read;
+        if (read) {
+            this.gl.readPixels(read[0], read[1], read[2], read[3], WebGLRenderer.formatFrom(this, renderTarget.format), WebGLRenderer.typeFrom(this, renderTarget.type), renderTarget.output);
+        }
+        if (this.framebuffer) {
+            this.framebuffer = null;
+        }
+
+        return this;
+    }
+
+    /** Remove all dependencies from GraphicsNode in the current WebGLRenderer
+     * @param {GraphicsNode} node GraphicsNode to render
+     * @returns {WebGLRenderer} the current WebGLRenderer
+     */
+    remove(node) {
+        const toRemove = this.childrens.filter(c => c.is(node));
+        toRemove.forEach(n => this.removeChild(n));
+
+        return this;
     }
 
     static formatFrom(renderer, format) {

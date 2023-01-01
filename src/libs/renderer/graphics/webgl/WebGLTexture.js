@@ -29,7 +29,7 @@ export default class WebGLTexture extends WebGLNode {
                     if (texture.data instanceof RenderTarget) {
                         const format = WebGLRenderer.formatFrom(renderer, texture.data.format);
                         const type = WebGLRenderer.typeFrom(renderer, texture.data.type);
-                        renderer.gl.texImage2D(this.target, texture.level, format, texture.data.width, texture.data.height, 0, format, type, null);
+                        renderer.gl.texImage2D(this.target, texture.level, format, texture.width, texture.height, 0, format, type, null);
                         texture.updated = false;
                     } else {
                         const format = WebGLRenderer.formatFrom(renderer, texture.format);

@@ -1,9 +1,9 @@
 import Frustum from '../../math/Frustum';
 import Matrix4 from '../../math/Matrix4';
 import Plan from '../../math/Plan';
-import CameraNode from './CameraNode';
+import Camera from './Camera';
 
-export default class PerspectiveCamera extends CameraNode {
+export default class PerspectiveCamera extends Camera {
     constructor(fovY, aspectRatio, near, far) {
         super();
         this._fovY = fovY;
@@ -63,7 +63,7 @@ export default class PerspectiveCamera extends CameraNode {
 
     get projectionMatrix() {
         if (this.projectionUpdated) {
-            this._projectionMatrix = this.perspectiveMatrix.clone().multiply(this.worldMatrix.clone().invert());
+            this._projectionMatrix = this.perspectiveMatrix.clone().multiply(this.vertexMatrix.clone().invert());
             this.projectionUpdated = false;
         }
         return this._projectionMatrix;
