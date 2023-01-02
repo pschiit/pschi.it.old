@@ -1,6 +1,9 @@
+import Color from '../../core/Color';
 import Vector2 from '../../math/Vector2';
 import Material from '../../renderer/graphics/Material';
 import Render from '../../renderer/graphics/Render';
+import BoxBuffer from '../buffer/BoxBuffer';
+import ColorMaterial from '../material/ColorMaterial';
 import Node3d from '../Node3d';
 
 export default class Camera extends Node3d {
@@ -8,6 +11,26 @@ export default class Camera extends Node3d {
         super();
         this.fog = new Vector2(0, 50);
         this.projectionUpdated = true;
+    }
+
+    get showFrustum() {
+        return this.frustum != undefined;
+    }
+
+    set showFrustum(v) {
+        if (v && this.frustum.parent != this) {
+            this.appendChild(this.frustum);
+        } else {
+            this.removeChild(this.frustum);
+            this._frustum = null;
+        }
+    }
+
+    get frustum() {
+        if (!this._frustum) {
+            this._frustum = Camera.frustum();
+        }
+        return this._frustum;
     }
 
     get projectionMatrix() {
@@ -18,7 +41,7 @@ export default class Camera extends Node3d {
         const parameters = {};
         const materials = {};
         const renders = [];
-        if(renderTarget.material){
+        if (renderTarget.material) {
             materials[renderTarget.material.id] = renderTarget.material;
         }
 
@@ -33,7 +56,7 @@ export default class Camera extends Node3d {
             const material = materials[id];
             for (const name in parameters) {
                 const parameter = parameters[name];
-                if(material.parameters.hasOwnProperty(name)){
+                if (material.parameters.hasOwnProperty(name)) {
                     material.setParameter(name, parameter);
                 }
             }
@@ -46,7 +69,7 @@ export default class Camera extends Node3d {
          */
         function update(render) {
             if (render.renderable) {
-                if(!renderTarget.material && !materials[render.material.id]){
+                if (!renderTarget.material && !materials[render.material.id]) {
                     materials[render.material.id] = render.material;
                 }
                 renders.push(render);
@@ -55,4 +78,17 @@ export default class Camera extends Node3d {
             render.childrens.forEach(update);
         }
     }
+
+    static frustum() {
+        const frustum = new Node3d();
+        frustum.vertexBuffer = frustumBuffer;
+        frustum.material = frustumMaterial;
+
+        return frustum;
+    }
 }
+
+const frustumMaterial = new ColorMaterial();
+const frustumBuffer = new BoxBuffer(2, 2, 2);
+frustumBuffer.setColor(Color.white);
+frustumBuffer.setPrimitive(Render.primitive.lines);

@@ -20,19 +20,26 @@ export default class Light extends GraphicsNode {
     }
 
     setScene(parameters) {
-        // if(!parameters.lights){
-        //     parameters.lights = [];
-        // }
-        // parameters.lights.push(this);
         for (const name in this.parameters) {
             let parameter = this.parameters[name];
-            if (Number.isFinite(parameter)) {
-                parameter = [parameter];
-            }
-            if (!parameters[name]) {
-                parameters[name] = new MathArray(parameter);
+            if (parameter instanceof MathArray) {
+                if (!parameters[name]) {
+                    parameters[name] = new MathArray(parameter);
+                } else {
+                    parameters[name] = parameters[name].concat(parameter);
+                }
+            } else if (Number.isFinite(parameter)) {
+                if (!parameters[name]) {
+                    parameters[name] = new MathArray([parameter]);
+                } else {
+                    parameters[name] = parameters[name].concat(parameter);
+                }
             } else {
-                parameters[name] = parameters[name].concat(parameter);
+                if (!parameters[name]) {
+                    parameters[name] = [parameter];
+                } else {
+                    parameters[name].push(parameter);
+                }
             }
         }
 

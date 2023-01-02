@@ -106,7 +106,15 @@ export default class OrthographicCamera extends Camera {
         }
     }
 
-    get orthograpicMatrix() {
+    get frustum() {
+        if (!this._frustum) {
+            this._frustum = Camera.frustum();
+            this.orthographicMatrix;
+        }
+        return this._frustum;
+    }
+
+    get orthographicMatrix() {
         if (this.orthograpicUpdated) {
             const dx = (this.right - this.left) / (2 * this.zoom);
             const dy = (this.top - this.bottom) / (2 * this.zoom);
@@ -119,15 +127,19 @@ export default class OrthographicCamera extends Camera {
             let top = cy + dy;
             let bottom = cy - dy;
 
-            this._orthograpicMatrix = Matrix4.orthographicMatrix(left, right, bottom, top, this.near, this.far);
+            this._orthographicMatrix = Matrix4.orthographicMatrix(left, right, bottom, top, this.near, this.far);
             this.orthograpicUpdated = false;
+            if(this.showFrustum){
+                this.frustum.matrix = this._orthographicMatrix.clone().invert();
+                this.frustum.vertexMatrix;
+            }
         }
-        return this._orthograpicMatrix;
+        return this._orthographicMatrix;
     }
 
     get projectionMatrix() {
         if (this.projectionUpdated) {
-            this._projectionMatrix = this.orthograpicMatrix.clone().multiply(this.vertexMatrix.clone().invert());
+            this._projectionMatrix = this.orthographicMatrix.clone().multiply(this.vertexMatrix.clone().invert());
             this.projectionUpdated = false;
         }
         return this._projectionMatrix;

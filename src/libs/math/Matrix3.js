@@ -18,7 +18,8 @@ export default class  Matrix3 extends MathArray{
      * @return {Boolean} true if matrices are equals
     */
     equals(matrix) {
-        return this[0] === matrix[0] &&
+        return matrix?.length == this.length && 
+            this[0] === matrix[0] &&
             this[1] === matrix[1] &&
             this[2] === matrix[2] &&
             this[3] === matrix[3] &&

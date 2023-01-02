@@ -1,22 +1,22 @@
+import BoxBuffer from '../libs/3d/buffer/BoxBuffer';
+import PlaneBuffer from '../libs/3d/buffer/PlaneBuffer';
+import OrthographicCamera from '../libs/3d/camera/OrthographicCamera';
+import PerspectiveCamera from '../libs/3d/camera/PerspectiveCamera';
+import DirectionalLight from '../libs/3d/light/DirectionalLight';
+import PointLight from '../libs/3d/light/PointLight';
+import SpotLight from '../libs/3d/light/SpotLight';
+import LightMaterial from '../libs/3d/material/LightMaterial';
 import PickingMaterial from '../libs/3d/material/PickingMaterial';
+import Node3d from '../libs/3d/Node3d';
 import App from '../libs/core/App';
 import Buffer from '../libs/core/Buffer';
-import LightMaterial from '../libs/3d/material/LightMaterial';
-import BoxBuffer from '../libs/3d/buffer/BoxBuffer';
 import Color from '../libs/core/Color';
-import PlaneBuffer from '../libs/3d/buffer/PlaneBuffer';
+import Angle from '../libs/math/Angle';
 import Matrix4 from '../libs/math/Matrix4';
 import Vector3 from '../libs/math/Vector3';
-import Node3d from '../libs/3d/Node3d';
-import PerspectiveCamera from '../libs/3d/camera/PerspectiveCamera';
-import Texture from '../libs/renderer/graphics/Texture';
-import RenderTarget from '../libs/renderer/graphics/RenderTarget';
-import PointLight from '../libs/3d/light/PointLight';
-import DirectionalLight from '../libs/3d/light/DirectionalLight';
-import SpotLight from '../libs/3d/light/SpotLight';
-import Angle from '../libs/math/Angle';
 import Vector4 from '../libs/math/Vector4';
-import OrthographicCamera from '../libs/3d/camera/OrthographicCamera';
+import RenderTarget from '../libs/renderer/graphics/RenderTarget';
+import Texture from '../libs/renderer/graphics/Texture';
 
 export default class Lights extends App {
     constructor(graphicRenderer, eventInterface) {
@@ -130,8 +130,8 @@ export default class Lights extends App {
         floor.appendChild(this.rotatingBox);
 
         const sun = new DirectionalLight(
-            Color.white.scale(0.5),
-            new Vector3(10, 20, 10),
+            Color.white.scale(0.6),
+            new Vector3(0.1, 5, 0.1),
             new Vector3(0, 0, 0));
         floor.appendChild(sun);
         this.rotatingBox.addEventListener('click', (e) => {
@@ -197,6 +197,9 @@ export default class Lights extends App {
             console.log('toggle spot');
             spotLight.light.toggle();
         });
+        
+        const pickingMaterial = new PickingMaterial();
+        const pickingTexture = new Texture();
 
         const perspectiveCamera = new PerspectiveCamera(70, 1, 0.1, 100);
         perspectiveCamera.translate(7, 5, 7);
@@ -204,18 +207,31 @@ export default class Lights extends App {
         world.appendChild(perspectiveCamera);
         this.perspectiveRenderTarget = new RenderTarget(perspectiveCamera);
 
-        const orthographicCamera = new OrthographicCamera(-4, 4, -4, 4, 0.1, 100);
-        perspectiveCamera.appendChild(orthographicCamera);
+
+        const orthographicCamera = new OrthographicCamera(-4, 4, -4, 6, 0.1, 100);
+        orthographicCamera.translate(-7, 5, -7);
+        orthographicCamera.target = new Vector3(0, 0, 0);
+        world.appendChild(orthographicCamera);
         this.orthographicRenderTarget = new RenderTarget(orthographicCamera);
 
-        //this.toRender.unshift(sun.shadowMap);
+        this.renders = [
+            this.perspectiveRenderTarget,
+            this.orthographicRenderTarget
+        ];
+        
+        const frameBuffer = new RenderTarget(perspectiveCamera, 1024, 1024);
+        frameBuffer.colorTexture = new Texture();
+        lightMaterial.texture = frameBuffer.colorTexture;
+        frameBuffer.colorTexture.minification = Texture.filter.linear;
+        this.renders.unshift(frameBuffer);
+        
+        // spotLight.shadow = true;
+        // spotLight.showFrustum = true;
+        // this.renders.unshift(spotLight.shadowMap);
 
-        lightMaterial.texture = new Texture(new RenderTarget(orthographicCamera, 1024, 1024));
-
-        this.renders = [lightMaterial.texture, this.perspectiveRenderTarget, this.orthographicRenderTarget];
-
-        const pickingMaterial = new PickingMaterial();
-        const pickingTexture = new Texture();
+        // sun.shadow = true;
+        // //sun.shadowCamera = perspectiveCamera;
+        // this.renders.unshift(sun.shadowMap);
 
         this.addEventListener('pointerdown', e => {
             const mousePosition = this.getPointerPosition(e);
@@ -225,23 +241,17 @@ export default class Lights extends App {
 
             renderTarget.read = new Vector4(mousePosition[0], mousePosition[1], 1, 1);
             renderTarget.material = pickingMaterial;
+            renderTarget.colorTexture = pickingTexture;
 
-            pickingTexture.data = renderTarget;
-            if (this.width != pickingTexture.width
-                || this.height != pickingTexture.height) {
-                pickingTexture.width = this.width;
-                pickingTexture.height = this.height;
-            }
-
-
-            this.graphicsRenderer.render(pickingTexture);
+            this.graphicsRenderer.render(renderTarget);
             const color = new Color(renderTarget.output);
-            const node = Node3d.search(color);
+            const node = Node3d.search(color.normalize());
             if (node) {
                 node.dispatchEvent({ type: 'click' });
             }
             renderTarget.read = null;
             renderTarget.material = null;
+            renderTarget.colorTexture = null;
         });
 
         this.addEventListener('keydown', e => {

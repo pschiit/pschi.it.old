@@ -8,7 +8,7 @@ export default class MathArray extends Float32Array {
      * @return {Boolean} true if matrices are equals
     */
     equals(mathArray) {
-        return mathArray.every((e, i) => e == this[i]);
+        return mathArray?.every((e, i) => e == this[i]);
     }
 
     clone() {
@@ -16,11 +16,14 @@ export default class MathArray extends Float32Array {
     }
 
     concat(data) {
+        if(Number.isFinite(data)){
+            data = [data];
+        }
         const result = new MathArray(this.length + data.length);
 
         result.set(this);
         result.set(data, this.length);
-
+        
         return result;
     }
 

@@ -20,6 +20,7 @@ export default class LightMaterial extends Material {
         this.emissiveColor = Color.black;
 
         [Material.parameters.texture,
+        Material.parameters.textureProjectionMatrix,
         Material.parameters.fogDistance,
         Material.parameters.cameraPosition,
         Material.parameters.projectionMatrix,
@@ -35,6 +36,8 @@ export default class LightMaterial extends Material {
         LightMaterial.parameters.directionalShadowLightColor,
         LightMaterial.parameters.directionalShadowLightDirection,
         LightMaterial.parameters.directionalShadowLightAmbientStrength,
+        LightMaterial.parameters.directionalShadowLightShadowMap,
+        LightMaterial.parameters.directionalShadowLightShadowMatrix,
         LightMaterial.parameters.pointLightColor,
         LightMaterial.parameters.pointLightPosition,
         LightMaterial.parameters.pointLightAmbientStrength,
@@ -45,7 +48,16 @@ export default class LightMaterial extends Material {
         LightMaterial.parameters.spotLightRadius,
         LightMaterial.parameters.spotLightInnerRadius,
         LightMaterial.parameters.spotLightAmbientStrength,
-        LightMaterial.parameters.spotLightIntensity].forEach(p => this.setParameter(p));
+        LightMaterial.parameters.spotLightIntensity,
+        LightMaterial.parameters.spotShadowLightColor,
+        LightMaterial.parameters.spotShadowLightDirection,
+        LightMaterial.parameters.spotShadowLightPosition,
+        LightMaterial.parameters.spotShadowLightRadius,
+        LightMaterial.parameters.spotShadowLightInnerRadius,
+        LightMaterial.parameters.spotShadowLightAmbientStrength,
+        LightMaterial.parameters.spotShadowLightIntensity,
+        LightMaterial.parameters.spotShadowLightShadowMap,
+        LightMaterial.parameters.spotShadowLightShadowMatrix,].forEach(p => this.setParameter(p));
 
         this.fog = true;
 
@@ -53,6 +65,7 @@ export default class LightMaterial extends Material {
         this.directionalShadowLightsCount = 0;
         this.pointLightsCount = 0;
         this.spotLightsCount = 0;
+        this.spotShadowLightsCount = 0;
     }
 
     get pointLightsCount() {
@@ -74,6 +87,18 @@ export default class LightMaterial extends Material {
     set spotLightsCount(v) {
         if (this.spotLightsCount != v) {
             this._spotLightsCount = v;
+            this.vertexShader = null;
+            this.fragmentShader = null;
+        }
+    }
+
+    get spotShadowLightsCount() {
+        return this._spotShadowLightsCount;
+    }
+
+    set spotShadowLightsCount(v) {
+        if (this.spotShadowLightsCount != v) {
+            this._spotShadowLightsCount = v;
             this.vertexShader = null;
             this.fragmentShader = null;
         }
@@ -187,6 +212,9 @@ export default class LightMaterial extends Material {
         if (!this.vertexShader || !this.fragmentShader) {
             this.createShader();
         }
+        if (this.texture?.projectionMatrix) {
+            this.setParameter(Material.parameters.textureProjectionMatrix, this.texture.projectionMatrix);
+        }
         return super.compiled;
     }
 
@@ -195,8 +223,10 @@ export default class LightMaterial extends Material {
         this.directionalShadowLightsCount = this.parameters[LightMaterial.parameters.directionalShadowLightAmbientStrength.name]?.length || 0;
         this.pointLightsCount = this.parameters[LightMaterial.parameters.pointLightAmbientStrength.name]?.length || 0;
         this.spotLightsCount = this.parameters[LightMaterial.parameters.spotLightAmbientStrength.name]?.length || 0;
-        const hasLight = this.directionalLightsCount || this.directionalShadowLightsCount || this.pointLightsCount || this.spotLightsCount;
-        const hasShadow = this.directionalShadowLightsCount;
+        this.spotShadowLightsCount = this.parameters[LightMaterial.parameters.spotShadowLightAmbientStrength.name]?.length || 0;
+        const hasLight = this.directionalLightsCount || this.directionalShadowLightsCount
+            || this.pointLightsCount
+            || this.spotLightsCount || this.spotShadowLightsCount;
 
         const position = Parameter.vector4('position');
         const vColor = Parameter.vector4('v_' + Material.parameters.color, Parameter.qualifier.out);
@@ -225,17 +255,6 @@ export default class LightMaterial extends Material {
             Operation.equal(vColor, Material.parameters.color),
             Operation.equal(vUV, Material.parameters.uv),
         ]);
-        const vPositionFromDirectionalShadowLight = Parameter.vector4('v_positionFromDirectionalShadowLight', Parameter.qualifier.out);
-        if (this.directionalShadowLightsCount) {
-            LightMaterial.parameters.directionalShadowLightShadowMatrix.length = this.directionalShadowLightsCount;
-            vPositionFromDirectionalShadowLight.length = this.directionalShadowLightsCount
-            this.vertexShader.operations.push(
-                Operation.for('int i = 0', 'i < ' + this.directionalShadowLightsCount, 'i++',
-                    Operation.equal(
-                        Operation.selection(vPositionFromDirectionalShadowLight, '[i]'),
-                        Operation.multiply(Operation.selection(LightMaterial.parameters.directionalShadowLightShadowMatrix, '[i]'), position))
-                ));
-        }
 
         const normal = Parameter.vector3('normal');
         const fragmentColor = Parameter.vector4('fragmentColor');
@@ -247,8 +266,41 @@ export default class LightMaterial extends Material {
             Operation.equal(Operation.declare(nCameraPosition), Operation.normalize(Operation.substract(Material.parameters.cameraPosition, vPosition))),
             Operation.equal(Operation.declare(fragmentColor), vColor),
             Operation.equal(Operation.declare(color), new Vector3())];
+
         if (this.texture) {
-            operations.push(Operation.addTo(fragmentColor, Operation.read(Material.parameters.texture, vUV)))
+            if (this.texture.projectionMatrix) {
+                const vTextureProjection = Parameter.vector4('v_textureProjection', Parameter.qualifier.out);
+                this.vertexShader.operations.push(
+                    Operation.equal(
+                        vTextureProjection,
+                        Operation.multiply(Material.parameters.textureProjectionMatrix, position)));
+
+                const projection = Parameter.vector3('textureCoordinate');
+                const x = Operation.selection(projection, '.x');
+                const y = Operation.selection(projection, '.y')
+                operations.push(
+                    Operation.equal(
+                        Operation.declare(projection),
+                        Operation.add(
+                            Operation.multiply(
+                                Operation.divide(
+                                    Operation.selection(vTextureProjection, '.xyz'),
+                                    Operation.selection(vTextureProjection, '.w')
+                                ), 0.5)
+                            , 0.5)
+                    )
+                );
+                operations.push(
+                    Operation.if(
+                        Operation.and(
+                            Operation.greaterEquals(x, 0),
+                            Operation.greaterEquals(y, 0),
+                            Operation.lessEquals(x, 1),
+                            Operation.lessEquals(y, 1)),
+                        Operation.addTo(fragmentColor, Operation.read(Material.parameters.texture, Operation.selection(projection, '.xy')))))
+            } else {
+                operations.push(Operation.addTo(fragmentColor, Operation.read(Material.parameters.texture, vUV)))
+            }
         }
         if (hasLight) {
             const calculateLight = LightMaterial.shaderFunction.calculateLight();
@@ -307,6 +359,16 @@ export default class LightMaterial extends Material {
                     ));
             }
             if (this.directionalShadowLightsCount) {
+                const vPositionFromDirectionalShadowLight = Parameter.vector4('v_positionFromDirectionalShadowLight', Parameter.qualifier.out);
+                LightMaterial.parameters.directionalShadowLightShadowMatrix.length = this.directionalShadowLightsCount;
+                vPositionFromDirectionalShadowLight.length = this.directionalShadowLightsCount
+                this.vertexShader.operations.push(
+                    Operation.for('int i = 0', 'i < ' + this.directionalShadowLightsCount, 'i++',
+                        Operation.equal(
+                            Operation.selection(vPositionFromDirectionalShadowLight, '[i]'),
+                            Operation.multiply(Operation.selection(LightMaterial.parameters.directionalShadowLightShadowMatrix, '[i]'), position))
+                    ));
+
                 const visibility = Parameter.number('visibility');
                 LightMaterial.parameters.directionalShadowLightShadowMap.length = this.directionalShadowLightsCount;
                 LightMaterial.parameters.directionalShadowLightColor.length = this.directionalShadowLightsCount;
@@ -442,6 +504,88 @@ export default class LightMaterial extends Material {
                     ])
                 );
             }
+            if (this.spotShadowLightsCount) {
+                const vPositionFromSpotShadowLight = Parameter.vector4('v_positionFromSpotShadowLight', Parameter.qualifier.out);
+                LightMaterial.parameters.spotShadowLightShadowMatrix.length = this.spotShadowLightsCount;
+                vPositionFromSpotShadowLight.length = this.spotShadowLightsCount
+                this.vertexShader.operations.push(
+                    Operation.for('int i = 0', 'i < ' + this.spotShadowLightsCount, 'i++',
+                        Operation.equal(
+                            Operation.selection(vPositionFromSpotShadowLight, '[i]'),
+                            Operation.multiply(Operation.selection(LightMaterial.parameters.spotShadowLightShadowMatrix, '[i]'), position))
+                    ));
+
+                const visibility = Parameter.number('visibility');
+                LightMaterial.parameters.spotShadowLightShadowMap.length = this.spotShadowLightsCount;
+                LightMaterial.parameters.spotShadowLightColor.length = this.spotShadowLightsCount;
+                LightMaterial.parameters.spotShadowLightPosition.length = this.spotShadowLightsCount;
+                LightMaterial.parameters.spotShadowLightDirection.length = this.spotShadowLightsCount;
+                LightMaterial.parameters.spotShadowLightRadius.length = this.spotShadowLightsCount;
+                LightMaterial.parameters.spotShadowLightInnerRadius.length = this.spotShadowLightsCount;
+                LightMaterial.parameters.spotShadowLightAmbientStrength.length = this.spotShadowLightsCount;
+                LightMaterial.parameters.spotShadowLightIntensity.length = this.spotShadowLightsCount;
+                const r = Parameter.number('r');
+                const lightDistance = Parameter.vector3('lightDistance');
+                const theta = Parameter.number('theta');
+                const smoothing = Parameter.number('smoothing');
+                const attenuation = Parameter.number('attenuation');
+                const intensity = Operation.selection(LightMaterial.parameters.spotShadowLightIntensity, '[i]');
+                operations.push(
+                    Operation.for('int i = 0', 'i < ' + this.spotShadowLightsCount, 'i++', [
+                        Operation.if(Operation.greater(intensity, 0), [
+
+                            Operation.equal(
+                                Operation.declare(visibility),
+                                Operation.do(calculateVisibility, [
+                                    Operation.selection(vPositionFromSpotShadowLight, '[i]'),
+                                    Operation.selection(LightMaterial.parameters.spotShadowLightShadowMap, '[i]'),])
+                            ),
+                            Operation.equal(
+                                Operation.declare(lightDistance),
+                                Operation.substract(Operation.selection(LightMaterial.parameters.spotShadowLightPosition, '[i]'), vPosition)
+                            ),
+                            Operation.equal(
+                                Operation.declare(theta),
+                                Operation.substract(
+                                    Operation.dot(Operation.normalize(lightDistance), Operation.selection(LightMaterial.parameters.spotShadowLightDirection, '[i]')),
+                                    Operation.selection(LightMaterial.parameters.spotShadowLightRadius, '[i]')),
+                            ),
+                            Operation.equal(Operation.declare(r), Operation.substract(
+                                Operation.selection(LightMaterial.parameters.spotShadowLightInnerRadius, '[i]'),
+                                Operation.selection(LightMaterial.parameters.spotShadowLightRadius, '[i]')),
+                            ),
+                            Operation.equal(
+                                Operation.declare(smoothing),
+                                Operation.clamp(Operation.divide(theta, r), 0, 1)
+                            ),
+                            Operation.equal(
+                                Operation.declare(attenuation),
+                                Operation.multiply(
+                                    smoothing,
+                                    Operation.clamp(Operation.divide(intensity, Operation.len(lightDistance)), 0, 1)
+                                )
+                            ),
+                            Operation.if(Operation.notEquals(attenuation, 0),
+                                Operation.addTo(color, Operation.multiply(
+                                    attenuation,
+                                    Operation.do(calculateLight, [
+                                        Operation.selection(LightMaterial.parameters.spotShadowLightDirection, '[i]'),
+                                        Operation.selection(LightMaterial.parameters.spotShadowLightColor, '[i]'),
+                                        Operation.selection(LightMaterial.parameters.spotShadowLightAmbientStrength, '[i]'),
+                                        visibility,
+                                        materialAmbient,
+                                        materialDiffuse,
+                                        materialSpecular,
+                                        materialEmissive,
+                                        nCameraPosition,
+                                        normal
+                                    ]))
+                                )
+                            )
+                        ])
+                    ])
+                );
+            }
 
             operations.push(Operation.multiplyTo(color, fragmentRGB));
         } else {
@@ -502,6 +646,16 @@ export default class LightMaterial extends Material {
         spotLightRadius: Parameter.number('spotLightRadius', Parameter.qualifier.const),
         spotLightInnerRadius: Parameter.number('spotLightInnerRadius', Parameter.qualifier.const),
         spotLightIntensity: Parameter.number('spotLightIntensity', Parameter.qualifier.const),
+
+        spotShadowLightShadowMatrix: Parameter.matrix4('spotShadowLightShadowMatrix', Parameter.qualifier.const),
+        spotShadowLightShadowMap: Parameter.texture('spotShadowLightShadowMap', Parameter.qualifier.const),
+        spotShadowLightColor: Parameter.vector3('spotShadowLightColor', Parameter.qualifier.const),
+        spotShadowLightPosition: Parameter.vector3('spotShadowLightPosition', Parameter.qualifier.const),
+        spotShadowLightDirection: Parameter.vector3('spotShadowLightDirection', Parameter.qualifier.const),
+        spotShadowLightAmbientStrength: Parameter.number('spotShadowLightAmbientStrength', Parameter.qualifier.const),
+        spotShadowLightRadius: Parameter.number('spotShadowLightRadius', Parameter.qualifier.const),
+        spotShadowLightInnerRadius: Parameter.number('spotShadowLightInnerRadius', Parameter.qualifier.const),
+        spotShadowLightIntensity: Parameter.number('spotShadowLightIntensity', Parameter.qualifier.const),
     };
 
     static shaderFunction = {
@@ -527,13 +681,13 @@ export default class LightMaterial extends Material {
                 ),
                 Operation.equal(
                     Operation.declare(depth),
-                    Operation.selection(Operation.read(shadowMap, Operation.selection(projectedPosition, '.xy')), '.r')
+                    Operation.selection(Operation.read(shadowMap, Operation.selection(projectedPosition, '.xy')), '.z')
                 ),
                 Operation.if(
                     Operation.greater(Operation.selection(projectedPosition, '.z'), depth),
-                    Operation.return(1)
+                    Operation.return(0)
                 ),
-                Operation.return(0),
+                Operation.return(1),
             ]);
         },
         calculateLight: () => {
@@ -580,7 +734,7 @@ export default class LightMaterial extends Material {
                                 0
                             )
                         ),
-                        Operation.if(Operation.equals(nDotL, 0), Operation.return(ambient)),
+                        Operation.if(Operation.isEqual(nDotL, 0), Operation.return(ambient)),
                         Operation.equal(
                             Operation.declare(diffuse),
                             Operation.multiply(materialDiffuse, lightColor, visibility, nDotL)

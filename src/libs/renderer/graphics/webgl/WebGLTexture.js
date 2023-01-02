@@ -13,35 +13,43 @@ export default class WebGLTexture extends WebGLNode {
         this.target = renderer.gl.TEXTURE_2D;
         this.location = renderer.gl.createTexture();
 
-        renderer.texture2d = this;
-        if(texture.mipmap){
-            renderer.gl.generateMipmap(this.target);
-        }
-        //renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_WRAP_S, renderer.gl.CLAMP_TO_EDGE);
-        //renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_WRAP_T, renderer.gl.CLAMP_TO_EDGE);
-        //renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_MAG_FILTER, renderer.gl.LINEAR);
-        renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_MIN_FILTER, renderer.gl.LINEAR);
+        this.mipmap = false;
+        this.magnification = Texture.filter.linear;
+        this.minification = Texture.filter.nearestMipmaplinear;
+        this.wrapS = Texture.wrapping.repeat;
+        this.wrapT = Texture.wrapping.repeat;
 
         if (this.target === renderer.gl.TEXTURE_2D) {
             this.update = (texture) => {
-                if (texture.updated) {
-                    renderer.gl.bindTexture(this.target, this.location);
-                    if (texture.data instanceof RenderTarget) {
-                        const format = WebGLRenderer.formatFrom(renderer, texture.data.format);
-                        const type = WebGLRenderer.typeFrom(renderer, texture.data.type);
-                        renderer.gl.texImage2D(this.target, texture.level, format, texture.width, texture.height, 0, format, type, null);
-                        texture.updated = false;
-                    } else {
-                        const format = WebGLRenderer.formatFrom(renderer, texture.format);
-                        const type = WebGLRenderer.typeFrom(renderer, texture.type);
-                        if (texture.width && texture.height) {
-                            renderer.gl.texImage2D(this.target, texture.level, format, texture.width, texture.height, 0, format, type, texture.data);
+                renderer.texture2d = this;
+                if (this.mipmap != texture.mipmap) {
+                    renderer.gl.generateMipmap(this.target);
+                    this.mipmap = texture.mipmap;
+                }
+                if(this.magnification != texture.magnification){
+                    renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_MAG_FILTER, renderer.gl[texture.magnification]);
+                    this.magnification = texture.magnification;
+                }
+                if(this.minification != texture.minification){
+                    renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_MIN_FILTER, renderer.gl[texture.minification]);
+                    this.minification = texture.minification;
+                }
+                if(this.wrapS != texture.wrapS){
+                    renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_WRAP_S, renderer.gl[texture.wrapS]);
+                    this.wrapS = texture.wrapS;
+                }
+                if(this.wrapT != texture.wrapT){
+                    renderer.gl.texParameteri(renderer.gl.TEXTURE_2D, renderer.gl.TEXTURE_WRAP_T, renderer.gl[texture.wrapT]);
+                    this.wrapT = texture.wrapT;
+                }
+                const format = WebGLRenderer.formatFrom(renderer, texture.format);
+                const type = WebGLRenderer.typeFrom(renderer, texture.type);
+                if (texture.width && texture.height) {
+                    renderer.gl.texImage2D(this.target, texture.level, format, texture.width, texture.height, texture.border, format, type, texture.data);
 
-                        } else {
-                            renderer.gl.texImage2D(this.target, texture.level, format, format, type, texture.data);
-                        }
-                    }
-                    texture.updated = false;
+                } else {
+                    console.log(texture);
+                    renderer.gl.texImage2D(this.target, texture.level, format, format, type, texture.data);
                 }
             };
         } else if (this.target === renderer.gl.TEXTURE_CUBE_MAP) {
@@ -55,19 +63,24 @@ export default class WebGLTexture extends WebGLNode {
                 texture.updated = false;
             }
         }
-    }
 
-    get unit() {
-        if (!this._unit) {
-            this._unit = unitAvailables.pop() ?? unit++;
+        this.activate = () => {
+            if (!this.active) {
+                this.active = true;
+                this.unit = unitAvailables.pop() ?? unit++;
+                renderer.gl.activeTexture(renderer.gl.TEXTURE0 + this.unit);
+                renderer.texture2d = this;
+            }
         }
-        return this._unit;
     }
 
-    set unit(v) {
-        if (!v && this._unit) {
-            unitAvailables.push(this._unit);
-            this._unit = null;
+    deactivate() {
+        if (this.active) {
+            this.active = false;
+            if (this.unit) {
+                unitAvailables.push(this.unit);
+                this.unit = null;
+            }
         }
     }
 

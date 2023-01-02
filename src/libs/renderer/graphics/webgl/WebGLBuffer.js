@@ -19,20 +19,14 @@ export default class WebGLBuffer extends WebGLNode {
 
         if (webGLTarget === renderer.gl.ELEMENT_ARRAY_BUFFER) {
             this.update = (buffer) => {
-                if (buffer.updated) {
-                    renderer.elementArrayBuffer = this;
-                    renderer.gl.bufferData(this.target, buffer.data, this.usage);
-                    buffer.updated = false;
-                }
+                renderer.elementArrayBuffer = this;
+                renderer.gl.bufferData(this.target, buffer.data, this.usage);
             };
         } else {
             this.update = (buffer) => {
-                if (buffer.updated) {
-                    renderer.arrayBuffer = this;
-                    const data = buffer.data;
-                    renderer.gl.bufferData(this.target, data, this.usage);
-                    buffer.updated = false;
-                }
+                renderer.arrayBuffer = this;
+                const data = buffer.data;
+                renderer.gl.bufferData(this.target, data, this.usage);
             };
         }
     }

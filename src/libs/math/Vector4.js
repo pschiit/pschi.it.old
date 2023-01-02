@@ -38,7 +38,8 @@ export default class Vector4 extends MathArray {
      * @return {Boolean} true if vectors are equals
     */
     equals(vector) {
-        return this[0] === vector[0] &&
+        return vector?.length == this.length && 
+            this[0] === vector[0] &&
             this[1] === vector[1] &&
             this[2] === vector[2] &&
             this[3] === vector[3];

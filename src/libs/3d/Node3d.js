@@ -13,8 +13,6 @@ export default class Node3d extends Render {
         this.setParameter(Material.parameters.colorId, colorId);
         this.matrix = Matrix4.identityMatrix();
         this._target = new Vector3();
-
-        this.shadow = false;
     }
 
     get vertexMatrix() {
@@ -22,7 +20,6 @@ export default class Node3d extends Render {
             const parentMatrix = this.parent?.vertexMatrix;
             const vertexMatrix = parentMatrix instanceof Matrix4 ? parentMatrix.clone().multiply(this.matrix)
                 : this.matrix.clone();
-    
             this.setParameter(Material.parameters.vertexMatrix, vertexMatrix);
         }
         return this.parameters[Material.parameters.vertexMatrix];
@@ -87,6 +84,21 @@ export default class Node3d extends Render {
     set target(v) {
         this._target = v;
         this.matrix.target(this._target);
+        this.clearVertexMatrix();
+    }
+
+    /** Return the Matrix4 of the current Node3d
+     * @return {Matrix4} node Matrix4
+    */
+    get matrix() {
+        return this._matrix;
+    }
+
+    /** Set the Matrix4 of the current Node3d
+     * @param {Matrix4} v Matrix4
+    */
+    set matrix(v) {
+        this._matrix = v;
         this.clearVertexMatrix();
     }
 

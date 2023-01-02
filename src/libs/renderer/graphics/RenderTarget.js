@@ -12,11 +12,15 @@ export default class RenderTarget extends GraphicsNode {
         this.height = height;
         this.data = data;
         this.format = RenderTarget.format.rgba;
-        this.type = new Float32Array(0).constructor;
+        this.type = new Uint8Array(0).constructor;
         this.backgroundColor = Color.black;
         this.scissor = null;
         this.read = null;
         this.material = null;
+
+        this.colorTexture = null;
+        this.depthTexture = null;
+        this.stencilTexture = null;
     }
 
     get x() {
@@ -97,6 +101,57 @@ export default class RenderTarget extends GraphicsNode {
         return this.width / this.height;
     }
 
+    get colorTexture() {
+        return this.childrens[this._colorTexture];
+    }
+
+    set colorTexture(v) {
+        if (this.colorTexture != v) {
+            if(v && v.parent != this){
+                this._colorTexture = this.appendChild(v);
+            } else if(!v){
+                if(this.colorTexture){
+                    this.removeChild(this.colorTexture);
+                    this._colorTexture = null;
+                }
+            }
+        }
+    }
+
+    get depthTexture() {
+        return this.childrens[this._depthTexture];
+    }
+
+    set depthTexture(v) {
+        if (this.depthTexture != v) {
+            if(v && v.parent != this){
+                this._depthTexture = this.appendChild(v);
+            } else if(!v){
+                if(this.depthTexture){
+                    this.removeChild(this.depthTexture);
+                    this._depthTexture = null;
+                }
+            }
+        }
+    }
+
+    get stencilTexture() {
+        return this.childrens[this._stencilTexture];
+    }
+
+    set stencilTexture(v) {
+        if (this.stencilTexture != v) {
+            if(v && v.parent != this){
+                this._stencilTexture = this.appendChild(v);
+            } else if(!v){
+                if(this.stencilTexture){
+                    this.removeChild(this.stencilTexture);
+                    this._stencilTexture = null;
+                }
+            }
+        }
+    }
+
     /* Return wheter the Vector2 is inside the RenderTarget 
     * @param {Number|Number[]} x first coordinate or vector array
     * @param {Number} y second coordinate
@@ -115,6 +170,7 @@ export default class RenderTarget extends GraphicsNode {
     static format = {
         rgba: 'RGBA',
         rgb: 'RGB',
-        alpha: 'ALPHA'
+        alpha: 'ALPHA',
+        depth: 'DEPTH_COMPONENT'
     };
 }

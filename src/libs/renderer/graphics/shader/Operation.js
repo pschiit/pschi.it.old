@@ -25,13 +25,16 @@ export default class Operation extends ShaderNode {
         substract: ' - ',
         multiply: ' * ',
         divide: ' / ',
+        
+        and: ' && ',
+        or: ' || ',
 
-        equals: ' == ',
+        isEqual: ' == ',
         notEquals: ' != ',
         less: ' < ',
         lessEquals: ' <= ',
         greater: ' > ',
-        greaterEquals: ' >=',
+        greaterEquals: ' >= ',
 
         if: 'if',
         elseIf: 'else if',
@@ -135,8 +138,31 @@ export default class Operation extends ShaderNode {
         return new Operation(Operation.symbol.divide, parameters);
     }
 
-    static equals(a, b) {
-        return new Operation(Operation.symbol.equals, [a, b]);
+    static and(parameters) {
+        if (arguments.length > 1) {
+            const result = new Array(arguments.length);
+            for (const key in arguments) {
+                const operand = arguments[key];
+                result[key] = operand;
+            }
+            parameters = result;
+        }
+        return new Operation(Operation.symbol.and, parameters);
+    }
+    static or(parameters) {
+        if (arguments.length > 1) {
+            const result = new Array(arguments.length);
+            for (const key in arguments) {
+                const operand = arguments[key];
+                result[key] = operand;
+            }
+            parameters = result;
+        }
+        return new Operation(Operation.symbol.or, parameters);
+    }
+
+    static isEqual(a, b) {
+        return new Operation(Operation.symbol.isEqual, [a, b]);
     }
     static notEquals(a, b) {
         return new Operation(Operation.symbol.notEquals, [a, b]);

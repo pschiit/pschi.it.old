@@ -1,7 +1,6 @@
-import MathArray from '../../math/MathArray';
+import Light from '../../renderer/graphics/Light';
 import LightMaterial from '../material/LightMaterial';
 import Node3d from '../Node3d';
-import Light from '../../renderer/graphics/Light';
 
 export default class PointLight extends Node3d {
     constructor(color, position) {

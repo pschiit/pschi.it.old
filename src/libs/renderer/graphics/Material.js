@@ -18,7 +18,6 @@ export default class Material extends GraphicsNode {
     }
 
     static parameters = {
-        texture: Parameter.texture('texture',Parameter.qualifier.const),
         backgroundColor: Parameter.vector3('backgroundColor', Parameter.qualifier.const),
         
         position: Parameter.vector4('vertexPosition', Parameter.qualifier.let),
@@ -30,7 +29,10 @@ export default class Material extends GraphicsNode {
         normalMatrix: Parameter.matrix4('normalMatrix', Parameter.qualifier.const),
         colorId: Parameter.vector3('colorId', Parameter.qualifier.const),
         
-        projectionMatrix: Parameter.matrix4('cameraMatrix', Parameter.qualifier.const),
+        texture: Parameter.texture('texture',Parameter.qualifier.const),
+        textureProjectionMatrix: Parameter.matrix4('textureProjectionMatrix',Parameter.qualifier.const),
+        
+        projectionMatrix: Parameter.matrix4('projectionMatrix', Parameter.qualifier.const),
         cameraPosition: Parameter.vector3('cameraPosition', Parameter.qualifier.const),
         cameraTarget: Parameter.vector3('cameraTarget', Parameter.qualifier.const),
         fogDistance: Parameter.vector2('fogDistance', Parameter.qualifier.const),

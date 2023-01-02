@@ -53,10 +53,22 @@ export default class PerspectiveCamera extends Camera {
         this.projectionUpdated = true;
     }
 
+    get frustum() {
+        if (!this._frustum) {
+            this._frustum = Camera.frustum();
+            this.perspectiveMatrix;
+        }
+        return this._frustum;
+    }
+
     get perspectiveMatrix() {
         if (this.perspectiveUpdated) {
             this._perspectiveMatrix = Matrix4.perspectiveMatrix(this.fovY, this.aspectRatio, this.near, this.far);
             this.perspectiveUpdated = false;
+            if(this.showFrustum){
+                this.frustum.matrix = this._perspectiveMatrix.clone().invert();
+                this.frustum.vertexMatrix;
+            }
         }
         return this._perspectiveMatrix;
     }
@@ -67,17 +79,6 @@ export default class PerspectiveCamera extends Camera {
             this.projectionUpdated = false;
         }
         return this._projectionMatrix;
-    }
-
-    get frustum() {
-        const left = new Plan();
-        const rigth = new Plan();
-        const top = new Plan();
-        const bottom = new Plan();
-        const near = new Plan();
-        const far = new Plan();
-
-        return new Frustum(left, rigth, top, bottom, near, far);
     }
 
     getScene(renderTarget){

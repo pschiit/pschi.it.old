@@ -167,6 +167,11 @@ export default class WebGLRenderer extends GraphicsRenderer {
         if (this._framebuffer != v) {
             this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, v?.location);
             this._framebuffer = v;
+            if (v && (this.texture2d == v.colorTexture
+                || this.texture2d == v.depthTexture
+                || this.texture2d == v.stencilTexture)) {
+                this.texture2d = null;
+            }
         }
     }
 
@@ -276,15 +281,10 @@ export default class WebGLRenderer extends GraphicsRenderer {
         let renderTarget = this.parent.renderTarget;
         if (node instanceof Render && renderTarget.data != node) {
             renderTarget.data = node;
-        } else if (node instanceof Texture) {
-            if (!this.framebuffer?.is(node)) {
+        } else if (node instanceof RenderTarget) {
+            if (node.colorTexture) {
                 this.framebuffer = WebGLFramebuffer.from(this, node);
             }
-            if (this.texture2d?.is(node)) {
-                this.texture2d = null;
-            }
-            renderTarget = node.data;
-        } else if (node instanceof RenderTarget) {
             renderTarget = node;
         }
 
