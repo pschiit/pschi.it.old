@@ -4,6 +4,7 @@ import OrthographicCamera from '../camera/OrthographicCamera';
 import LightMaterial from '../material/LightMaterial';
 import Node3d from '../Node3d';
 import Light from '../../renderer/graphics/Light';
+import Color from '../../core/Color';
 
 export default class DirectionalLight extends Node3d {
     constructor(color, position, target) {
@@ -11,77 +12,65 @@ export default class DirectionalLight extends Node3d {
         this.light = new Light(color);
         this.translate(position);
         this.target = target;
-        this.shadow = false;
-    }
-
-    get shadowCamera() {
-        return this._shadowCamera;
-    }
-
-    set shadowCamera(v) {
-        if (v != this.shadowCamera) {
-            if (this.shadowCamera) {
-                this.removeChild(this.shadowCamera)
-            }
-            this._shadowCamera = v;
-            if (v.parent != this) {
-                this.appendChild(v);
-            }
-        }
     }
 
     get showFrustum() {
-        return this.shadowCamera && this.shadowCamera.showFrustum;
+        return this.shadow?.data.showFrustum;
     }
 
     set showFrustum(v) {
-        if(this.shadowCamera){
-            this.shadowCamera.showFrustum = v;
-            this.clearVertexMatrix();
+        if (this.shadow) {
+            this.shadow.data.showFrustum = v;
         }
     }
 
     get shadow() {
-        return this.shadowMap && this.shadowCamera;
+        return this._shadow;
     }
 
     set shadow(v) {
-        if (v) {
-            if (!this.shadowCamera) {
-                this.shadowCamera = new OrthographicCamera(-5, 5, -5, 5, 0, 10);
+        if (v != this.shadow) {
+            if (v) {
+                if (!v.data) {
+                    v.data = new OrthographicCamera(-10, 10, -10, 10, 0, 100);
+                    v.data.filters.push('castShadow');
+                }
+                if (v.data.parent != this) {
+                    this.appendChild(v.data);
+                }
+                if (!v.material) {
+                    v.material = LightMaterial.shadowMaterial;
+                }
+                if (!v.colorTexture) {
+                    v.colorTexture = new Texture();
+                    v.colorTexture.minification = Texture.filter.linear;
+                }
+                v.backgroundColor = Color.transparent;
+                this._shadow = v;
+                this.light.parameters = {};
+            } else if (this.shadow) {
+                if (this.shadow.data.parent == this) {
+                    this.removeChild(this.shadow.data);
+                }
+                this._shadow = null;
+                this.light.parameters = {};
             }
-            if (!this.shadowMap) {
-                const renderTarget = new RenderTarget(this.shadowCamera, 1024, 1024);
-                renderTarget.material = LightMaterial.shadowMaterial;
-                this._shadowMap = new Texture(renderTarget);
-                this._shadowMap.magnification = Texture.filter.nearest;
-                this._shadowMap.minification = Texture.filter.nearest;
-                this._shadowMap.wrapS = Texture.wrapping.clamp;
-                this._shadowMap.wrapT = Texture.wrapping.clamp;
-            }
-            this.light.parameters = {};
-        } else {
-            if (this.shadowCamera) {
-                this.shadowCamera = null;
-            }
-            if (!this.shadowMap) {
-                this._shadowMap = null;
-            }
-            this.light.parameters = {};
         }
     }
 
+    get shadowCamera() {
+        return this.shadow?.data;
+    }
+
     get shadowMap() {
-        if (!this._shadowMap) {
-        }
-        return this._shadowMap;
+        return this.shadow?.colorTexture;
     }
 
     setScene(parameters) {
         super.setScene(parameters);
         if (this.shadow) {
-            this.light.setParameter(LightMaterial.parameters.directionalShadowLightShadowMatrix, this.shadowCamera.projectionMatrix);
-            this.light.setParameter(LightMaterial.parameters.directionalShadowLightShadowMap, this.shadowMap);
+            this.light.setParameter(LightMaterial.parameters.directionalShadowLightShadowMatrix, this.shadow.data.projectionMatrix);
+            this.light.setParameter(LightMaterial.parameters.directionalShadowLightShadowMap, this.shadow.colorTexture);
             this.light.setParameter(LightMaterial.parameters.directionalShadowLightColor, this.light.color.rgb.scale(this.light.intensity));
             this.light.setParameter(LightMaterial.parameters.directionalShadowLightDirection, this.vertexMatrix.zAxis);
             this.light.setParameter(LightMaterial.parameters.directionalShadowLightAmbientStrength, this.light.ambientStrength);

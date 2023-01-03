@@ -11,6 +11,7 @@ import Node3d from '../libs/3d/Node3d';
 import App from '../libs/core/App';
 import Buffer from '../libs/core/Buffer';
 import Color from '../libs/core/Color';
+import Img from '../libs/html/Img';
 import Angle from '../libs/math/Angle';
 import Matrix4 from '../libs/math/Matrix4';
 import Vector3 from '../libs/math/Vector3';
@@ -125,13 +126,13 @@ export default class Lights extends App {
 
         this.rotatingBox = new Node3d();
         this.rotatingBox.material = lightMaterial;
-        this.rotatingBox.translate(0, 1, 0);
+        this.rotatingBox.translate(0, 2, 0);
         this.rotatingBox.vertexBuffer = cube;
         floor.appendChild(this.rotatingBox);
 
         const sun = new DirectionalLight(
-            Color.white.scale(0.6),
-            new Vector3(0.1, 5, 0.1),
+            Color.white.scale(0.5),
+            new Vector3(10, 20, 10),
             new Vector3(0, 0, 0));
         floor.appendChild(sun);
         this.rotatingBox.addEventListener('click', (e) => {
@@ -186,10 +187,10 @@ export default class Lights extends App {
 
         const spotLight = new SpotLight(
             Color.magenta,
-            Math.cos(Angle.toRadian(50)),
-            new Vector3(-3, 2, -3),
+            Math.cos(Angle.toRadian(40)),
+            new Vector3(-3, 3, -3),
             new Vector3(0, 0, 0));
-        spotLight.innerRadius = Math.cos(Angle.toRadian(40));
+        spotLight.innerRadius = Math.cos(Angle.toRadian(25));
         spotLight.material = lightMaterial;
         spotLight.vertexBuffer = reverseCube;
         floor.appendChild(spotLight);
@@ -197,7 +198,7 @@ export default class Lights extends App {
             console.log('toggle spot');
             spotLight.light.toggle();
         });
-        
+
         const pickingMaterial = new PickingMaterial();
         const pickingTexture = new Texture();
 
@@ -205,39 +206,39 @@ export default class Lights extends App {
         perspectiveCamera.translate(7, 5, 7);
         perspectiveCamera.target = new Vector3(0, 0, 0);
         world.appendChild(perspectiveCamera);
-        this.perspectiveRenderTarget = new RenderTarget(perspectiveCamera);
+        this.leftTarget = new RenderTarget(perspectiveCamera);
 
 
         const orthographicCamera = new OrthographicCamera(-4, 4, -4, 6, 0.1, 100);
         orthographicCamera.translate(-7, 5, -7);
         orthographicCamera.target = new Vector3(0, 0, 0);
         world.appendChild(orthographicCamera);
-        this.orthographicRenderTarget = new RenderTarget(orthographicCamera);
+        this.rightTarget = new RenderTarget(orthographicCamera);
+
+
+        this.sunRenderTarget = new RenderTarget(null, 1024, 1024);
+        sun.shadow = this.sunRenderTarget;
+        sun.showFrustum = true;
+
+        this.spotLightRenderTarget = new RenderTarget(null, 1024, 1024);
+        spotLight.shadow = this.spotLightRenderTarget;
+        spotLight.showFrustum = true;
+
 
         this.renders = [
-            this.perspectiveRenderTarget,
-            this.orthographicRenderTarget
+            this.sunRenderTarget,
+            this.spotLightRenderTarget,
+            this.leftTarget,
+            this.rightTarget
         ];
         
-        const frameBuffer = new RenderTarget(perspectiveCamera, 1024, 1024);
-        frameBuffer.colorTexture = new Texture();
-        lightMaterial.texture = frameBuffer.colorTexture;
-        frameBuffer.colorTexture.minification = Texture.filter.linear;
-        this.renders.unshift(frameBuffer);
-        
-        // spotLight.shadow = true;
-        // spotLight.showFrustum = true;
-        // this.renders.unshift(spotLight.shadowMap);
-
-        // sun.shadow = true;
-        // //sun.shadowCamera = perspectiveCamera;
-        // this.renders.unshift(sun.shadowMap);
+        this.rotatingBox.castShadow = true;
 
         this.addEventListener('pointerdown', e => {
             const mousePosition = this.getPointerPosition(e);
-            const renderTarget = this.perspectiveRenderTarget.isIn(mousePosition) ?
-                this.perspectiveRenderTarget :
-                this.orthographicRenderTarget;
+            const renderTarget = this.leftTarget.isIn(mousePosition) ?
+                this.leftTarget :
+                this.rightTarget;
 
             renderTarget.read = new Vector4(mousePosition[0], mousePosition[1], 1, 1);
             renderTarget.material = pickingMaterial;
@@ -320,16 +321,17 @@ export default class Lights extends App {
         const renderTarget = this.renderTarget;
         if (this.width != renderTarget.width) {
             this.width = renderTarget.width;
-            this.perspectiveRenderTarget.viewport = new Vector4(0, 0, this.width / 2, this.height);
-            this.perspectiveRenderTarget.scissor = this.perspectiveRenderTarget.viewport;
-            this.orthographicRenderTarget.viewport = new Vector4(this.width / 2, 0, this.width / 2, this.height);
-            this.orthographicRenderTarget.scissor = this.orthographicRenderTarget.viewport;
+            this.leftTarget.viewport = new Vector4(0, 0, this.width / 2, this.height);
+            this.leftTarget.scissor = this.leftTarget.viewport;
+            this.rightTarget.viewport = new Vector4(this.width / 2, 0, this.width / 2, this.height);
+            this.rightTarget.scissor = this.rightTarget.viewport;
         }
         if (this.height != renderTarget.height) {
             this.height = renderTarget.height;
-            this.perspectiveRenderTarget.height = this.height;
-            this.orthographicRenderTarget.height = this.height;
+            this.leftTarget.height = this.height;
+            this.rightTarget.height = this.height;
         }
+
         this.rotatingBox.rotate(0.01, 1, 1, 1);
         this.renders.forEach(r => this.graphicsRenderer.render(r));
     }

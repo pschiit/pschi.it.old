@@ -283,48 +283,48 @@ function createUniform(renderer, program, uniform) {
             break;
         case renderer.gl.SAMPLER_2D:
         case renderer.gl.SAMPLER_CUBE:
-            if (uniform.size > 1) {
+            if (uniform.size > 1 || uniform.name.endsWith('[0]')) {
                 program.parameters[name] = (v) => {
                     if (v) {
-                        const textures = v.map(t => WebGLTexture.from(renderer, t));
-                        let update = textures.some(t => !t.active);
+                        if (renderer.framebuffer) {
+                            v = v.filter(t => !renderer.framebuffer.linkedTo(t));
+                        }
+                        const units = v.map(t =>{
+                            const webGLTexture = WebGLTexture.from(renderer, t);
+                            webGLTexture.activate();
+                            return webGLTexture.unit;
+                        });
+                        if(program.cache[name] != units){
+                            renderer.gl.uniform1iv(location, units);
+                        }
                         if (program.cache[name]) {
-                            program.cache[name].forEach(t => {
-                                if (textures.indexOf(t) == -1) {
-                                    program.cache[name].deactivate();
-                                    update = true;
+                            program.cache[name].forEach(unit => {
+                                if (units.indexOf(unit) == -1) {
+                                    WebGLTexture.deactivate(unit);
                                 }
                             });
                         }
-                        if (update) {
-                            textures.forEach(t => {
-                                t.activate();
-                                renderer.texture2d = t;
-                                console.log('activate', name, t.uniform);
-                            });
-                            renderer.gl.uniform1iv(location, textures.map(t => t.units));
-                            program.cache[name] = textures;
-                        }
+                        program.cache[name] = units;
                     } else if (program.cache[name] != null) {
-                        program.cache[name].forEach(t => t.deactivate());
+                        program.cache[name].forEach(WebGLTexture.deactivate);
                         renderer.gl.uniform1iv(location, null);
                         program.cache[name] = null;
                     };
                 }
             } else {
                 program.parameters[name] = (v) => {
-                    if(v.length){
+                    if (v.length) {
                         v = v[0];
                     }
                     if (v && !renderer.framebuffer?.linkedTo(v)) {
                         var texture = WebGLTexture.from(renderer, v);
-                        if (program.cache[name] != texture) {
-                            texture.activate();
+                        texture.activate();
+                        if (program.cache[name] != texture.unit) {
                             renderer.gl.uniform1i(location, texture.unit);
-                            program.cache[name] = texture;
+                            program.cache[name] = texture.unit;
                         }
                     } else if (program.cache[name] != null) {
-                        program.cache[name].deactivate();
+                        WebGLTexture.deactivate(program.cache[name]);
                         renderer.gl.uniform1i(location, null);
                         program.cache[name] = null;
                     };

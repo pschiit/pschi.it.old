@@ -11,6 +11,8 @@ export default class Camera extends Node3d {
         super();
         this.fog = new Vector2(0, 50);
         this.projectionUpdated = true;
+        this.updateAspectRatio = true;
+        this.filters = ['visible'];
     }
 
     get showFrustum() {
@@ -20,6 +22,7 @@ export default class Camera extends Node3d {
     set showFrustum(v) {
         if (v && this.frustum.parent != this) {
             this.appendChild(this.frustum);
+            this.clearVertexMatrix();
         } else {
             this.removeChild(this.frustum);
             this._frustum = null;
@@ -38,6 +41,7 @@ export default class Camera extends Node3d {
     }
 
     getScene(renderTarget) {
+        const filters = this.filters;
         const parameters = {};
         const materials = {};
         const renders = [];
@@ -68,7 +72,7 @@ export default class Camera extends Node3d {
          * @param {Render} render Node to load
          */
         function update(render) {
-            if (render.renderable) {
+            if (filter(render)) {
                 if (!renderTarget.material && !materials[render.material.id]) {
                     materials[render.material.id] = render.material;
                 }
@@ -76,6 +80,18 @@ export default class Camera extends Node3d {
             }
             render.setScene(parameters);
             render.childrens.forEach(update);
+        }
+
+
+        /** Return whether or not the Render is ignored by the Camera
+         * @param {Render} render Render to verify
+         * @returns {Boolean} true if the Camera can see the Render
+         */
+        function filter(render) {
+            return filters.every(f =>
+                f != render
+                && (f instanceof Function && f(render)) || render[f])
+                && render.renderable;
         }
     }
 

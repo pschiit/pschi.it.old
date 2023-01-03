@@ -1,3 +1,4 @@
+import ShadowMaterial from '../../../3d/material/ShadowMaterial';
 import Color from '../../../core/Color';
 import Node from '../../../core/Node';
 import Vector4 from '../../../math/Vector4';
@@ -315,6 +316,8 @@ export default class WebGLRenderer extends GraphicsRenderer {
         return format === RenderTarget.format.rgba ? renderer.gl.RGBA
             : format === RenderTarget.format.rbg ? renderer.gl.RGB
                 : format === RenderTarget.format.alpha ? renderer.gl.ALPHA
+                : format === RenderTarget.format.depth ? renderer.gl.DEPTH_COMPONENT
+                : format === RenderTarget.format.stencil ? renderer.gl.DEPTH_STENCIL
                     : null;
     }
 
@@ -359,7 +362,7 @@ function render(renderer, renderTarget) {
     clear();
     const cache = {};
     renders.forEach(r => {
-        const material = renderTarget.material ? renderTarget.material : r.material
+        const material = renderTarget.material ? renderTarget.material : r.material;
         renderer.material = material;
         if (!cache[material.id]) {
             for (const name in material.parameters) {

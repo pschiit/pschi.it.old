@@ -111,12 +111,12 @@ export default class Color extends Vector4 {
         this[3] = value;
     }
 
-    normalize(){
+    normalize() {
         this[0] = this[0] / 255;
         this[1] = this[1] / 255;
         this[2] = this[2] / 255;
         this[3] = this[3] / 255;
-        
+
         return this;
     }
 
@@ -143,4 +143,5 @@ export default class Color extends Vector4 {
     static cyan = new Color(0, 1, 1, 1);
     static magenta = new Color(1, 0, 1, 1);
     static yellow = new Color(1, 1, 0, 1);
+    static transparent = new Color(0, 0, 0, 0);
 }

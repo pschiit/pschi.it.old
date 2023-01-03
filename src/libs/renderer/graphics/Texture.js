@@ -11,7 +11,7 @@ export default class Texture extends GraphicsNode {
         this.border = 0;
         this.level = 0;
         this.format = RenderTarget.format.rgba;
-        this.type = Uint8Array.constructor;
+        this.type = Uint8Array;
         this.mipmap = false;
         this.projectionMatrix = null;
         this.magnification = Texture.filter.linear;
@@ -22,7 +22,7 @@ export default class Texture extends GraphicsNode {
 
     get width() {
         if (this.parent instanceof RenderTarget) {
-            return this.parent.width;
+            return this.parent.maxX;
         }
         return this._width;
     }
@@ -36,7 +36,7 @@ export default class Texture extends GraphicsNode {
 
     get height() {
         if (this.parent instanceof RenderTarget) {
-            return this.parent.height;
+            return this.parent.maxY;
         }
         return this._height;
     }
@@ -50,7 +50,10 @@ export default class Texture extends GraphicsNode {
 
     get format() {
         if (this.parent instanceof RenderTarget) {
-            return this.parent.format;
+            return this.parent.colorTexture == this ? this.parent.format
+                : this.parent.depthTexture == this ? RenderTarget.format.depth
+                    : this.parent.stencilTexture == this ? RenderTarget.format.stencil
+                        : this._format;
         }
         return this._format;
     }
@@ -64,7 +67,10 @@ export default class Texture extends GraphicsNode {
 
     get type() {
         if (this.parent instanceof RenderTarget) {
-            return this.parent.type;
+            return this.parent.colorTexture == this ? this.parent.type
+                : this.parent.depthTexture == this ? Uint32Array
+                    : this.parent.stencilTexture == this ? Uint16Array
+                        : this._type;
         }
         return this._type;
     }

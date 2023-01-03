@@ -12,7 +12,7 @@ export default class RenderTarget extends GraphicsNode {
         this.height = height;
         this.data = data;
         this.format = RenderTarget.format.rgba;
-        this.type = new Uint8Array(0).constructor;
+        this.type = Uint8Array;
         this.backgroundColor = Color.black;
         this.scissor = null;
         this.read = null;
@@ -21,6 +21,14 @@ export default class RenderTarget extends GraphicsNode {
         this.colorTexture = null;
         this.depthTexture = null;
         this.stencilTexture = null;
+    }
+
+    get maxX(){
+        return this.x + this.width;
+    }
+
+    get maxY(){
+        return this.y + this.height;
     }
 
     get x() {
@@ -171,6 +179,7 @@ export default class RenderTarget extends GraphicsNode {
         rgba: 'RGBA',
         rgb: 'RGB',
         alpha: 'ALPHA',
-        depth: 'DEPTH_COMPONENT'
+        depth: 'DEPTH_COMPONENT',
+        stencil: 'DEPTH_STENCIL'
     };
 }

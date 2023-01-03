@@ -277,7 +277,7 @@ export default class LightMaterial extends Material {
 
                 const projection = Parameter.vector3('textureCoordinate');
                 const x = Operation.selection(projection, '.x');
-                const y = Operation.selection(projection, '.y')
+                const y = Operation.selection(projection, '.y');
                 operations.push(
                     Operation.equal(
                         Operation.declare(projection),
@@ -360,6 +360,7 @@ export default class LightMaterial extends Material {
             }
             if (this.directionalShadowLightsCount) {
                 const vPositionFromDirectionalShadowLight = Parameter.vector4('v_positionFromDirectionalShadowLight', Parameter.qualifier.out);
+
                 LightMaterial.parameters.directionalShadowLightShadowMatrix.length = this.directionalShadowLightsCount;
                 vPositionFromDirectionalShadowLight.length = this.directionalShadowLightsCount
                 this.vertexShader.operations.push(
@@ -610,7 +611,7 @@ export default class LightMaterial extends Material {
                         , 0, 1))));
         }
         operations.push(Operation.equal(Shader.parameters.output, Operation.toVector4(color, Operation.selection(fragmentColor, '.a'))));
-        this.fragmentShader = Shader.fragmentShader(operations, Shader.precision.high);
+        this.fragmentShader = Shader.fragmentShader(operations);
     }
 
     static parameters = {
@@ -663,28 +664,38 @@ export default class LightMaterial extends Material {
             const positionFromLight = Parameter.vector4('positionFromLight');
             const shadowMap = Parameter.texture('shadowMap');
 
-            const projectedPosition = Parameter.vector3('projectedPosition');
-            const depth = Parameter.number('depth');
-
+            const projection = Parameter.vector3('projection');
+            const x = Operation.selection(projection, '.x');
+            const y = Operation.selection(projection, '.y');
+            const depth = Parameter.vector4('depth');
             return new ShaderFunction('calculateVisibility', Number, [
                 positionFromLight,
                 shadowMap], [
                 Operation.equal(
-                    Operation.declare(projectedPosition),
+                    Operation.declare(projection),
                     Operation.add(
                         Operation.multiply(
                             Operation.divide(
                                 Operation.selection(positionFromLight, '.xyz'),
-                                Operation.selection(positionFromLight, '.w')
-                            ), 0.5)
-                        , 0.5)
+                                Operation.selection(positionFromLight, '.w')),
+                            0.5),
+                        0.5)
                 ),
                 Operation.equal(
                     Operation.declare(depth),
-                    Operation.selection(Operation.read(shadowMap, Operation.selection(projectedPosition, '.xy')), '.z')
+                    Operation.read(shadowMap, Operation.selection(projection, '.xy'))
                 ),
                 Operation.if(
-                    Operation.greater(Operation.selection(projectedPosition, '.z'), depth),
+                    Operation.and(
+                        Operation.greaterEquals(x, 0),
+                        Operation.greaterEquals(y, 0),
+                        Operation.lessEquals(x, 1),
+                        Operation.lessEquals(y, 1),
+                        Operation.isEqual(Operation.selection(depth, '.w'), 1),
+                        Operation.greater(
+                            Operation.selection(projection, '.z'),
+                            Operation.add(Operation.selection(depth, '.z'), 0.005),
+                        )),
                     Operation.return(0)
                 ),
                 Operation.return(1),

@@ -1,9 +1,9 @@
-import LightMaterial from '../material/LightMaterial';
-import Node3d from '../Node3d';
+import Color from '../../core/Color';
 import Light from '../../renderer/graphics/Light';
-import RenderTarget from '../../renderer/graphics/RenderTarget';
 import Texture from '../../renderer/graphics/Texture';
 import PerspectiveCamera from '../camera/PerspectiveCamera';
+import LightMaterial from '../material/LightMaterial';
+import Node3d from '../Node3d';
 
 export default class SpotLight extends Node3d {
     constructor(color, radius, position, target) {
@@ -13,74 +13,65 @@ export default class SpotLight extends Node3d {
         this.radius = radius;
         this.innerRadius = radius;
         this.target = target;
-        this.shadow = false;
-    }
-
-    get shadowCamera() {
-        return this._shadowCamera;
-    }
-
-    set shadowCamera(v) {
-        if (v != this.shadowCamera) {
-            if (this.shadowCamera) {
-                this.removeChild(this.shadowCamera)
-            }
-            this._shadowCamera = v;
-            if (v.parent != this) {
-                this.appendChild(v);
-            }
-        }
     }
 
     get showFrustum() {
-        return this.shadowCamera && this.shadowCamera.showFrustum;
+        return this.shadow?.data.showFrustum;
     }
 
     set showFrustum(v) {
-        if (this.shadowCamera) {
-            this.shadowCamera.showFrustum = v;
-            this.clearVertexMatrix();
+        if (this.shadow) {
+            this.shadow.data.showFrustum = v;
         }
     }
 
     get shadow() {
-        return this.shadowMap && this.shadowCamera;
+        return this._shadow;
     }
 
     set shadow(v) {
-        if (v) {
-            if (!this.shadowCamera) {
-                this.shadowCamera = new PerspectiveCamera(this.radius, 1, 0.5, 500);
+        if (v != this.shadow) {
+            if (v) {
+                if (!v.data) {
+                    v.data = new PerspectiveCamera(Math.cos(this.radius), 1, 0.5, 500);
+                    v.data.filters.push('castShadow');
+                }
+                if (v.data.parent != this) {
+                    this.appendChild(v.data);
+                }
+                if (!v.material) {
+                    v.material = LightMaterial.shadowMaterial;
+                }
+                if (!v.colorTexture) {
+                    v.colorTexture = new Texture();
+                    v.colorTexture.minification = Texture.filter.linear;
+                }
+                v.backgroundColor = Color.transparent;
+                this._shadow = v;
+                this.light.parameters = {};
+            } else if (this.shadow) {
+                if (this.shadow.data.parent == this) {
+                    this.removeChild(this.shadow.data);
+                }
+                this._shadow = null;
+                this.light.parameters = {};
             }
-            if (!this.shadowMap) {
-                const renderTarget = new RenderTarget(this.shadowCamera, 1024, 1024);
-                renderTarget.material = LightMaterial.shadowMaterial;
-                this._shadowMap = new Texture(renderTarget);
-                this._shadowMap.minification = Texture.filter.linear;
-            }
-            this.light.parameters = {};
-        } else {
-            if (this.shadowCamera) {
-                this.shadowCamera = null;
-            }
-            if (!this.shadowMap) {
-                this._shadowMap = null;
-            }
-            this.light.parameters = {};
         }
     }
 
+    get shadowCamera() {
+        return this.shadow?.data;
+    }
+
     get shadowMap() {
-        if (!this._shadowMap) {
-        }
-        return this._shadowMap;
+        return this.shadow?.colorTexture;
     }
 
     setScene(parameters) {
         super.setScene(parameters);
         if (this.shadow) {
-            this.light.setParameter(LightMaterial.parameters.spotShadowLightShadowMatrix, this.shadowCamera.projectionMatrix);
-            this.light.setParameter(LightMaterial.parameters.spotShadowLightShadowMap, this.shadowMap);
+            this.light.setParameter(LightMaterial.parameters.spotShadowLightShadowMatrix, this.shadow.data.projectionMatrix);
+            this.light.setParameter(LightMaterial.parameters.spotShadowLightShadowMap, this.shadow.colorTexture);
             this.light.setParameter(LightMaterial.parameters.spotShadowLightColor, this.light.color.rgb);
             this.light.setParameter(LightMaterial.parameters.spotShadowLightPosition, this.vertexMatrix.positionVector);
             this.light.setParameter(LightMaterial.parameters.spotShadowLightDirection, this.vertexMatrix.zAxis);

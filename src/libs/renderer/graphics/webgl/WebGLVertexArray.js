@@ -47,7 +47,7 @@ export default class WebGLVertexArray extends WebGLNode {
      * @returns {WebGLVertexArray} the WebGLVertexArray
      */
     static from(renderer, vertexBuffer, material) {
-        const result = renderer.nodes[vertexBuffer.id + '_' + material.id] || new WebGLVertexArray(renderer, vertexBuffer, material);
-        return result;
+        const webGLVertexArray = renderer.nodes[vertexBuffer.id + '_' + material.id] || new WebGLVertexArray(renderer, vertexBuffer, material);
+        return webGLVertexArray;
     }
 }

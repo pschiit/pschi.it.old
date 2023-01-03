@@ -5,9 +5,7 @@ import Shader from '../../renderer/graphics/shader/Shader';
 export default class ShadowMaterial extends Material {
     constructor() {
         super();
-        //this.culling = Material.culling.front;
-        //this.depth = Material.depth.less;
-        
+
         this.setParameter(Material.parameters.projectionMatrix);
 
         this.vertexShader = Shader.vertexShader(
@@ -18,9 +16,11 @@ export default class ShadowMaterial extends Material {
                     Material.parameters.vertexMatrix,
                     Material.parameters.position)));
 
-        this.fragmentShader = Shader.fragmentShader(
+
+        this.fragmentShader = Shader.fragmentShader([
             Operation.equal(
                 Shader.parameters.output,
-                Operation.toVector4(0, 0, Operation.selection(Shader.parameters.fragmentCoordinate, '.z'), 1)));
+                Operation.toVector4(0, 0, Operation.selection(Shader.parameters.fragmentCoordinate, '.z'), 1))
+        ]);
     }
 }

@@ -1,6 +1,4 @@
-import Frustum from '../../math/Frustum';
 import Matrix4 from '../../math/Matrix4';
-import Plan from '../../math/Plan';
 import Camera from './Camera';
 
 export default class PerspectiveCamera extends Camera {
@@ -82,9 +80,8 @@ export default class PerspectiveCamera extends Camera {
     }
 
     getScene(renderTarget){
-        const aspectRatio = renderTarget.aspectRatio;
-        if(this.aspectRatio != aspectRatio){
-            this.aspectRatio = aspectRatio;
+        if(this.updateAspectRatio && this.aspectRatio != renderTarget.aspectRatio){
+            this.aspectRatio = renderTarget.aspectRatio;
         }
         return super.getScene(renderTarget);
     }

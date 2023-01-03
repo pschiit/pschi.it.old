@@ -12,16 +12,17 @@ export default class WebGLFramebuffer extends WebGLNode {
     constructor(renderer, renderTarget) {
         super(renderer, renderTarget.id);
         this.location = renderer.gl.createFramebuffer();
-        this.width = renderTarget.width;
-        this.height = renderTarget.height
+        this.width = renderTarget.maxX;
+        this.height = renderTarget.maxY;
 
+        renderTarget.colorTexture.updated = true;
         this.colorTexture = WebGLTexture.from(renderer, renderTarget.colorTexture);
         if (renderTarget.depthTexture) {
             this.depthTexture = WebGLTexture.from(renderer, renderTarget.depthTexture);
         } else {
             this.renderBuffer = renderer.gl.createRenderbuffer();
             renderer.gl.bindRenderbuffer(renderer.gl.RENDERBUFFER, this.renderBuffer);
-            renderer.gl.renderbufferStorage(renderer.gl.RENDERBUFFER, renderer.gl.DEPTH_COMPONENT16, renderTarget.width, renderTarget.height);
+            renderer.gl.renderbufferStorage(renderer.gl.RENDERBUFFER, renderer.gl.DEPTH_COMPONENT16, this.width, this.height);
         }
         if (renderTarget.stencilTexture) {
             this.stencilTexture = WebGLTexture.from(renderer, renderTarget.stencilTexture);
@@ -49,13 +50,25 @@ export default class WebGLFramebuffer extends WebGLNode {
             renderer.gl.bindRenderbuffer(renderer.gl.RENDERBUFFER, null);
         }
 
-        this.update = (texture) => {
-            renderer.gl.bindRenderbuffer(renderer.gl.RENDERBUFFER, this.renderBuffer);
-            renderer.gl.renderbufferStorage(renderer.gl.RENDERBUFFER, renderer.gl.DEPTH_COMPONENT16, texture.width, texture.height);
-            renderer.gl.bindRenderbuffer(renderer.gl.RENDERBUFFER, null);
-            this.colorTexture.update(texture);
-            this.width = renderTarget.width;
-            this.height = renderTarget.height
+        this.update = (renderTarget) => {
+            if (renderTarget.maxX != this.width
+                || renderTarget.maxY != this.height) {
+                this.width = renderTarget.maxX;
+                this.height = renderTarget.maxY;
+                renderer.gl.bindRenderbuffer(renderer.gl.RENDERBUFFER, this.renderBuffer);
+                renderer.gl.renderbufferStorage(renderer.gl.RENDERBUFFER, renderer.gl.DEPTH_COMPONENT16, this.width, this.height);
+                renderer.gl.bindRenderbuffer(renderer.gl.RENDERBUFFER, null);
+            }
+            this.colorTexture.deactivate();
+            this.colorTexture.update(renderTarget.colorTexture);
+            if(this.depthTexture){
+                this.colorTexture.deactivate();
+                this.depthTexture.update(renderTarget.depthTexture);
+            }
+            if(this.stencilTexture){
+                this.colorTexture.deactivate();
+                this.stencilTexture.update(renderTarget.stencilTexture);
+            }
         }
     }
 
@@ -82,11 +95,8 @@ export default class WebGLFramebuffer extends WebGLNode {
      * @returns {WebGLFramebuffer} the WebGLFramebuffer
      */
     static from(renderer, renderTarget) {
-        const framebuffer = renderer.nodes[renderTarget.id] || new WebGLFramebuffer(renderer, renderTarget);
-        if (renderTarget.width != framebuffer.width
-            || renderTarget.height != framebuffer.height) {
-            framebuffer.update(renderTarget);
-        };
-        return framebuffer;
+        const webGLFramebuffer = renderer.nodes[renderTarget.id] || new WebGLFramebuffer(renderer, renderTarget);
+        webGLFramebuffer.update(renderTarget);
+        return webGLFramebuffer;
     }
 }

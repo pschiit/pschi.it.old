@@ -13,6 +13,8 @@ export default class Node3d extends Render {
         this.setParameter(Material.parameters.colorId, colorId);
         this.matrix = Matrix4.identityMatrix();
         this._target = new Vector3();
+        this.castShadow = false;
+        this.receiveShadow = false;
     }
 
     get vertexMatrix() {
