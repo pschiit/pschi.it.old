@@ -9,39 +9,15 @@ export default class Material extends GraphicsNode {
 
         this.culling = null;
         this.depth = null;
-        this.fog = true;
-    }
-
-    get vertexShader(){
-        return this._vertexShader;
-    }
-
-    set vertexShader(v){
-        this._vertexShader = v;
-    }
-
-    get fragmentShader(){
-        return this._fragmentShader;
-    }
-
-    set fragmentShader(v){
-        this._fragmentShader = v;
+        this.vertexShader = null;
+        this.fragmentShader = null
     }
 
     get compiled(){
-        return this.vertexShader?.compiled && this.vertexShader?.compiled;
-    }
-
-    get texture() {
-        return this.parameters[Material.parameters.texture];
-    }
-
-    set texture(v) {
-        this.setParameter(Material.parameters.texture, v);
+        return this.vertexShader?.compiled && this.fragmentShader?.compiled;
     }
 
     static parameters = {
-        texture: Parameter.texture('texture',Parameter.qualifier.const),
         backgroundColor: Parameter.vector3('backgroundColor', Parameter.qualifier.const),
         
         position: Parameter.vector4('vertexPosition', Parameter.qualifier.let),
@@ -53,8 +29,12 @@ export default class Material extends GraphicsNode {
         normalMatrix: Parameter.matrix4('normalMatrix', Parameter.qualifier.const),
         colorId: Parameter.vector3('colorId', Parameter.qualifier.const),
         
+        texture: Parameter.texture('texture',Parameter.qualifier.const),
+        textureProjectionMatrix: Parameter.matrix4('textureProjectionMatrix',Parameter.qualifier.const),
+        
         projectionMatrix: Parameter.matrix4('projectionMatrix', Parameter.qualifier.const),
         cameraPosition: Parameter.vector3('cameraPosition', Parameter.qualifier.const),
+        cameraTarget: Parameter.vector3('cameraTarget', Parameter.qualifier.const),
         fogDistance: Parameter.vector2('fogDistance', Parameter.qualifier.const),
     };
 

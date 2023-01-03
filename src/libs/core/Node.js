@@ -24,7 +24,7 @@ export default class Node {
     }
 
     setParameter(name, value) {
-        if (this.parameters[name] != value) {
+        if (!this.parameters[name] || this.parameters[name] != value) {
             this.parameters[name] = value;
         }
     }

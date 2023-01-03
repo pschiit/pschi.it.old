@@ -19,20 +19,14 @@ export default class WebGLBuffer extends WebGLNode {
 
         if (webGLTarget === renderer.gl.ELEMENT_ARRAY_BUFFER) {
             this.update = (buffer) => {
-                if (buffer.updated) {
-                    renderer.elementArrayBuffer = this;
-                    renderer.gl.bufferData(this.target, buffer.data, this.usage);
-                    buffer.updated = false;
-                }
+                renderer.elementArrayBuffer = this;
+                renderer.gl.bufferData(this.target, buffer.data, this.usage);
             };
         } else {
             this.update = (buffer) => {
-                if (buffer.updated) {
-                    renderer.arrayBuffer = this;
-                    const data = buffer.data;
-                    renderer.gl.bufferData(this.target, data, this.usage);
-                    buffer.updated = false;
-                }
+                renderer.arrayBuffer = this;
+                const data = buffer.data;
+                renderer.gl.bufferData(this.target, data, this.usage);
             };
         }
     }
@@ -55,13 +49,13 @@ export default class WebGLBuffer extends WebGLNode {
         if(!renderer.nodes[mainBuffer.id]){
             mainBuffer.updated = true;
         }
-        const result = renderer.nodes[mainBuffer.id] || new WebGLBuffer(renderer, mainBuffer, webGLTarget);
+        const webGLBuffer = renderer.nodes[mainBuffer.id] || new WebGLBuffer(renderer, mainBuffer, webGLTarget);
 
         if (mainBuffer.updated) {
-            result.update(mainBuffer);
+            webGLBuffer.update(mainBuffer);
             mainBuffer.updated = false;
         };
 
-        return result;
+        return webGLBuffer;
     }
 }

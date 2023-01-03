@@ -1,8 +1,9 @@
-import Canvas from './Canvas';
 import Node from '../core/Node';
-import WebGLRenderer from '../renderer/graphics/webgl/WebGLRenderer';
 import Vector2 from '../math/Vector2';
+import GraphicsNode from '../renderer/graphics/GraphicsNode';
 import RenderTarget from '../renderer/graphics/RenderTarget';
+import WebGLRenderer from '../renderer/graphics/webgl/WebGLRenderer';
+import Canvas from './Canvas';
 
 export default class WebGLCanvas extends Canvas {
     /** Create a new WebGLCanvas HtmlNode
@@ -27,10 +28,6 @@ export default class WebGLCanvas extends Canvas {
                 this.removeChild(child);
             }
         });
-
-        window.onresize = (e) => {
-            this.fitParent();
-        };
 
         function initContext(webGLCanvas, contextOptions) {
             const newContext = new WebGLRenderer(webGLCanvas.element.getContext('webgl', contextOptions) || webGLCanvas.element.getContext('experimental-webgl', contextOptions));
@@ -72,6 +69,20 @@ export default class WebGLCanvas extends Canvas {
             WebGLCanvas.repeatFunction(arguments, this.render.bind(this));
         } else {
             this.context.render(node);
+        }
+
+        return this;
+    }
+    
+    /** Remove all dependencies from GraphicsNode in the current Renderer
+     * @param {GraphicsNode} node Node to render
+     * @returns {WebGLCanvas} the current Renderer
+     */
+    remove(node) {
+        if (arguments.length > 1) {
+            WebGLCanvas.repeatFunction(arguments, this.remove.bind(this));
+        } else {
+            this.context.remove(node);
         }
 
         return this;

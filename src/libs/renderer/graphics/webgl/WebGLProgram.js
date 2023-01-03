@@ -283,35 +283,48 @@ function createUniform(renderer, program, uniform) {
             break;
         case renderer.gl.SAMPLER_2D:
         case renderer.gl.SAMPLER_CUBE:
-            if (uniform.size > 1) {
+            if (uniform.size > 1 || uniform.name.endsWith('[0]')) {
                 program.parameters[name] = (v) => {
-                    // if (v) {
-                    //     const textures = v.map(t => WebGLTexture.from(renderer, t));
-                    //     const units = textures.map(t => t.units);
-                    //     if (program.cache[name] != units) {
-                    //         renderer.gl.uniform1iv(location, units);
-                    //         program.cache[name] = units;
-                    //         textures.forEach(t => {
-                    //             renderer.gl.activeTexture(renderer.gl.TEXTURE0 + t.unit);
-                    //             renderer.texture2d = t;
-                    //         });
-                    //     }
-                    // } else if (program.cache[name] = null) {
-                    //     renderer.gl.uniform1iv(location, null);
-                    //     program.cache[name] = null;
-                    // };
+                    if (v) {
+                        if (renderer.framebuffer) {
+                            v = v.filter(t => !renderer.framebuffer.linkedTo(t));
+                        }
+                        const units = v.map(t =>{
+                            const webGLTexture = WebGLTexture.from(renderer, t);
+                            webGLTexture.activate();
+                            return webGLTexture.unit;
+                        });
+                        if(program.cache[name] != units){
+                            renderer.gl.uniform1iv(location, units);
+                        }
+                        if (program.cache[name]) {
+                            program.cache[name].forEach(unit => {
+                                if (units.indexOf(unit) == -1) {
+                                    WebGLTexture.deactivate(unit);
+                                }
+                            });
+                        }
+                        program.cache[name] = units;
+                    } else if (program.cache[name] != null) {
+                        program.cache[name].forEach(WebGLTexture.deactivate);
+                        renderer.gl.uniform1iv(location, null);
+                        program.cache[name] = null;
+                    };
                 }
             } else {
                 program.parameters[name] = (v) => {
-                    if (v && !renderer.framebuffer?.is(v)) {
+                    if (v.length) {
+                        v = v[0];
+                    }
+                    if (v && !renderer.framebuffer?.linkedTo(v)) {
                         var texture = WebGLTexture.from(renderer, v);
+                        texture.activate();
                         if (program.cache[name] != texture.unit) {
                             renderer.gl.uniform1i(location, texture.unit);
-                            renderer.gl.activeTexture(renderer.gl.TEXTURE0 + texture.unit);
-                            renderer.texture2d = texture;
                             program.cache[name] = texture.unit;
                         }
                     } else if (program.cache[name] != null) {
+                        WebGLTexture.deactivate(program.cache[name]);
                         renderer.gl.uniform1i(location, null);
                         program.cache[name] = null;
                     };

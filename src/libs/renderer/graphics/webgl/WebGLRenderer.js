@@ -1,3 +1,4 @@
+import ShadowMaterial from '../../../3d/material/ShadowMaterial';
 import Color from '../../../core/Color';
 import Node from '../../../core/Node';
 import Vector4 from '../../../math/Vector4';
@@ -85,49 +86,6 @@ export default class WebGLRenderer extends GraphicsRenderer {
         });
     }
 
-    /** Render a GraphicsNode in the current WebGLRenderer
-     * @param {GraphicsNode} node Node to render
-     * @returns {WebGLRenderer} the current WebGLRenderer
-     */
-    render(node) {
-        let renderTarget = this.parent.renderTarget;
-        if (node instanceof Render && renderTarget.data != node) {
-            renderTarget.data = node;
-        } else if (node instanceof Texture) {
-            if (!this.framebuffer?.is(node)) {
-                this.framebuffer = WebGLFramebuffer.from(this, node);
-            }
-            if (this.texture2d?.is(node)) {
-                this.texture2d = null;
-            }
-            renderTarget = node.data;
-        } else if (node instanceof RenderTarget) {
-            renderTarget = node;
-        }
-
-        render(this, renderTarget);
-        const read = renderTarget.read;
-        if (read) {
-            this.gl.readPixels(read[0], read[1], read[2], read[3], WebGLRenderer.formatFrom(this, renderTarget.format), WebGLRenderer.typeFrom(this, renderTarget.type), renderTarget.output);
-        }
-        if (this.framebuffer) {
-            this.framebuffer = null;
-        }
-
-        return this;
-    }
-
-    /** Remove all dependencies from GraphicsNode in the current WebGLRenderer
-     * @param {GraphicsNode} node GraphicsNode to render
-     * @returns {WebGLRenderer} the current WebGLRenderer
-     */
-    remove(node) {
-        const toRemove = this.childrens.filter(c => c.is(node));
-        toRemove.forEach(this.removeChild.bind(this));
-
-        return this;
-    }
-
     /** Return the WebGLProgram currently used by the WebGLRenderer
      * @return {WebGLProgram} the WebGLProgram used
      */
@@ -210,6 +168,11 @@ export default class WebGLRenderer extends GraphicsRenderer {
         if (this._framebuffer != v) {
             this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, v?.location);
             this._framebuffer = v;
+            if (v && (this.texture2d == v.colorTexture
+                || this.texture2d == v.depthTexture
+                || this.texture2d == v.stencilTexture)) {
+                this.texture2d = null;
+            }
         }
     }
 
@@ -311,10 +274,50 @@ export default class WebGLRenderer extends GraphicsRenderer {
         }
     }
 
+    /** Render a GraphicsNode in the current WebGLRenderer
+     * @param {GraphicsNode} node Node to render
+     * @returns {WebGLRenderer} the current WebGLRenderer
+     */
+    render(node) {
+        let renderTarget = this.parent.renderTarget;
+        if (node instanceof Render && renderTarget.data != node) {
+            renderTarget.data = node;
+        } else if (node instanceof RenderTarget) {
+            if (node.colorTexture) {
+                this.framebuffer = WebGLFramebuffer.from(this, node);
+            }
+            renderTarget = node;
+        }
+
+        render(this, renderTarget);
+        const read = renderTarget.read;
+        if (read) {
+            this.gl.readPixels(read[0], read[1], read[2], read[3], WebGLRenderer.formatFrom(this, renderTarget.format), WebGLRenderer.typeFrom(this, renderTarget.type), renderTarget.output);
+        }
+        if (this.framebuffer) {
+            this.framebuffer = null;
+        }
+
+        return this;
+    }
+
+    /** Remove all dependencies from GraphicsNode in the current WebGLRenderer
+     * @param {GraphicsNode} node GraphicsNode to render
+     * @returns {WebGLRenderer} the current WebGLRenderer
+     */
+    remove(node) {
+        const toRemove = this.childrens.filter(c => c.is(node));
+        toRemove.forEach(n => this.removeChild(n));
+
+        return this;
+    }
+
     static formatFrom(renderer, format) {
         return format === RenderTarget.format.rgba ? renderer.gl.RGBA
             : format === RenderTarget.format.rbg ? renderer.gl.RGB
                 : format === RenderTarget.format.alpha ? renderer.gl.ALPHA
+                : format === RenderTarget.format.depth ? renderer.gl.DEPTH_COMPONENT
+                : format === RenderTarget.format.stencil ? renderer.gl.DEPTH_STENCIL
                     : null;
     }
 
@@ -359,7 +362,7 @@ function render(renderer, renderTarget) {
     clear();
     const cache = {};
     renders.forEach(r => {
-        const material = renderTarget.material ? renderTarget.material : r.material
+        const material = renderTarget.material ? renderTarget.material : r.material;
         renderer.material = material;
         if (!cache[material.id]) {
             for (const name in material.parameters) {
@@ -390,7 +393,7 @@ function render(renderer, renderTarget) {
                 renderer.gl.drawArrays(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.offset, r.vertexBuffer.count);
             }
         } else {
-            renderer.gl.drawArrays(renderer.gl[r.primitive], 0, r.count);
+            renderer.gl.drawArrays(renderer.gl[r.primitive], r.offset, r.count);
         }
     });
     renderer.vertexArray = null;

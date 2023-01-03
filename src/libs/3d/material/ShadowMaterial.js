@@ -2,12 +2,12 @@ import Material from '../../renderer/graphics/Material';
 import Operation from '../../renderer/graphics/shader/Operation';
 import Shader from '../../renderer/graphics/shader/Shader';
 
-export default class PickingMaterial extends Material {
+export default class ShadowMaterial extends Material {
     constructor() {
         super();
-        
+
         this.setParameter(Material.parameters.projectionMatrix);
-        
+
         this.vertexShader = Shader.vertexShader(
             Operation.equal(
                 Shader.parameters.output,
@@ -16,9 +16,11 @@ export default class PickingMaterial extends Material {
                     Material.parameters.vertexMatrix,
                     Material.parameters.position)));
 
-        this.fragmentShader = Shader.fragmentShader(
+
+        this.fragmentShader = Shader.fragmentShader([
             Operation.equal(
                 Shader.parameters.output,
-                Operation.toVector4(Material.parameters.colorId, 1)));
+                Operation.toVector4(0, 0, Operation.selection(Shader.parameters.fragmentCoordinate, '.z'), 1))
+        ]);
     }
 }

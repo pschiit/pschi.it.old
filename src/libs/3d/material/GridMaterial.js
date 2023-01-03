@@ -6,12 +6,16 @@ import Parameter from '../../renderer/graphics/shader/Parameter';
 import Shader from '../../renderer/graphics/shader/Shader';
 import ShaderFunction from '../../renderer/graphics/shader/ShaderFunction';
 import VertexBuffer from '../../renderer/graphics/VertexBuffer';
-import CameraNode from '../camera/CameraNode';
+import Camera from '../camera/Camera';
 import Node3d from '../Node3d';
 
 export default class GridMaterial extends Material {
     constructor(color = Color.white, sizes = new Vector2(1, 10), distance = 100, axes = 'xzy') {
         super();
+        
+        this.setParameter(Material.parameters.cameraPosition);
+        this.setParameter(Material.parameters.projectionMatrix);
+
         this.color = color;
         this.sizes = sizes;
         this.distance = distance;

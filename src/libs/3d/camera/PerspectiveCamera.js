@@ -1,10 +1,7 @@
-import Frustum from '../../math/Frustum';
 import Matrix4 from '../../math/Matrix4';
-import Plan from '../../math/Plan';
-import Material from '../../renderer/graphics/Material';
-import CameraNode from './CameraNode';
+import Camera from './Camera';
 
-export default class PerspectiveCamera extends CameraNode {
+export default class PerspectiveCamera extends Camera {
     constructor(fovY, aspectRatio, near, far) {
         super();
         this._fovY = fovY;
@@ -54,47 +51,38 @@ export default class PerspectiveCamera extends CameraNode {
         this.projectionUpdated = true;
     }
 
+    get frustum() {
+        if (!this._frustum) {
+            this._frustum = Camera.frustum();
+            this.perspectiveMatrix;
+        }
+        return this._frustum;
+    }
+
     get perspectiveMatrix() {
         if (this.perspectiveUpdated) {
             this._perspectiveMatrix = Matrix4.perspectiveMatrix(this.fovY, this.aspectRatio, this.near, this.far);
             this.perspectiveUpdated = false;
+            if(this.showFrustum){
+                this.frustum.matrix = this._perspectiveMatrix.clone().invert();
+                this.frustum.vertexMatrix;
+            }
         }
         return this._perspectiveMatrix;
     }
 
     get projectionMatrix() {
         if (this.projectionUpdated) {
-            this._projectionMatrix = this.perspectiveMatrix.clone().multiply(this.worldMatrix.clone().invert());
+            this._projectionMatrix = this.perspectiveMatrix.clone().multiply(this.vertexMatrix.clone().invert());
             this.projectionUpdated = false;
         }
         return this._projectionMatrix;
     }
 
-    get frustum() {
-        const left = new Plan();
-        const rigth = new Plan();
-        const top = new Plan();
-        const bottom = new Plan();
-        const near = new Plan();
-        const far = new Plan();
-
-        return new Frustum(left, rigth, top, bottom, near, far);
-    }
-
     getScene(renderTarget){
-        const aspectRatio = renderTarget.aspectRatio;
-        if(this.aspectRatio != aspectRatio){
-            this.aspectRatio = aspectRatio;
+        if(this.updateAspectRatio && this.aspectRatio != renderTarget.aspectRatio){
+            this.aspectRatio = renderTarget.aspectRatio;
         }
         return super.getScene(renderTarget);
-    }
-
-    setScene(parameters){
-        super.setScene(parameters);
-        if (this.projectionUpdated) {
-            this._projectionMatrix = this.perspectiveMatrix.clone().multiply(this.vertexMatrix.clone().invert());
-            this.projectionUpdated = false;
-        }
-        parameters[Material.parameters.projectionMatrix.name] = this.projectionMatrix;
     }
 }

@@ -30,7 +30,8 @@ export default class  Vector2 extends MathArray {
      * @return {Boolean} true if vectors are equals
     */
     equals(vector) {
-        return this[0] === vector[0] &&
+        return vector?.length == this.length && 
+            this[0] === vector[0] &&
             this[1] === vector[1];
     }
 

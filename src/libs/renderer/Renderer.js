@@ -11,8 +11,7 @@ export default class Renderer extends Node {
     render(node) {
         return this;
     }
-
-
+    
     /** Remove all dependencies from Node in the current Renderer
      * @param {Node} node Node to render
      * @returns {Renderer} the current Renderer
