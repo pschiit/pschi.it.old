@@ -190,7 +190,7 @@ export default class Lights extends App {
             Math.cos(Angle.toRadian(40)),
             new Vector3(-3, 3, -3),
             new Vector3(0, 0, 0));
-        spotLight.innerRadius = Math.cos(Angle.toRadian(25));
+        spotLight.innerRadius = Math.cos(Angle.toRadian(30));
         spotLight.material = lightMaterial;
         spotLight.vertexBuffer = reverseCube;
         floor.appendChild(spotLight);
@@ -218,11 +218,9 @@ export default class Lights extends App {
 
         this.sunRenderTarget = new RenderTarget(null, 1024, 1024);
         sun.shadow = this.sunRenderTarget;
-        sun.showFrustum = true;
 
         this.spotLightRenderTarget = new RenderTarget(null, 1024, 1024);
         spotLight.shadow = this.spotLightRenderTarget;
-        spotLight.showFrustum = true;
 
 
         this.renders = [

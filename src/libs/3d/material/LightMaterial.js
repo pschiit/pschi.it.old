@@ -42,6 +42,12 @@ export default class LightMaterial extends Material {
         LightMaterial.parameters.pointLightPosition,
         LightMaterial.parameters.pointLightAmbientStrength,
         LightMaterial.parameters.pointLightIntensity,
+        LightMaterial.parameters.pointShadowLightColor,
+        LightMaterial.parameters.pointShadowLightPosition,
+        LightMaterial.parameters.pointShadowLightAmbientStrength,
+        LightMaterial.parameters.pointShadowLightIntensity,
+        LightMaterial.parameters.pointShadowLightShadowMap,
+        LightMaterial.parameters.pointShadowLightShadowMatrix,
         LightMaterial.parameters.spotLightColor,
         LightMaterial.parameters.spotLightDirection,
         LightMaterial.parameters.spotLightPosition,
@@ -64,8 +70,33 @@ export default class LightMaterial extends Material {
         this.directionalLightsCount = 0;
         this.directionalShadowLightsCount = 0;
         this.pointLightsCount = 0;
+        this.pointShadowLightsCount = 0;
         this.spotLightsCount = 0;
         this.spotShadowLightsCount = 0;
+    }
+
+    get directionalLightsCount() {
+        return this._directionalLightsCount;
+    }
+
+    set directionalLightsCount(v) {
+        if (this.directionalLightsCount != v) {
+            this._directionalLightsCount = v;
+            this.vertexShader = null;
+            this.fragmentShader = null;
+        }
+    }
+
+    get directionalShadowLightsCount() {
+        return this._directionalShadowLightsCount;
+    }
+
+    set directionalShadowLightsCount(v) {
+        if (this.directionalShadowLightsCount != v) {
+            this._directionalShadowLightsCount = v;
+            this.vertexShader = null;
+            this.fragmentShader = null;
+        }
     }
 
     get pointLightsCount() {
@@ -75,6 +106,18 @@ export default class LightMaterial extends Material {
     set pointLightsCount(v) {
         if (this.pointLightsCount != v) {
             this._pointLightsCount = v;
+            this.vertexShader = null;
+            this.fragmentShader = null;
+        }
+    }
+
+    get pointShadowLightsCount() {
+        return this._pointShadowLightsCount;
+    }
+
+    set pointShadowLightsCount(v) {
+        if (this.pointShadowLightsCount != v) {
+            this._pointShadowLightsCount = v;
             this.vertexShader = null;
             this.fragmentShader = null;
         }
@@ -99,30 +142,6 @@ export default class LightMaterial extends Material {
     set spotShadowLightsCount(v) {
         if (this.spotShadowLightsCount != v) {
             this._spotShadowLightsCount = v;
-            this.vertexShader = null;
-            this.fragmentShader = null;
-        }
-    }
-
-    get directionalLightsCount() {
-        return this._directionalLightsCount;
-    }
-
-    set directionalLightsCount(v) {
-        if (this.directionalLightsCount != v) {
-            this._directionalLightsCount = v;
-            this.vertexShader = null;
-            this.fragmentShader = null;
-        }
-    }
-
-    get directionalShadowLightsCount() {
-        return this._directionalShadowLightsCount;
-    }
-
-    set directionalShadowLightsCount(v) {
-        if (this.directionalShadowLightsCount != v) {
-            this._directionalShadowLightsCount = v;
             this.vertexShader = null;
             this.fragmentShader = null;
         }
@@ -222,6 +241,7 @@ export default class LightMaterial extends Material {
         this.directionalLightsCount = this.parameters[LightMaterial.parameters.directionalLightAmbientStrength.name]?.length || 0;
         this.directionalShadowLightsCount = this.parameters[LightMaterial.parameters.directionalShadowLightAmbientStrength.name]?.length || 0;
         this.pointLightsCount = this.parameters[LightMaterial.parameters.pointLightAmbientStrength.name]?.length || 0;
+        this.pointShadowLightsCount = this.parameters[LightMaterial.parameters.pointShadowLightAmbientStrength.name]?.length || 0;
         this.spotLightsCount = this.parameters[LightMaterial.parameters.spotLightAmbientStrength.name]?.length || 0;
         this.spotShadowLightsCount = this.parameters[LightMaterial.parameters.spotShadowLightAmbientStrength.name]?.length || 0;
         const hasLight = this.directionalLightsCount || this.directionalShadowLightsCount
@@ -442,6 +462,71 @@ export default class LightMaterial extends Material {
                     ])
                 );
             }
+            if (this.pointShadowLightsCount) {
+                LightMaterial.parameters.pointShadowLightShadowMatrix.length = this.pointShadowLightsCount;
+                LightMaterial.parameters.pointShadowLightShadowMap.length = this.pointShadowLightsCount;
+                LightMaterial.parameters.pointShadowLightColor.length = this.pointShadowLightsCount;
+                LightMaterial.parameters.pointShadowLightPosition.length = this.pointShadowLightsCount;
+                LightMaterial.parameters.pointShadowLightAmbientStrength.length = this.pointShadowLightsCount;
+                LightMaterial.parameters.pointShadowLightIntensity.length = this.pointShadowLightsCount;
+                const lightDirection = Parameter.vector3('lightDirection');
+                const lightDistance = Parameter.vector3('lightDistance');
+                const attenuation = Parameter.number('attenuation');
+                const intensity = Operation.selection(LightMaterial.parameters.pointShadowLightIntensity, '[i]');
+                const visibility = Parameter.number('visibility');
+
+                const vPositionFromPointShadowLight = Parameter.vector4('v_positionFromPointShadowLight', Parameter.qualifier.out);
+                vPositionFromPointShadowLight.length = this.pointShadowLightsCount
+                this.vertexShader.operations.push(
+                    Operation.for('int i = 0', 'i < ' + this.pointShadowLightsCount, 'i++',
+                        Operation.equal(
+                            Operation.selection(vPositionFromPointShadowLight, '[i]'),
+                            Operation.multiply(Operation.selection(LightMaterial.parameters.pointShadowLightShadowMatrix, '[i]'), position))
+                    ));
+
+                operations.push(
+                    Operation.for('int i = 0', 'i < ' + this.pointShadowLightsCount, 'i++', [
+                        Operation.if(Operation.greater(intensity, 0), [
+                            Operation.equal(
+                                Operation.declare(lightDistance),
+                                Operation.substract(Operation.selection(LightMaterial.parameters.pointShadowLightPosition, '[i]'), vPosition)
+                            ),
+                            Operation.equal(
+                                Operation.declare(lightDirection),
+                                Operation.normalize(lightDistance)
+                            ),
+                            Operation.equal(
+                                Operation.declare(attenuation),
+                                Operation.clamp(Operation.divide(intensity, Operation.len(lightDistance)), 0, 1)
+                            ),
+                            Operation.if(Operation.notEquals(attenuation, 0), [
+                                Operation.equal(
+                                    Operation.declare(visibility),
+                                    Operation.do(calculateVisibility, [
+                                        Operation.selection(vPositionFromPointShadowLight, '[i]'),
+                                        Operation.selection(LightMaterial.parameters.pointShadowLightShadowMap, '[i]'),
+                                    ])
+                                ),
+                                Operation.addTo(color, Operation.multiply(
+                                    attenuation,
+                                    Operation.do(calculateLight, [
+                                        lightDirection,
+                                        Operation.selection(LightMaterial.parameters.pointShadowLightColor, '[i]'),
+                                        Operation.selection(LightMaterial.parameters.pointShadowLightAmbientStrength, '[i]'),
+                                        visibility,
+                                        materialAmbient,
+                                        materialDiffuse,
+                                        materialSpecular,
+                                        materialEmissive,
+                                        nCameraPosition,
+                                        normal
+                                    ]))
+                                )
+                            ])
+                        ])
+                    ])
+                );
+            }
             if (this.spotLightsCount) {
                 LightMaterial.parameters.spotLightColor.length = this.spotLightsCount;
                 LightMaterial.parameters.spotLightPosition.length = this.spotLightsCount;
@@ -639,6 +724,14 @@ export default class LightMaterial extends Material {
         pointLightPosition: Parameter.vector3('pointLightPosition', Parameter.qualifier.const),
         pointLightAmbientStrength: Parameter.number('pointLightAmbientStrength', Parameter.qualifier.const),
         pointLightIntensity: Parameter.number('pointLightIntensity', Parameter.qualifier.const),
+
+        pointShadowLightShadowMatrix: Parameter.matrix4('pointShadowLightShadowMatrix', Parameter.qualifier.const),
+        pointShadowLightShadowMap: Parameter.texture('pointShadowLightShadowMap', Parameter.qualifier.const),
+        pointShadowLightColor: Parameter.vector3('pointShadowLightColor', Parameter.qualifier.const),
+        pointShadowLightPosition: Parameter.vector3('pointShadowLightPosition', Parameter.qualifier.const),
+        pointShadowLightAmbientStrength: Parameter.number('pointShadowLightAmbientStrength', Parameter.qualifier.const),
+        pointShadowLightIntensity: Parameter.number('pointShadowLightIntensity', Parameter.qualifier.const),
+        
 
         spotLightColor: Parameter.vector3('spotLightColor', Parameter.qualifier.const),
         spotLightPosition: Parameter.vector3('spotLightPosition', Parameter.qualifier.const),
