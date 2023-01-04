@@ -1,3 +1,4 @@
+import Boxel from './apps/Boxel/Boxel';
 import Lights from './apps/Lights';
 import HtmlNode from './libs/html/HtmlNode';
 import WebGLCanvas from './libs/html/WebGLCanvas';
@@ -25,17 +26,19 @@ let animationFrame = requestAnimationFrame(run);
 let then = 0;
 
 function getApp(name) {
-    if(app){
+    if (app) {
         app.stop();
     }
     switch (name) {
         case 'lights':
-        default:
             return new Lights(canvas.context, document);
+        case 'boxel':
+        default:
+            return new Boxel(canvas.context, document);
     }
 }
 
-function run(time){
+function run(time) {
     time *= 0.001;
     canvas.element.setAttribute('fps', Math.round(1 / (time - then)).toString());
     then = time;

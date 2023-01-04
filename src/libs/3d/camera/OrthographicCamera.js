@@ -14,6 +14,18 @@ export default class OrthographicCamera extends Camera {
         this.orthograpicUpdated = true;
     }
 
+    get zoom() {
+        return this._zoom;
+    }
+
+    set zoom(v) {
+        if (v != this._zoom) {
+            this._zoom = v;
+            this.orthograpicUpdated = true;
+            this.projectionUpdated = true;
+        }
+    }
+
     get left() {
         return this._left;
     }

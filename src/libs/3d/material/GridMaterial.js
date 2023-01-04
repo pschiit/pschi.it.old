@@ -10,9 +10,9 @@ import Camera from '../camera/Camera';
 import Node3d from '../Node3d';
 
 export default class GridMaterial extends Material {
-    constructor(color = Color.white, sizes = new Vector2(1, 10), distance = 100, axes = 'xzy') {
+    constructor(color = Color.white, sizes = new Vector2(1, 10), distance = 1000, axes = 'xzy') {
         super();
-        
+
         this.setParameter(Material.parameters.cameraPosition);
         this.setParameter(Material.parameters.projectionMatrix);
 
@@ -26,6 +26,7 @@ export default class GridMaterial extends Material {
 
         const position = Parameter.vector3('pos');
         const vPosition = Parameter.vector3('v_' + Material.parameters.position, Parameter.qualifier.out);
+        const vColor = Parameter.vector4('v_' + Material.parameters.color, Parameter.qualifier.out);
 
         this.vertexShader = Shader.vertexShader([
             Operation.equal(
@@ -141,10 +142,7 @@ export default class GridMaterial extends Material {
                 Shader.parameters.output,
                 Operation.toVector4(
                     GridMaterial.parameters.color,
-                    Operation.multiply(
-                        Operation.mix(g2, g1, g1),
-                        Operation.pow(d, 3)
-                    )),
+                    Operation.mix(g2, g1, g1),),
             ),
             Operation.equal(
                 outputAlpha,

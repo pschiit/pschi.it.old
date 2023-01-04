@@ -193,6 +193,7 @@ export default class Lights extends App {
         spotLight.innerRadius = Math.cos(Angle.toRadian(30));
         spotLight.material = lightMaterial;
         spotLight.vertexBuffer = reverseCube;
+        spotLight.light.intensity = 5;
         floor.appendChild(spotLight);
         spotLight.addEventListener('click', (e) => {
             console.log('toggle spot');
@@ -208,11 +209,13 @@ export default class Lights extends App {
         world.appendChild(perspectiveCamera);
         this.leftTarget = new RenderTarget(perspectiveCamera);
 
-
+        this.cameraHolder = new Node3d();
+        world.appendChild(this.cameraHolder);
         const orthographicCamera = new OrthographicCamera(-4, 4, -4, 6, 0.1, 100);
         orthographicCamera.translate(-7, 5, -7);
         orthographicCamera.target = new Vector3(0, 0, 0);
-        world.appendChild(orthographicCamera);
+        orthographicCamera.showFrustum = true;
+        this.cameraHolder.appendChild(orthographicCamera);
         this.rightTarget = new RenderTarget(orthographicCamera);
 
 
@@ -329,7 +332,8 @@ export default class Lights extends App {
             this.leftTarget.height = this.height;
             this.rightTarget.height = this.height;
         }
-
+        this.cameraHolder.rotate(0.01, 0, 1, 0);
+        this.rightTarget.data.projectionUpdated = true;
         this.rotatingBox.rotate(0.01, 1, 1, 1);
         this.renders.forEach(r => this.graphicsRenderer.render(r));
     }

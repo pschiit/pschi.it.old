@@ -121,6 +121,14 @@ export default class HtmlNode extends Node {
             Math.round((rect.bottom - event.clientY) * this.height / this.element.clientHeight)
         );
     }
+    
+    setPointerCapture(pointerId){
+        this.element.setPointerCapture(pointerId);
+    };
+    
+    releasePointerCapture(pointerId){
+        this.element.releasePointerCapture(pointerId);
+    };
 
     /** Return the HtmlNode singleton of the document
      * @return {HtmlNode} the document HtmlNode
