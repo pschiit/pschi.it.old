@@ -14,6 +14,28 @@ export default class Camera extends Node3d {
         this.projectionUpdated = true;
         this.updateAspectRatio = true;
         this.filters.push('visible');
+        this.viewport = null;
+    }
+
+    get viewport() {
+        return this._viewport;
+    }
+
+    set viewport(v) {
+        this._viewport = v;
+        if(v){
+            this.aspectRatio = v[2] / v[3];
+        }
+
+    }
+
+    get aspectRatio() {
+        return this._aspectRatio;
+    }
+
+    set aspectRatio(v) {
+        this._aspectRatio = v;
+        this.projectionUpdated = true;
     }
 
     get showFrustum() {
@@ -42,8 +64,12 @@ export default class Camera extends Node3d {
     }
 
     getScene(renderTarget, materialParameters = {}) {
+        if (this.viewport
+            && !this.viewport.equals(renderTarget.scissor)) {
+            renderTarget.scissor = this.viewport;
+        }
         materialParameters[Material.parameters.fogDistance.name] = this.fog;
-        materialParameters[Material.parameters.cameraPosition.name] = this.vertexMatrix.positionVector;
+        materialParameters[Material.parameters.cameraPosition.name] = this.position;
         materialParameters[Material.parameters.projectionMatrix.name] = this.projectionMatrix;
         return super.getScene(renderTarget, materialParameters);
     }

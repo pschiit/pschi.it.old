@@ -168,7 +168,7 @@ export default class OrthographicCamera extends Camera {
     }
 
     getScene(renderTarget, materialParameters) {
-        if (this.updateAspectRatio) {
+        if (!this.viewport) {
             this.aspectRatio = renderTarget.aspectRatio;
         }
         return super.getScene(renderTarget, materialParameters);

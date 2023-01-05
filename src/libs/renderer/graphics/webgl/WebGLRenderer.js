@@ -334,10 +334,11 @@ export default class WebGLRenderer extends GraphicsRenderer {
  */
 function render(renderer, renderTarget) {
     const renders = renderTarget.data.getScene(renderTarget);
-    const viewport = renderTarget.viewport;
+    let viewport = renderTarget.viewport;
     const scissor = renderTarget.scissor;
     const clearColor = renderTarget.backgroundColor || Color.black;
     if (scissor) {
+        viewport = scissor;
         if (!renderer.scissor) {
             renderer.gl.enable(renderer.gl.SCISSOR_TEST);
         }

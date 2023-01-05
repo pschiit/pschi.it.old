@@ -129,13 +129,13 @@ export default class Lights extends App {
         this.rotatingBox.vertexBuffer = cube;
         floor.appendChild(this.rotatingBox);
 
-        const sun = new DirectionalLight(
+        this.sun = new DirectionalLight(
             Color.white.clone().scale(0.5),
             new Vector3(10, 20, 10),
             new Vector3(0, 0, 0));
-        floor.appendChild(sun);
+        floor.appendChild(this.sun);
         this.rotatingBox.addEventListener('click', (e) => {
-            sun.light.toggle();
+            this.sun.light.toggle();
         });
 
         const redLight = new PointLight(
@@ -179,66 +179,63 @@ export default class Lights extends App {
         });
 
 
-        const spotLight = new SpotLight(
+        this.spotLight = new SpotLight(
             Color.magenta,
             Math.cos(Angle.toRadian(40)),
             new Vector3(-3, 3, -3),
             new Vector3(0, 0, 0));
-        spotLight.innerRadius = Math.cos(Angle.toRadian(30));
-        spotLight.material = lightMaterial;
-        spotLight.vertexBuffer = reverseCube;
-        spotLight.light.intensity = 5;
-        floor.appendChild(spotLight);
-        spotLight.addEventListener('click', (e) => {
-            spotLight.light.toggle();
+        this.spotLight.innerRadius = Math.cos(Angle.toRadian(30));
+        this.spotLight.material = lightMaterial;
+        this.spotLight.vertexBuffer = reverseCube;
+        this.spotLight.light.intensity = 5;
+        floor.appendChild(this.spotLight);
+        this.spotLight.addEventListener('click', (e) => {
+            this.spotLight.light.toggle();
         });
 
         const pickingMaterial = new PickingMaterial();
         const pickingTexture = new Texture();
 
-        const perspectiveCamera = new PerspectiveCamera(70, 1, 0.1, 100);
-        perspectiveCamera.translate(7, 5, 7);
-        perspectiveCamera.target = new Vector3(0, 0, 0);
-        world.appendChild(perspectiveCamera);
-        this.leftTarget = new RenderTarget(perspectiveCamera);
+        this.cameraLeft = new PerspectiveCamera(70, 1, 0.1, 100);
+        this.cameraLeft.translate(7, 5, 7);
+        this.cameraLeft.target = new Vector3(0, 0, 0);
+        world.appendChild(this.cameraLeft);
 
-        this.cameraHolder = new Node3d();
-        world.appendChild(this.cameraHolder);
-        const orthographicCamera = new OrthographicCamera(-4, 4, -4, 6, 0.1, 100);
-        orthographicCamera.translate(-7, 5, -7);
-        orthographicCamera.target = new Vector3(0, 0, 0);
-        orthographicCamera.showFrustum = true;
-        this.cameraHolder.appendChild(orthographicCamera);
-        this.rightTarget = new RenderTarget(orthographicCamera);
+        this.cameraRight = new OrthographicCamera(-4, 4, -4, 6, 0.1, 100);
+        this.cameraRight.translate(-7, 5, -7);
+        this.cameraRight.target = new Vector3(0, 0, 0);
+        const cameraHolder = new Node3d();
+        cameraHolder.appendChild(this.cameraRight);
+        world.appendChild(cameraHolder);
 
 
-        this.sunRenderTarget = new RenderTarget(null, 1024, 1024);
-        sun.shadow = this.sunRenderTarget;
 
-        this.spotLightRenderTarget = new RenderTarget(null, 1024, 1024);
-        spotLight.shadow = this.spotLightRenderTarget;
+        this.sun.shadow = new RenderTarget(null, 1024, 1024);
+        this.spotLight.shadow = new RenderTarget(null, 1024, 1024);
 
 
         this.renders = [
-            this.sunRenderTarget,
-            this.spotLightRenderTarget,
-            this.leftTarget,
-            this.rightTarget
+            this.sun.shadow,
+            this.spotLight.shadow,
+            this.cameraLeft,
+            this.cameraRight,
         ];
 
         this.rotatingBox.castShadow = true;
 
         this.canvas.addEventListener('pointerdown', e => {
             const mousePosition = this.canvas.getPointerPosition(e);
-            const renderTarget = this.leftTarget.isIn(mousePosition) ?
-                this.leftTarget :
-                this.rightTarget;
+
+            const renderTarget = this.canvas.renderTarget;
+            this.updateCameras(renderTarget);
 
             renderTarget.read = new Vector4(mousePosition[0], mousePosition[1], 1, 1);
             renderTarget.material = pickingMaterial;
             renderTarget.colorTexture = pickingTexture;
+            const x = mousePosition[0];
+            const camera = x < this.cameraLeft.viewport[2] ? this.cameraLeft : this.cameraRight;
 
-            this.canvas.render(renderTarget);
+            this.canvas.render(camera);
             const color = new Color(renderTarget.output).normalize();
             world.dispatchCallback((node) => {
                 if (node.colorId.equals(color)) {
@@ -256,52 +253,44 @@ export default class Lights extends App {
                 case 'a':
                 case 'KeyA':
                 case 'ArrowLeft':
-                    perspectiveCamera.rotate(step * 0.1, 0, 1, 0);
-                    perspectiveCamera.projectionUpdated = true;
-                    orthographicCamera.projectionUpdated = true;
+                    this.cameraLeft.rotate(step * 0.1, 0, 1, 0);
+                    this.cameraLeft.projectionUpdated = true;
                     break;
                 case 'd':
                 case 'KeyD':
                 case 'ArrowRight':
-                    perspectiveCamera.rotate(step * 0.1, 0, -1, 0);
-                    perspectiveCamera.projectionUpdated = true;
-                    orthographicCamera.projectionUpdated = true;
+                    this.cameraLeft.rotate(step * 0.1, 0, -1, 0);
+                    this.cameraLeft.projectionUpdated = true;
                     break;
                 case 'w':
                 case 'KeyW':
                 case 'ArrowUp':
-                    perspectiveCamera.translate(0, 0, -step);
-                    perspectiveCamera.projectionUpdated = true;
-                    orthographicCamera.projectionUpdated = true;
+                    this.cameraLeft.translate(0, 0, -step);
+                    this.cameraLeft.projectionUpdated = true;
                     break;
                 case 's':
                 case 'KeyS':
                 case 'ArrowDown':
-                    perspectiveCamera.translate(0, 0, step);
-                    perspectiveCamera.projectionUpdated = true;
-                    orthographicCamera.projectionUpdated = true;
+                    this.cameraLeft.translate(0, 0, step);
+                    this.cameraLeft.projectionUpdated = true;
                     break;
                 case 'ControlLeft':
-                    perspectiveCamera.rotate(step * 0.1, -1, 0, 0);
-                    perspectiveCamera.projectionUpdated = true;
-                    orthographicCamera.projectionUpdated = true;
+                    this.cameraLeft.rotate(step * 0.1, -1, 0, 0);
+                    this.cameraLeft.projectionUpdated = true;
                     break;
                 case 'Space':
-                    perspectiveCamera.rotate(step * 0.1, 1, 0, 0);
-                    perspectiveCamera.projectionUpdated = true;
-                    orthographicCamera.projectionUpdated = true;
+                    this.cameraLeft.rotate(step * 0.1, 1, 0, 0);
+                    this.cameraLeft.projectionUpdated = true;
                     break;
                 case 'q':
                 case 'KeyQ':
-                    perspectiveCamera.rotate(step * 0.1, 0, 0, 1,);
-                    perspectiveCamera.projectionUpdated = true;
-                    orthographicCamera.projectionUpdated = true;
+                    this.cameraLeft.rotate(step * 0.1, 0, 0, 1,);
+                    this.cameraLeft.projectionUpdated = true;
                     break;
                 case 'e':
                 case 'KeyE':
-                    perspectiveCamera.rotate(step * 0.1, 0, 0, -1);
-                    perspectiveCamera.projectionUpdated = true;
-                    orthographicCamera.projectionUpdated = true;
+                    this.cameraLeft.rotate(step * 0.1, 0, 0, -1);
+                    this.cameraLeft.projectionUpdated = true;
                     break;
                 default:
                     return;
@@ -313,22 +302,21 @@ export default class Lights extends App {
         if (!this.renders) {
             this.init();
         }
-        const renderTarget = this.canvas.renderTarget;
-        if (this.width != renderTarget.width) {
-            this.width = renderTarget.width;
-            this.leftTarget.viewport = new Vector4(0, 0, this.width / 2, this.height);
-            this.leftTarget.scissor = this.leftTarget.viewport;
-            this.rightTarget.viewport = new Vector4(this.width / 2, 0, this.width / 2, this.height);
-            this.rightTarget.scissor = this.rightTarget.viewport;
-        }
-        if (this.height != renderTarget.height) {
-            this.height = renderTarget.height;
-            this.leftTarget.height = this.height;
-            this.rightTarget.height = this.height;
-        }
-        this.cameraHolder.rotate(0.01, 0, 1, 0);
-        this.rightTarget.data.projectionUpdated = true;
+        this.updateCameras(this.canvas.renderTarget);
+        this.cameraRight.parent.rotate(0.01, 0, 1, 0);
+        this.cameraRight.projectionUpdated = true;
         this.rotatingBox.rotate(0.01, 1, 1, 1);
+
         this.renders.forEach(r => this.canvas.render(r));
+    }
+
+    updateCameras(renderTarget) {
+        if (this.width != renderTarget.width
+            || this.height != renderTarget.height) {
+            this.width = renderTarget.width;
+            this.height = renderTarget.height;
+            this.cameraLeft.viewport = new Vector4(0, 0, this.width / 2, this.height);
+            this.cameraRight.viewport = new Vector4(this.width / 2, 0, this.width / 2, this.height);
+        }
     }
 }

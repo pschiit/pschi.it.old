@@ -70,12 +70,12 @@ export default class PointLight extends Node3d {
             this.light.setParameter(LightMaterial.parameters.pointShadowLightShadowMatrix, this.shadow.data.projectionMatrix);
             this.light.setParameter(LightMaterial.parameters.pointShadowLightShadowMap, this.shadow.colorTexture);
             this.light.setParameter(LightMaterial.parameters.pointShadowLightColor,this.light.color.rgb);
-            this.light.setParameter(LightMaterial.parameters.pointShadowLightPosition,this.vertexMatrix.positionVector);
+            this.light.setParameter(LightMaterial.parameters.pointShadowLightPosition,this.position);
             this.light.setParameter(LightMaterial.parameters.pointShadowLightAmbientStrength,this.light.ambientStrength);
             this.light.setParameter(LightMaterial.parameters.pointShadowLightIntensity,this.light.intensity);
         }else{
             this.light.setParameter(LightMaterial.parameters.pointLightColor,this.light.color.rgb);
-            this.light.setParameter(LightMaterial.parameters.pointLightPosition,this.vertexMatrix.positionVector);
+            this.light.setParameter(LightMaterial.parameters.pointLightPosition,this.position);
             this.light.setParameter(LightMaterial.parameters.pointLightAmbientStrength,this.light.ambientStrength);
             this.light.setParameter(LightMaterial.parameters.pointLightIntensity,this.light.intensity);
         }

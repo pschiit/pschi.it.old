@@ -3,6 +3,7 @@ import Matrix3 from './Matrix3';
 import FloatArray from './FloatArray';
 import Vector3 from './Vector3';
 import Vector4 from './Vector4';
+import Ray from './Ray';
 
 export default class Matrix4 extends FloatArray {
     /** Create a new Matrix3 from an array of number
@@ -50,6 +51,10 @@ export default class Matrix4 extends FloatArray {
     */
     get zAxis() {
         return new Vector3(this[8], this[9], this[10]);
+    }
+
+    get ray(){
+        return new Ray(this.positionVector,this.zAxis);
     }
 
     /** Return a Vector3 reflecting the position from the current Matrix

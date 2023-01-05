@@ -73,16 +73,16 @@ export default class SpotLight extends Node3d {
             this.light.setParameter(LightMaterial.parameters.spotShadowLightShadowMatrix, this.shadow.data.projectionMatrix);
             this.light.setParameter(LightMaterial.parameters.spotShadowLightShadowMap, this.shadow.colorTexture);
             this.light.setParameter(LightMaterial.parameters.spotShadowLightColor, this.light.color.rgb);
-            this.light.setParameter(LightMaterial.parameters.spotShadowLightPosition, this.vertexMatrix.positionVector);
-            this.light.setParameter(LightMaterial.parameters.spotShadowLightDirection, this.vertexMatrix.zAxis);
+            this.light.setParameter(LightMaterial.parameters.spotShadowLightPosition, this.position);
+            this.light.setParameter(LightMaterial.parameters.spotShadowLightDirection, this.zAxis);
             this.light.setParameter(LightMaterial.parameters.spotShadowLightInnerRadius, this.innerRadius);
             this.light.setParameter(LightMaterial.parameters.spotShadowLightRadius, this.radius);
             this.light.setParameter(LightMaterial.parameters.spotShadowLightAmbientStrength, this.light.ambientStrength);
             this.light.setParameter(LightMaterial.parameters.spotShadowLightIntensity, this.light.intensity);
         } else {
             this.light.setParameter(LightMaterial.parameters.spotLightColor, this.light.color.rgb);
-            this.light.setParameter(LightMaterial.parameters.spotLightPosition, this.vertexMatrix.positionVector);
-            this.light.setParameter(LightMaterial.parameters.spotLightDirection, this.vertexMatrix.zAxis);
+            this.light.setParameter(LightMaterial.parameters.spotLightPosition, this.position);
+            this.light.setParameter(LightMaterial.parameters.spotLightDirection, this.zAxis);
             this.light.setParameter(LightMaterial.parameters.spotLightInnerRadius, this.innerRadius);
             this.light.setParameter(LightMaterial.parameters.spotLightRadius, this.radius);
             this.light.setParameter(LightMaterial.parameters.spotLightAmbientStrength, this.light.ambientStrength);

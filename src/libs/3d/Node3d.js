@@ -1,5 +1,6 @@
 import Color from '../core/Color';
 import Matrix4 from '../math/Matrix4';
+import Ray from '../math/Ray';
 import Vector3 from '../math/Vector3';
 import Material from '../renderer/graphics/Material';
 import Render from '../renderer/graphics/Render';
@@ -36,6 +37,10 @@ export default class Node3d extends Render {
 
     get normalMatrix() {
         return this.getParameter(Material.parameters.normalMatrix);
+    }
+
+    get ray(){
+        return this.vertexMatrix.ray;
     }
 
     /** Return a Vector3 reflecting the x axis from the current Node3d
@@ -163,9 +168,9 @@ export default class Node3d extends Render {
     }
 
     clearVertexMatrix() {
-        this.dispatchCallback(() => {
-            if (this.vertexMatrix) {
-                this.setParameter(Material.parameters.vertexMatrix, null);
+        this.dispatchCallback((node) => {
+            if (node.vertexMatrix) {
+                node.setParameter(Material.parameters.vertexMatrix, null);
             }
         });
     }

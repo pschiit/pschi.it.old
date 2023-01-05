@@ -87,7 +87,7 @@ export default class PerspectiveCamera extends Camera {
     }
 
     getScene(renderTarget, materialParameters) {
-        if (this.updateAspectRatio) {
+        if (!this.viewport) {
             this.aspectRatio = renderTarget.aspectRatio;
         }
         return super.getScene(renderTarget, materialParameters);

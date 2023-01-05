@@ -29,8 +29,8 @@ export default class Editor extends App {
 
         this.orbit = new Node3d();
         this.camera = new OrthographicCamera(-this.scale, this.scale, -this.scale, this.scale, 0.1, 2000);
-        this.camera = new PerspectiveCamera(55, 1, 0.1, 2000);
-        //this.camera.zoom = this.scale / 4;
+        //this.camera = new PerspectiveCamera(60, 1, 0.1, 100);
+        this.camera.zoom = this.scale / 4;
         this.camera.translate(5, 5, -10);
         this.camera.target = new Vector3(0, 0, 0);
         this.orbit.appendChild(this.camera);
@@ -77,54 +77,11 @@ export default class Editor extends App {
             }
 
         });
-
-        // this.addEventListener('pointerdown', e => {
-        //     this.clicked = true;
-        //     this.graphicsRenderer.parent.setPointerCapture(e.pointerId);
-        //     this.updateMovement(e);
-        // });
-        // this.addEventListener('pointerup', e => {
-        //     this.graphicsRenderer.parent.releasePointerCapture(e.pointerId);
-        //     this.movementX = 0;
-        //     this.movementY = 0;
-        //     this.clicked = false;
-        // });
-        // this.addEventListener('pointermove', this.updateMovement.bind(this));
-
-        this.canvas.addEventListener('wheel', e => {
-            this.wheelDelta -= e.deltaY * this.step
-        });
-    }
-
-    updateMovement(e) {
-        if (this.clicked) {
-            this.movementX -= e.movementX * this.step;
-            this.movementY += e.movementY * this.step;
-        }
     }
 
     run() {
         if (!this.camera) {
             this.init();
-        }
-        if (this.wheelDelta) {
-            this.camera.zoom += this.wheelDelta * 0.1;
-            this.wheelDelta = 0;
-            if (this.camera.zoom > this.scale) {
-                this.camera.zoom = this.scale;
-            } else if (this.camera.zoom <= 1) {
-                this.camera.zoom = 1;
-            }
-        }
-        if (this.clicked) {
-            if (this.movementX) {
-                this.orbit.rotate(this.movementX * this.step, 0, 1, 0);
-                this.camera.projectionUpdated = true;
-            }
-            if (this.movementY) {
-                this.orbit.rotate(this.movementY * this.step, 1, 0, 0);
-                this.camera.projectionUpdated = true;
-            }
         }
 
         this.canvas.render(this.camera);
