@@ -8,6 +8,7 @@ export default class Render extends GraphicsNode {
         super();
         this.material = material;
         this.vertexBuffer = vertexBuffer;
+        this.filters = [];
     }
 
     get renderable() {
@@ -30,21 +31,21 @@ export default class Render extends GraphicsNode {
         return this.vertexBuffer ? this.vertexBuffer.primitive : this._primitive;
     }
 
-    getScene(renderTarget) {
-        const sceneParameters = {};
+    getScene(renderTarget, materialParameters) {
+        const filters = this.filters;
         const materials = {};
         const renders = [];
-        if(renderTarget.material){
+        if (renderTarget.material) {
             materials[renderTarget.material.id] = renderTarget.material;
         }
-        this.parameters[Material.parameters.backgroundColor] = renderTarget.backgroundColor;
+        materialParameters[Material.parameters.backgroundColor] = renderTarget.backgroundColor;
 
-        this.dispatchCallback(update);
+        this.root.dispatchCallback(update);
         for (const id in materials) {
             const material = materials[id];
-            for (const name in sceneParameters) {
-                const parameter = sceneParameters[name];
-                if(material.parameters.hasOwnProperty(name)){
+            for (const name in materialParameters) {
+                const parameter = materialParameters[name];
+                if (material.parameters.hasOwnProperty(name)) {
                     material.setParameter(name, parameter);
                 }
             }
@@ -56,13 +57,25 @@ export default class Render extends GraphicsNode {
          * @param {Render} render Node to load
          */
         function update(render) {
-            if (render.renderable) {
-                if(!renderTarget.material && !materials[render.material.id]){
+            if (filter(render)) {
+                if (!renderTarget.material && !materials[render.material.id]) {
                     materials[render.material.id] = render.material;
                 }
                 renders.push(render);
             }
-            render.setScene(sceneParameters);
+            render.setScene(materialParameters);
+        }
+
+
+        /** Return whether or not the Render is ignored by the Camera
+         * @param {Render} render Render to verify
+         * @returns {Boolean} true if the Camera can see the Render
+         */
+        function filter(render) {
+            return filters.every(f =>
+                f != render
+                && (f instanceof Function && f(render)) || render[f])
+                && render.renderable;
         }
     }
 

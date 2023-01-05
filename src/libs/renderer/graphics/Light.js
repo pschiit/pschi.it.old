@@ -21,7 +21,7 @@ export default class Light extends GraphicsNode {
 
     setScene(parameters) {
         for (const name in this.parameters) {
-            let parameter = this.parameters[name];
+            let parameter = this.getParameter(name);
             if (parameter instanceof FloatArray) {
                 if (!parameters[name]) {
                     parameters[name] = new FloatArray(parameter);

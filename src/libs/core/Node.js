@@ -7,16 +7,7 @@ export default class Node {
         this.parent = null;
         this.childrens = [];
         this.listeners = {};
-        this._visible = true;
         this.parameters = {};
-    }
-
-    get visible() {
-        return this._visible;
-    }
-
-    set visible(v) {
-        this._visible = v;
     }
 
     get root() {

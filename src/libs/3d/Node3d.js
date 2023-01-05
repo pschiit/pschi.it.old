@@ -15,20 +15,22 @@ export default class Node3d extends Render {
         this._target = new Vector3();
         this.castShadow = false;
         this.receiveShadow = false;
+        this.visible = true;
     }
 
     get vertexMatrix() {
-        if(!this.parameters[Material.parameters.vertexMatrix]){
+        let vertexMatrix = this.getParameter(Material.parameters.vertexMatrix)
+        if (!vertexMatrix){
             const parentMatrix = this.parent?.vertexMatrix;
-            const vertexMatrix = parentMatrix instanceof Matrix4 ? parentMatrix.clone().multiply(this.matrix)
+            vertexMatrix = parentMatrix instanceof Matrix4 ? parentMatrix.clone().multiply(this.matrix)
                 : this.matrix.clone();
             this.setParameter(Material.parameters.vertexMatrix, vertexMatrix);
         }
-        return this.parameters[Material.parameters.vertexMatrix];
+        return vertexMatrix;
     }
 
     get normalMatrix() {
-        return this.parameters[Material.parameters.normalMatrix];
+        return this.getParameter(Material.parameters.normalMatrix);
     }
 
     /** Return a Vector3 reflecting the x axis from the current Node3d
@@ -155,15 +157,15 @@ export default class Node3d extends Render {
         return this;
     }
 
-    clearVertexMatrix(){
-        this.dispatchCallback(()=>{
-            if(this.vertexMatrix){
-                this.parameters[Material.parameters.vertexMatrix] = null;
+    clearVertexMatrix() {
+        this.dispatchCallback(() => {
+            if (this.vertexMatrix) {
+                this.setParameter(Material.parameters.vertexMatrix, null);
             }
         });
     }
-    
-    intersect(ray){
+
+    intersect(ray) {
         return null;
     }
 

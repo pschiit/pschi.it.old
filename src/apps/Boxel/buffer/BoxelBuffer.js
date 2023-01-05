@@ -65,7 +65,7 @@ export default class BoxelBuffer extends VertexBuffer {
 
 
     get instancePosition() {
-        return this.parameters[BoxelMaterial.parameters.instancePosition.name];
+        return this.getParameter(BoxelMaterial.parameters.instancePosition);
     }
 
     set instancePosition(v) {
@@ -73,7 +73,7 @@ export default class BoxelBuffer extends VertexBuffer {
     }
 
     get instanceColor() {
-        return this.parameters[BoxelMaterial.parameters.instanceColor.name];
+        return this.getParameter(BoxelMaterial.parameters.instanceColor);
     }
 
     set instanceColor(v) {

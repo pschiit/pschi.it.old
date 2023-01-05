@@ -13,7 +13,7 @@ export default class Camera extends Node3d {
         this.fog = new Vector2(0, 50);
         this.projectionUpdated = true;
         this.updateAspectRatio = true;
-        this.filters = ['visible'];
+        this.filters.push('visible');
     }
 
     get showFrustum() {
@@ -41,69 +41,22 @@ export default class Camera extends Node3d {
         return this.vertexMatrix.inverse;
     }
 
-    getScene(renderTarget) {
-        const filters = this.filters;
-        const parameters = {};
-        const materials = {};
-        const renders = [];
-        if (renderTarget.material) {
-            materials[renderTarget.material.id] = renderTarget.material;
-        }
-
-        this.root.dispatchCallback(update);
-
-        parameters[Material.parameters.backgroundColor] = renderTarget.backgroundColor;
-        parameters[Material.parameters.fogDistance.name] = this.fog;
-        parameters[Material.parameters.cameraPosition.name] = this.vertexMatrix.positionVector;
-        parameters[Material.parameters.projectionMatrix.name] = this.projectionMatrix;
-
-        for (const id in materials) {
-            const material = materials[id];
-            for (const name in parameters) {
-                const parameter = parameters[name];
-                if (material.parameters.hasOwnProperty(name)) {
-                    material.setParameter(name, parameter);
-                }
-            }
-        }
-
-        return renders;
-
-        /** Load a Node in the current WebGLRenderer
-         * @param {Render} render Node to load
-         */
-        function update(render) {
-            if (filter(render)) {
-                if (!renderTarget.material && !materials[render.material.id]) {
-                    materials[render.material.id] = render.material;
-                }
-                renders.push(render);
-            }
-            render.setScene(parameters);
-        }
-
-
-        /** Return whether or not the Render is ignored by the Camera
-         * @param {Render} render Render to verify
-         * @returns {Boolean} true if the Camera can see the Render
-         */
-        function filter(render) {
-            return filters.every(f =>
-                f != render
-                && (f instanceof Function && f(render)) || render[f])
-                && render.renderable;
-        }
+    getScene(renderTarget, materialParameters = {}) {
+        materialParameters[Material.parameters.fogDistance.name] = this.fog;
+        materialParameters[Material.parameters.cameraPosition.name] = this.vertexMatrix.positionVector;
+        materialParameters[Material.parameters.projectionMatrix.name] = this.projectionMatrix;
+        return super.getScene(renderTarget, materialParameters);
     }
 
     raycast(vector2) {
         return null;
     }
 
-    project(position){
+    project(position) {
         return position.transform(this.vertexMatrix.inverse).transform(this.projectionMatrix);
     }
 
-    unproject(position){
+    unproject(position) {
         return position.transform(this.projectionMatrix.inverse);
     }
 

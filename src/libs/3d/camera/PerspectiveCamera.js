@@ -64,7 +64,7 @@ export default class PerspectiveCamera extends Camera {
         if (this.perspectiveUpdated) {
             this._perspectiveMatrix = Matrix4.perspectiveMatrix(this.fovY, this.aspectRatio, this.near, this.far);
             this.perspectiveUpdated = false;
-            if(this.showFrustum){
+            if (this.showFrustum) {
                 this.frustum.matrix = this._perspectiveMatrix.inverse;
                 this.frustum.vertexMatrix;
             }
@@ -83,13 +83,13 @@ export default class PerspectiveCamera extends Camera {
     raycast(vector2) {
         const origin = this.vertexMatrix.positionVector;
         const direction = this.unproject(vector2.toVector3(0)).substract(origin).normalize();
-        return new Ray(origin,direction);
+        return new Ray(origin, direction);
     }
 
-    getScene(renderTarget){
-        if(this.updateAspectRatio && this.aspectRatio != renderTarget.aspectRatio){
+    getScene(renderTarget, materialParameters) {
+        if (this.updateAspectRatio) {
             this.aspectRatio = renderTarget.aspectRatio;
         }
-        return super.getScene(renderTarget);
+        return super.getScene(renderTarget, materialParameters);
     }
 }

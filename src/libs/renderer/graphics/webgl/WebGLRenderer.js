@@ -364,11 +364,11 @@ function render(renderer, renderTarget) {
         renderer.material = material;
         if (!cache[material.id]) {
             for (const name in material.parameters) {
-                renderer.program.setParameter(name, material.parameters[name]);
+                renderer.program.updateParameter(name, material.getParameter(name));
             }
         }
         for (const name in r.parameters) {
-            renderer.program.setParameter(name, r.parameters[name]);
+            renderer.program.updateParameter(name, r.getParameter(name));
         }
         if (r.vertexBuffer) {
             renderer.vertexArray = WebGLVertexArray.from(renderer, r.vertexBuffer, renderer.material);

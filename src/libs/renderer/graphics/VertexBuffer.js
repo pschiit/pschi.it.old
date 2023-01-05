@@ -64,7 +64,7 @@ export default class VertexBuffer extends GraphicsNode {
     }
 
     get position() {
-        return this.parameters[Material.parameters.position.name];
+        return this.getParameter(Material.parameters.position);
     }
 
     set position(v) {
@@ -72,7 +72,7 @@ export default class VertexBuffer extends GraphicsNode {
     }
 
     get normal() {
-        return this.parameters[Material.parameters.normal.name];
+        return this.getParameter(Material.parameters.normal);
     }
 
     set normal(v) {
@@ -80,7 +80,7 @@ export default class VertexBuffer extends GraphicsNode {
     }
 
     get color() {
-        return this.parameters[Material.parameters.color.name];
+        return this.getParameter(Material.parameters.color);
     }
 
     set color(v) {
@@ -88,7 +88,7 @@ export default class VertexBuffer extends GraphicsNode {
     }
 
     get uv() {
-        return this.parameters[Material.parameters.uv.name];
+        return this.getParameter(Material.parameters.uv);
     }
 
     set uv(v) {
@@ -98,7 +98,7 @@ export default class VertexBuffer extends GraphicsNode {
     get buffers() {
         const result = [];
         for (const name in this.parameters) {
-            const parameter = this.parameters[name];
+            const parameter = this.getParameter(name);
             if (parameter instanceof Buffer) {
                 result.push(parameter);
             }
@@ -131,24 +131,24 @@ export default class VertexBuffer extends GraphicsNode {
     }
 
     setParameter(name, v, step, divisor) {
-        let buffer = this.parameters[name];
+        let buffer = this.getParameter(name);
         if (v) {
             if (v instanceof Buffer && v != buffer) {
-                this.parameters[name] = v;
+                super.setParameter(name, v);
             } else {
                 if (Array.isArray(v)) {
                     v = new Float32Array(v);
                 }
                 if (!buffer) {
                     buffer = new Buffer(v, step, divisor);
-                    this.parameters[name] = buffer;
+                    super.setParameter(name, buffer);
 
                 } else {
                     buffer.data = v;
                 }
             }
         } else if (buffer) {
-            this.parameters[name] = null;
+            super.setParameter(name, null);
         }
 
         return buffer;

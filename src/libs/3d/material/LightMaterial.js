@@ -148,7 +148,7 @@ export default class LightMaterial extends Material {
     }
 
     get ambientColor() {
-        return this.parameters[LightMaterial.parameters.ambientColor.name];
+        return this.getParameter(LightMaterial.parameters.ambientColor);
     }
 
     set ambientColor(v) {
@@ -156,7 +156,7 @@ export default class LightMaterial extends Material {
     }
 
     get diffuseColor() {
-        return this.parameters[LightMaterial.parameters.diffuseColor.name];
+        return this.getParameter(LightMaterial.parameters.diffuseColor);
     }
 
     set diffuseColor(v) {
@@ -164,7 +164,7 @@ export default class LightMaterial extends Material {
     }
 
     get specularColor() {
-        return this.parameters[LightMaterial.parameters.specularColor.name];
+        return this.getParameter(LightMaterial.parameters.specularColor);
     }
 
     set specularColor(v) {
@@ -172,7 +172,7 @@ export default class LightMaterial extends Material {
     }
 
     get emissiveColor() {
-        return this.parameters[LightMaterial.parameters.emissiveColor.name];
+        return this.getParameter(LightMaterial.parameters.emissiveColor);
     }
 
     set emissiveColor(v) {
@@ -180,7 +180,7 @@ export default class LightMaterial extends Material {
     }
 
     get ambientTexture() {
-        return this.parameters[LightMaterial.parameters.ambientTexture.name];
+        return this.getParameter(LightMaterial.parameters.ambientTexture);
     }
 
     set ambientTexture(v) {
@@ -188,7 +188,7 @@ export default class LightMaterial extends Material {
     }
 
     get diffuseTexture() {
-        return this.parameters[LightMaterial.parameters.diffuseTexture.name];
+        return this.getParameter(LightMaterial.parameters.diffuseTexture);
     }
 
     set diffuseTexture(v) {
@@ -196,7 +196,7 @@ export default class LightMaterial extends Material {
     }
 
     get specularTexture() {
-        return this.parameters[LightMaterial.parameters.specularTexture.name];
+        return this.getParameter(LightMaterial.parameters.specularTexture);
     }
 
     set specularTexture(v) {
@@ -204,7 +204,7 @@ export default class LightMaterial extends Material {
     }
 
     get emissiveTexture() {
-        return this.parameters[LightMaterial.parameters.emissiveTexture.name];
+        return this.getParameter(LightMaterial.parameters.emissiveTexture);
     }
 
     set emissiveTexture(v) {
@@ -212,7 +212,7 @@ export default class LightMaterial extends Material {
     }
 
     get shininess() {
-        return this.parameters[LightMaterial.parameters.shininess.name];
+        return this.getParameter(LightMaterial.parameters.shininess);
     }
 
     set shininess(v) {
@@ -220,7 +220,7 @@ export default class LightMaterial extends Material {
     }
 
     get texture() {
-        return this.parameters[Material.parameters.texture.name];
+        return this.getParameter(Material.parameters.texture);
     }
 
     set texture(v) {
@@ -238,12 +238,12 @@ export default class LightMaterial extends Material {
     }
 
     createShader() {
-        this.directionalLightsCount = this.parameters[LightMaterial.parameters.directionalLightAmbientStrength.name]?.length || 0;
-        this.directionalShadowLightsCount = this.parameters[LightMaterial.parameters.directionalShadowLightAmbientStrength.name]?.length || 0;
-        this.pointLightsCount = this.parameters[LightMaterial.parameters.pointLightAmbientStrength.name]?.length || 0;
-        this.pointShadowLightsCount = this.parameters[LightMaterial.parameters.pointShadowLightAmbientStrength.name]?.length || 0;
-        this.spotLightsCount = this.parameters[LightMaterial.parameters.spotLightAmbientStrength.name]?.length || 0;
-        this.spotShadowLightsCount = this.parameters[LightMaterial.parameters.spotShadowLightAmbientStrength.name]?.length || 0;
+        this.directionalLightsCount = this.getParameter(LightMaterial.parameters.directionalLightAmbientStrength)?.length || 0;
+        this.directionalShadowLightsCount = this.getParameter(LightMaterial.parameters.directionalShadowLightAmbientStrength)?.length || 0;
+        this.pointLightsCount = this.getParameter(LightMaterial.parameters.pointLightAmbientStrength)?.length || 0;
+        this.pointShadowLightsCount = this.getParameter(LightMaterial.parameters.pointShadowLightAmbientStrength)?.length || 0;
+        this.spotLightsCount = this.getParameter(LightMaterial.parameters.spotLightAmbientStrength)?.length || 0;
+        this.spotShadowLightsCount = this.getParameter(LightMaterial.parameters.spotShadowLightAmbientStrength)?.length || 0;
         const hasLight = this.directionalLightsCount || this.directionalShadowLightsCount
             || this.pointLightsCount
             || this.spotLightsCount || this.spotShadowLightsCount;

@@ -140,7 +140,7 @@ export default class GridMaterial extends Material {
                 Operation.toVector4(
                     GridMaterial.parameters.color,
                     Operation.multiply(Operation.mix(g2, g1, g1), 
-                    d)),
+                    Operation.pow(d,2))),
             ),
             Operation.equal(
                 outputAlpha,
@@ -160,7 +160,7 @@ export default class GridMaterial extends Material {
     }
 
     get distance() {
-        return this.parameters[GridMaterial.parameters.distance];
+        return this.getParameter(GridMaterial.parameters.distance);
     }
 
     set distance(v) {
@@ -168,7 +168,7 @@ export default class GridMaterial extends Material {
     }
 
     get sizes() {
-        return this.parameters[GridMaterial.parameters.sizes];
+        return this.getParameter(GridMaterial.parameters.sizes);
     }
 
     set sizes(v) {
@@ -176,7 +176,7 @@ export default class GridMaterial extends Material {
     }
 
     get color() {
-        return this.parameters[GridMaterial.parameters.color];
+        return this.getParameter(GridMaterial.parameters.color);
     }
 
     set color(v) {
