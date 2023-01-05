@@ -23,7 +23,7 @@ export default class Camera extends Node3d {
 
     set viewport(v) {
         this._viewport = v;
-        if(v){
+        if (v) {
             this.aspectRatio = v[2] / v[3];
         }
 
@@ -38,25 +38,24 @@ export default class Camera extends Node3d {
         this.projectionUpdated = true;
     }
 
-    get showFrustum() {
-        return this.frustum != undefined;
+    get frustum() {
+        return this._frustum;
     }
 
-    set showFrustum(v) {
-        if (v && this.frustum.parent != this) {
-            this.appendChild(this.frustum);
-            this.clearVertexMatrix();
-        } else {
+    set frustum(v) {
+        if (v && v != this.frustum) {
+            this.frustum = null;
+            if (v.parent != this) {
+                this.appendChild(v);
+            }
+            v.material = frustumMaterial;
+            v.vertexBuffer = frustumBuffer;
+            this._frustum = v;
+
+        } else if (!v && this.frustum) {
             this.removeChild(this.frustum);
             this._frustum = null;
         }
-    }
-
-    get frustum() {
-        if (!this._frustum) {
-            this._frustum = Camera.frustum();
-        }
-        return this._frustum;
     }
 
     get projectionMatrix() {

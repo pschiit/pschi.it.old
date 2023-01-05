@@ -196,7 +196,7 @@ export default class Lights extends App {
         const pickingMaterial = new PickingMaterial();
         const pickingTexture = new Texture();
 
-        this.cameraLeft = new PerspectiveCamera(70, 1, 0.1, 100);
+        this.cameraLeft = new PerspectiveCamera(55, 1, 0.1, 2000);
         this.cameraLeft.translate(7, 5, 7);
         this.cameraLeft.target = new Vector3(0, 0, 0);
         world.appendChild(this.cameraLeft);
@@ -204,6 +204,7 @@ export default class Lights extends App {
         this.cameraRight = new OrthographicCamera(-4, 4, -4, 6, 0.1, 100);
         this.cameraRight.translate(-7, 5, -7);
         this.cameraRight.target = new Vector3(0, 0, 0);
+        this.cameraRight.frustum = new Node3d();
         const cameraHolder = new Node3d();
         cameraHolder.appendChild(this.cameraRight);
         world.appendChild(cameraHolder);
@@ -212,7 +213,7 @@ export default class Lights extends App {
         this.spotLight.shadow = new RenderTarget(null, 1024, 1024);
 
         const renderTarget = this.canvas.renderTarget;
-        renderTarget.data = [this.cameraLeft,this.cameraRight];
+        renderTarget.data = [this.cameraLeft, this.cameraRight];
         this.renders = [
             this.sun.shadow,
             this.spotLight.shadow,
@@ -243,7 +244,7 @@ export default class Lights extends App {
             renderTarget.read = null;
             renderTarget.material = null;
             renderTarget.colorTexture = null;
-            renderTarget.data = [this.cameraLeft,this.cameraRight];
+            renderTarget.data = [this.cameraLeft, this.cameraRight];
         });
 
         this.canvas.addEventListener('keydown', e => {

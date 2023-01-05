@@ -120,14 +120,6 @@ export default class OrthographicCamera extends Camera {
         }
     }
 
-    get frustum() {
-        if (!this._frustum) {
-            this._frustum = Camera.frustum();
-            this.orthographicMatrix;
-        }
-        return this._frustum;
-    }
-
     get orthographicMatrix() {
         if (this.orthograpicUpdated) {
             const dx = (this.right - this.left) / (2 * this.zoom);
@@ -143,7 +135,7 @@ export default class OrthographicCamera extends Camera {
 
             this._orthographicMatrix = Matrix4.orthographicMatrix(left, right, bottom, top, this.near, this.far);
             this.orthograpicUpdated = false;
-            if (this.showFrustum) {
+            if (this.frustum) {
                 this.frustum.matrix = this._orthographicMatrix.inverse;
                 this.frustum.vertexMatrix;
             }

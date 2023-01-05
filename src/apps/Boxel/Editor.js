@@ -29,7 +29,7 @@ export default class Editor extends App {
 
         this.orbit = new Node3d();
         this.camera = new OrthographicCamera(-this.scale, this.scale, -this.scale, this.scale, 0.1, 2000);
-        //this.camera = new PerspectiveCamera(60, 1, 0.1, 100);
+        this.camera = new PerspectiveCamera(55, 1, 0.1, 100);
         this.camera.zoom = this.scale / 4;
         this.camera.translate(5, 5, -10);
         this.camera.target = new Vector3(0, 0, 0);
@@ -83,7 +83,6 @@ export default class Editor extends App {
         if (!this.camera) {
             this.init();
         }
-
         this.canvas.render(this.camera);
     }
 

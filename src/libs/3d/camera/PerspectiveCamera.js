@@ -52,19 +52,11 @@ export default class PerspectiveCamera extends Camera {
         this.projectionUpdated = true;
     }
 
-    get frustum() {
-        if (!this._frustum) {
-            this._frustum = Camera.frustum();
-            this.perspectiveMatrix;
-        }
-        return this._frustum;
-    }
-
     get perspectiveMatrix() {
         if (this.perspectiveUpdated) {
             this._perspectiveMatrix = Matrix4.perspectiveMatrix(this.fovY, this.aspectRatio, this.near, this.far);
             this.perspectiveUpdated = false;
-            if (this.showFrustum) {
+            if (this.frustum) {
                 this.frustum.matrix = this._perspectiveMatrix.inverse;
                 this.frustum.vertexMatrix;
             }
