@@ -1,4 +1,5 @@
 import Color from '../../core/Color';
+import Ray from '../../math/Ray';
 import Vector2 from '../../math/Vector2';
 import Material from '../../renderer/graphics/Material';
 import Render from '../../renderer/graphics/Render';
@@ -37,7 +38,7 @@ export default class Camera extends Node3d {
     }
 
     get projectionMatrix() {
-        return this.vertexMatrix.clone().invert();
+        return this.vertexMatrix.inverse;
     }
 
     getScene(renderTarget) {
@@ -93,6 +94,18 @@ export default class Camera extends Node3d {
                 && (f instanceof Function && f(render)) || render[f])
                 && render.renderable;
         }
+    }
+
+    raycast(vector2) {
+        return null;
+    }
+
+    project(position){
+        return position.transform(this.vertexMatrix.inverse).transform(this.projectionMatrix);
+    }
+
+    unproject(position){
+        return position.transform(this.projectionMatrix.inverse);
     }
 
     static frustum() {

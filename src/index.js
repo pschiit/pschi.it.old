@@ -1,4 +1,4 @@
-import Boxel from './apps/Boxel/Boxel';
+import Editor from './apps/Boxel/Editor';
 import Lights from './apps/Lights';
 import HtmlNode from './libs/html/HtmlNode';
 import WebGLCanvas from './libs/html/WebGLCanvas';
@@ -32,9 +32,9 @@ function getApp(name) {
     switch (name) {
         case 'lights':
             return new Lights(canvas.context, document);
-        case 'boxel':
+        case 'editor':
         default:
-            return new Boxel(canvas.context, document);
+            return new Editor(canvas.context, document);
     }
 }
 

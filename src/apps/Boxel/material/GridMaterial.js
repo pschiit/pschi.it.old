@@ -1,32 +1,27 @@
-import Color from '../../core/Color';
-import Vector2 from '../../math/Vector2';
-import Material from '../../renderer/graphics/Material';
-import Operation from '../../renderer/graphics/shader/Operation';
-import Parameter from '../../renderer/graphics/shader/Parameter';
-import Shader from '../../renderer/graphics/shader/Shader';
-import ShaderFunction from '../../renderer/graphics/shader/ShaderFunction';
-import VertexBuffer from '../../renderer/graphics/VertexBuffer';
-import Camera from '../camera/Camera';
-import Node3d from '../Node3d';
+import Color from '../../../libs/core/Color';
+import Vector2 from '../../../libs/math/Vector2';
+import Material from '../../../libs/renderer/graphics/Material';
+import Operation from '../../../libs/renderer/graphics/shader/Operation';
+import Parameter from '../../../libs/renderer/graphics/shader/Parameter';
+import Shader from '../../../libs/renderer/graphics/shader/Shader';
+import ShaderFunction from '../../../libs/renderer/graphics/shader/ShaderFunction';
 
 export default class GridMaterial extends Material {
-    constructor(color = Color.white, sizes = new Vector2(1, 10), distance = 1000, axes = 'xzy') {
+    constructor() {
         super();
 
         this.setParameter(Material.parameters.cameraPosition);
         this.setParameter(Material.parameters.projectionMatrix);
 
-        this.color = color;
-        this.sizes = sizes;
-        this.distance = distance;
-        this.axes = axes;
-        this.culling = null;
+        this.color = Color.white.clone().scale(0.5);
+        this.sizes = new Vector2(1, 10);
+        this.distance = 10000;
+        this.axes = 'xzy';
 
         const planeAxes = this.axes.substring(0, 2);
 
         const position = Parameter.vector3('pos');
         const vPosition = Parameter.vector3('v_' + Material.parameters.position, Parameter.qualifier.out);
-        const vColor = Parameter.vector4('v_' + Material.parameters.color, Parameter.qualifier.out);
 
         this.vertexShader = Shader.vertexShader([
             Operation.equal(
@@ -99,6 +94,8 @@ export default class GridMaterial extends Material {
                     Operation.substract(1, Operation.min(line, 1))
                 ),
             ]);
+        const x = Operation.selection(viewPosition, '.x');
+        const y = Operation.selection(viewPosition, '.y');
 
         this.fragmentShader = Shader.fragmentShader([
             Operation.equal(
@@ -142,7 +139,8 @@ export default class GridMaterial extends Material {
                 Shader.parameters.output,
                 Operation.toVector4(
                     GridMaterial.parameters.color,
-                    Operation.mix(g2, g1, g1),),
+                    Operation.multiply(Operation.mix(g2, g1, g1), 
+                    d)),
             ),
             Operation.equal(
                 outputAlpha,

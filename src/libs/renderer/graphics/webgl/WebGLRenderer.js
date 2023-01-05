@@ -1,4 +1,3 @@
-import ShadowMaterial from '../../../3d/material/ShadowMaterial';
 import Color from '../../../core/Color';
 import Node from '../../../core/Node';
 import Vector4 from '../../../math/Vector4';
@@ -7,7 +6,6 @@ import GraphicsRenderer from '../GraphicsRenderer';
 import Material from '../Material';
 import Render from '../Render';
 import RenderTarget from '../RenderTarget';
-import Texture from '../Texture';
 import WebGLBuffer from './WebGLBuffer';
 import WebGLFramebuffer from './WebGLFramebuffer';
 import WebGLProgram from './WebGLProgram';
@@ -316,9 +314,9 @@ export default class WebGLRenderer extends GraphicsRenderer {
         return format === RenderTarget.format.rgba ? renderer.gl.RGBA
             : format === RenderTarget.format.rbg ? renderer.gl.RGB
                 : format === RenderTarget.format.alpha ? renderer.gl.ALPHA
-                : format === RenderTarget.format.depth ? renderer.gl.DEPTH_COMPONENT
-                : format === RenderTarget.format.stencil ? renderer.gl.DEPTH_STENCIL
-                    : null;
+                    : format === RenderTarget.format.depth ? renderer.gl.DEPTH_COMPONENT
+                        : format === RenderTarget.format.stencil ? renderer.gl.DEPTH_STENCIL
+                            : null;
     }
 
     static typeFrom(renderer, typeArray) {
@@ -383,7 +381,10 @@ function render(renderer, renderTarget) {
                     WebGLBuffer.from(renderer, r.vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
                 }
                 if (divisorCount) {
-                    renderer.gl.drawElementsInstanced(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, r.vertexBuffer.index.type), r.index.vertexBuffer.BYTES_PER_OFFSET, divisorCount);
+                    if (r.vertexBuffer.instanceArrayBuffer.updated) {
+                        WebGLBuffer.from(renderer, r.vertexBuffer.instanceArrayBuffer, renderer.gl.ARRAY_BUFFER);
+                    }
+                    renderer.gl.drawElementsInstanced(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, r.vertexBuffer.index.type), r.vertexBuffer.index.BYTES_PER_OFFSET, divisorCount);
                 } else {
                     renderer.gl.drawElements(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, r.vertexBuffer.index.type), r.vertexBuffer.index.BYTES_PER_OFFSET);
                 }

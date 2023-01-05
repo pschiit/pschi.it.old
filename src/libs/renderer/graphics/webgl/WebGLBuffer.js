@@ -20,13 +20,24 @@ export default class WebGLBuffer extends WebGLNode {
         if (webGLTarget === renderer.gl.ELEMENT_ARRAY_BUFFER) {
             this.update = (buffer) => {
                 renderer.elementArrayBuffer = this;
-                renderer.gl.bufferData(this.target, buffer.data, this.usage);
+                const newLength = buffer.length;
+                if (this.length >= newLength) {
+                    renderer.gl.bufferSubData(this.target, 0, buffer.data);
+                } else {
+                    renderer.gl.bufferData(this.target, buffer.data, this.usage);
+                    this.length = newLength;
+                }
             };
         } else {
             this.update = (buffer) => {
                 renderer.arrayBuffer = this;
-                const data = buffer.data;
-                renderer.gl.bufferData(this.target, data, this.usage);
+                const newLength = buffer.length;
+                if (this.length >= newLength) {
+                    renderer.gl.bufferSubData(this.target, 0, buffer.data);
+                } else {
+                    renderer.gl.bufferData(this.target, buffer.data, this.usage);
+                    this.length = newLength;
+                }
             };
         }
     }
@@ -46,7 +57,7 @@ export default class WebGLBuffer extends WebGLNode {
      */
     static from(renderer, buffer, webGLTarget) {
         var mainBuffer = buffer.mainBuffer;
-        if(!renderer.nodes[mainBuffer.id]){
+        if (!renderer.nodes[mainBuffer.id]) {
             mainBuffer.updated = true;
         }
         const webGLBuffer = renderer.nodes[mainBuffer.id] || new WebGLBuffer(renderer, mainBuffer, webGLTarget);

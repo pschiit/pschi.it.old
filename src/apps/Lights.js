@@ -11,7 +11,6 @@ import Node3d from '../libs/3d/Node3d';
 import App from '../libs/core/App';
 import Buffer from '../libs/core/Buffer';
 import Color from '../libs/core/Color';
-import Img from '../libs/html/Img';
 import Angle from '../libs/math/Angle';
 import Matrix4 from '../libs/math/Matrix4';
 import Vector3 from '../libs/math/Vector3';
@@ -131,12 +130,11 @@ export default class Lights extends App {
         floor.appendChild(this.rotatingBox);
 
         const sun = new DirectionalLight(
-            Color.white.scale(0.5),
+            Color.white.clone().scale(0.5),
             new Vector3(10, 20, 10),
             new Vector3(0, 0, 0));
         floor.appendChild(sun);
         this.rotatingBox.addEventListener('click', (e) => {
-            console.log('toggle sun');
             sun.light.toggle();
         });
 
@@ -147,7 +145,6 @@ export default class Lights extends App {
         redLight.vertexBuffer = reverseCube;
         floor.appendChild(redLight);
         redLight.addEventListener('click', (e) => {
-            console.log('toggle red');
             redLight.light.toggle();
         });
 
@@ -158,7 +155,6 @@ export default class Lights extends App {
         greenLight.vertexBuffer = reverseCube;
         floor.appendChild(greenLight);
         greenLight.addEventListener('click', (e) => {
-            console.log('toggle green');
             greenLight.light.toggle();
         });
 
@@ -169,7 +165,6 @@ export default class Lights extends App {
         blueLight.vertexBuffer = reverseCube;
         floor.appendChild(blueLight);
         blueLight.addEventListener('click', (e) => {
-            console.log('toggle blue');
             blueLight.light.toggle();
         });
 
@@ -180,7 +175,6 @@ export default class Lights extends App {
         whiteLight.vertexBuffer = reverseCube;
         floor.appendChild(whiteLight);
         whiteLight.addEventListener('click', (e) => {
-            console.log('toggle white');
             whiteLight.light.toggle();
         });
 
@@ -196,7 +190,6 @@ export default class Lights extends App {
         spotLight.light.intensity = 5;
         floor.appendChild(spotLight);
         spotLight.addEventListener('click', (e) => {
-            console.log('toggle spot');
             spotLight.light.toggle();
         });
 

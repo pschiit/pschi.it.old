@@ -19,6 +19,10 @@ export default class App {
         return this.graphicsRenderer.parent.getPointerPosition(e);
     }
 
+    getNormalizedPointerPosition(e){
+        return this.graphicsRenderer.parent.getNormalizedPointerPosition(e);
+    }
+
     run() {
 
     }

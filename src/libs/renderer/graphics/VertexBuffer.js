@@ -53,12 +53,14 @@ export default class VertexBuffer extends GraphicsNode {
         this._offset = v;
     }
 
-    get divisor(){
-        return this.arrayBuffer.divisor;
+    get divisor() {
+        return this.instanceArrayBuffer?.divisor ||
+            this.buffers.find(b => b.divisor > 0)?.divisor;
     }
 
-    get divisorCount(){
-        return this.arrayBuffer.divisorCount;
+    get divisorCount() {
+        return this.instanceArrayBuffer?.divisorCount ||
+            this.buffers.find(b => b.divisor > 0)?.divisorCount;
     }
 
     get position() {
@@ -104,15 +106,28 @@ export default class VertexBuffer extends GraphicsNode {
         return result;
     }
 
-    get arrayBuffer(){
-        if(!this._arrayBuffer){
-            const buffer = new Buffer();
-            this.buffers.forEach(b =>{
-                buffer.appendChild(b);
-            });
-            this._arrayBuffer = buffer
+    get arrayBuffer() {
+        if (!this._arrayBuffer) {
+            this._arrayBuffer = new Buffer();
         }
+        this.buffers.forEach(b => {
+            if (!b.divisor && b.parent != this._arrayBuffer) {
+                this._arrayBuffer.appendChild(b);
+            }
+        });
         return this._arrayBuffer;
+    }
+
+    get instanceArrayBuffer() {
+        if (!this._instanceArrayBuffer) {
+            this._instanceArrayBuffer = new Buffer();
+        }
+        this.buffers.forEach(b => {
+            if (b.divisor && b.parent != this._instanceArrayBuffer) {
+                this._instanceArrayBuffer.appendChild(b);
+            }
+        });
+        return this._instanceArrayBuffer;
     }
 
     setParameter(name, v, step, divisor) {
@@ -146,7 +161,7 @@ export default class VertexBuffer extends GraphicsNode {
         }
         buffer = this.normal;
         if (buffer) {
-            buffer.transform(matrix.clone().invert().transpose());
+            buffer.transform(matrix.inverse.transpose());
         }
     }
 }

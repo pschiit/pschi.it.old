@@ -1,4 +1,4 @@
-import MathArray from '../../../../math/MathArray';
+import FloatArray from '../../../../math/FloatArray';
 import Matrix2 from '../../../../math/Matrix2';
 import Matrix3 from '../../../../math/Matrix3';
 import Matrix4 from '../../../../math/Matrix4';
@@ -145,7 +145,10 @@ export default class GLSLShader extends Shader {
                     return 'discard';
                 }
                 if (shaderNode.symbol === Operation.symbol.return) {
-                    return `return ${toString(shaderNode.parameters[0])}`;
+                    if(shaderNode.parameters.length > 0){
+                        return `return ${toString(shaderNode.parameters[0])}`;
+                    }
+                    return `return`;
                 }
                 if (shaderNode.symbol === Operation.symbol.if) {
                     const condition = shaderNode.parameters[0];
@@ -163,7 +166,7 @@ export default class GLSLShader extends Shader {
                     return shaderNode.parameters.map(toString).join('');
                 }
                 //convertTo
-                if (shaderNode.symbol.prototype instanceof MathArray) {
+                if (shaderNode.symbol.prototype instanceof FloatArray) {
                     return `${typeOf(shaderNode.symbol)}(${shaderNode.parameters.flatMap(toString).join(', ')})`;
                 }
                 if (shaderNode.symbol === Operation.symbol.fWidth) {

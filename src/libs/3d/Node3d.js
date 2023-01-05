@@ -165,10 +165,14 @@ export default class Node3d extends Render {
             });
         }
     }
+    
+    intersect(ray){
+        return null;
+    }
 
     setScene(parameters) {
         if (this.vertexMatrix) {
-            this.setParameter(Material.parameters.normalMatrix, this.vertexMatrix.clone().invert().transpose());
+            this.setParameter(Material.parameters.normalMatrix, this.vertexMatrix.inverse.transpose());
         }
     }
 

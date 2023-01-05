@@ -1,10 +1,10 @@
 import Matrix2 from './Matrix2';
 import Matrix3 from './Matrix3';
-import MathArray from './MathArray';
+import FloatArray from './FloatArray';
 import Vector3 from './Vector3';
 import Vector4 from './Vector4';
 
-export default class Matrix4 extends MathArray {
+export default class Matrix4 extends FloatArray {
     /** Create a new Matrix3 from an array of number
      * @param {Number[]} values values of the matrix 
     */
@@ -87,7 +87,7 @@ export default class Matrix4 extends MathArray {
         this[10] = v[2];
     }
 
-    /** Return the Matrix4 rotation component 
+    /** Return the Vector4 rotation component 
      * @return {Vector4} rotation quaternion
     */
     get quaternion() {
@@ -133,6 +133,66 @@ export default class Matrix4 extends MathArray {
             out[2] = 0.25 * S;
         }
         return out;
+    }
+
+    /** Return the inverse of this Matrix4 
+     * @return  {Matrix4} matrix inverse
+    */
+    get inverse() {
+        const a00 = this[0],
+            a01 = this[1],
+            a02 = this[2],
+            a03 = this[3],
+            a10 = this[4],
+            a11 = this[5],
+            a12 = this[6],
+            a13 = this[7],
+            a20 = this[8],
+            a21 = this[9],
+            a22 = this[10],
+            a23 = this[11],
+            a30 = this[12],
+            a31 = this[13],
+            a32 = this[14],
+            a33 = this[15];
+        const b00 = a00 * a11 - a01 * a10;
+        const b01 = a00 * a12 - a02 * a10;
+        const b02 = a00 * a13 - a03 * a10;
+        const b03 = a01 * a12 - a02 * a11;
+        const b04 = a01 * a13 - a03 * a11;
+        const b05 = a02 * a13 - a03 * a12;
+        const b06 = a20 * a31 - a21 * a30;
+        const b07 = a20 * a32 - a22 * a30;
+        const b08 = a20 * a33 - a23 * a30;
+        const b09 = a21 * a32 - a22 * a31;
+        const b10 = a21 * a33 - a23 * a31;
+        const b11 = a22 * a33 - a23 * a32;
+
+        let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+        if (!det) {
+            return null;
+        }
+
+        det = 1.0 / det;
+        const result = new Matrix4();
+        result[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+        result[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+        result[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+        result[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+        result[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+        result[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+        result[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+        result[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+        result[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+        result[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+        result[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+        result[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+        result[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+        result[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+        result[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+        result[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+
+        return result;
     }
 
     /** Return whether or not a Matrix4 array is equals the current Matrix4
@@ -425,65 +485,6 @@ export default class Matrix4 extends MathArray {
         const b11 = a22 * a33 - a23 * a32;
 
         return b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-    }
-
-    /** Invert the current Matrix4
-     * @return the current updated Matrix4  or null if determinant == 0
-    */
-    invert() {
-        const a00 = this[0],
-            a01 = this[1],
-            a02 = this[2],
-            a03 = this[3],
-            a10 = this[4],
-            a11 = this[5],
-            a12 = this[6],
-            a13 = this[7],
-            a20 = this[8],
-            a21 = this[9],
-            a22 = this[10],
-            a23 = this[11],
-            a30 = this[12],
-            a31 = this[13],
-            a32 = this[14],
-            a33 = this[15];
-        const b00 = a00 * a11 - a01 * a10;
-        const b01 = a00 * a12 - a02 * a10;
-        const b02 = a00 * a13 - a03 * a10;
-        const b03 = a01 * a12 - a02 * a11;
-        const b04 = a01 * a13 - a03 * a11;
-        const b05 = a02 * a13 - a03 * a12;
-        const b06 = a20 * a31 - a21 * a30;
-        const b07 = a20 * a32 - a22 * a30;
-        const b08 = a20 * a33 - a23 * a30;
-        const b09 = a21 * a32 - a22 * a31;
-        const b10 = a21 * a33 - a23 * a31;
-        const b11 = a22 * a33 - a23 * a32;
-
-        let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-        if (!det) {
-            return null;
-        }
-
-        det = 1.0 / det;
-        this[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
-        this[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
-        this[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
-        this[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
-        this[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
-        this[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
-        this[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
-        this[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
-        this[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
-        this[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
-        this[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
-        this[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
-        this[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
-        this[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
-        this[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
-        this[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
-
-        return this;
     }
 
     target(vector) {

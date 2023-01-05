@@ -1,4 +1,6 @@
 import Matrix4 from '../../math/Matrix4';
+import Ray from '../../math/Ray';
+import Vector3 from '../../math/Vector3';
 import Camera from './Camera';
 
 export default class OrthographicCamera extends Camera {
@@ -110,7 +112,7 @@ export default class OrthographicCamera extends Camera {
 
     set aspectRatio(v) {
         const right = this.top * v;
-        if(this.right != right){
+        if (this.right != right) {
             this._left = -right;
             this._right = right;
             this.orthograpicUpdated = true;
@@ -141,8 +143,8 @@ export default class OrthographicCamera extends Camera {
 
             this._orthographicMatrix = Matrix4.orthographicMatrix(left, right, bottom, top, this.near, this.far);
             this.orthograpicUpdated = false;
-            if(this.showFrustum){
-                this.frustum.matrix = this._orthographicMatrix.clone().invert();
+            if (this.showFrustum) {
+                this.frustum.matrix = this._orthographicMatrix.inverse;
                 this.frustum.vertexMatrix;
             }
         }
@@ -151,15 +153,23 @@ export default class OrthographicCamera extends Camera {
 
     get projectionMatrix() {
         if (this.projectionUpdated) {
-            this._projectionMatrix = this.orthographicMatrix.clone().multiply(this.vertexMatrix.clone().invert());
+            this._projectionMatrix = this.orthographicMatrix.clone().multiply(this.vertexMatrix.inverse);
             this.projectionUpdated = false;
         }
         return this._projectionMatrix;
     }
 
-    getScene(renderTarget){
-        if(this.updateAspectRatio){
-            this.aspectRatio =  renderTarget.aspectRatio;
+    raycast(vector2) {
+        const z = (this.near + this.far) / (this.near + this.far);
+        const origin = this.unproject(vector2.toVector3(z));
+        const direction = new Vector3(0, 0, -1).transformMatrix4(this.vertexMatrix).normalize();
+
+        return new Ray(origin, direction);
+    }
+
+    getScene(renderTarget) {
+        if (this.updateAspectRatio) {
+            this.aspectRatio = renderTarget.aspectRatio;
         }
         return super.getScene(renderTarget);
     }

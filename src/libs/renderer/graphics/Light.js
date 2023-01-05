@@ -1,4 +1,4 @@
-import MathArray from '../../math/MathArray';
+import FloatArray from '../../math/FloatArray';
 import GraphicsNode from './GraphicsNode';
 
 export default class Light extends GraphicsNode {
@@ -22,15 +22,15 @@ export default class Light extends GraphicsNode {
     setScene(parameters) {
         for (const name in this.parameters) {
             let parameter = this.parameters[name];
-            if (parameter instanceof MathArray) {
+            if (parameter instanceof FloatArray) {
                 if (!parameters[name]) {
-                    parameters[name] = new MathArray(parameter);
+                    parameters[name] = new FloatArray(parameter);
                 } else {
                     parameters[name] = parameters[name].concat(parameter);
                 }
             } else if (Number.isFinite(parameter)) {
                 if (!parameters[name]) {
-                    parameters[name] = new MathArray([parameter]);
+                    parameters[name] = new FloatArray([parameter]);
                 } else {
                     parameters[name] = parameters[name].concat(parameter);
                 }

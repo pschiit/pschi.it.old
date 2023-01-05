@@ -2,9 +2,9 @@ import Matrix3 from'./Matrix3';
 import Matrix4 from'./Matrix4';
 import Vector2 from'./Vector2';
 import Vector4 from'./Vector4';
-import MathArray from'./MathArray';
+import FloatArray from'./FloatArray';
 
-export default class  Vector3 extends MathArray {
+export default class  Vector3 extends FloatArray {
     static xAxis = new Vector3(1, 0, 0);
     static yAxis = new Vector3(0, 1, 0);
     static zAxis = new Vector3(0, 0, 1);
@@ -215,5 +215,9 @@ export default class  Vector3 extends MathArray {
     */
     toVector4(w) {
         return new Vector4(this[0], this[1], this[2], w);
+    }
+
+    static random(){
+        return new Vector3(Math.random(), Math.random(), Math.random());
     }
 }

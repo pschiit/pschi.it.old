@@ -65,6 +65,7 @@ export default class Buffer extends Node {
     set data(v) {
         if (!(this.childrens.length > 0)) {
             this._data = v;
+            this.updated = true;
         }
     }
 

@@ -93,7 +93,7 @@ export default class WebGLCanvas extends Canvas {
      * @param {PointerEvent} event Pointer event
      * @return {Vector2} the pointer position as Vector2
     */
-    getPointerRelativePositon(event) {
+    getNormalizedPointerPosition(event) {
         const rect = this.element.getBoundingClientRect();
         
         return new Vector2(
