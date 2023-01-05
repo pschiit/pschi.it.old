@@ -28,15 +28,6 @@ export default class WebGLCanvas extends Canvas {
                 this.removeChild(child);
             }
         });
-
-        function initContext(webGLCanvas, contextOptions) {
-            const newContext = new WebGLRenderer(webGLCanvas.element.getContext('webgl', contextOptions) || webGLCanvas.element.getContext('experimental-webgl', contextOptions));
-            if (!newContext) {
-                webGLCanvas.element.innerText = 'WebGL is not supported.';
-                throw new Error(webGLCanvas.element.innerText);
-            }
-            webGLCanvas.appendChild(newContext);
-        }
     }
 
     /** Return the RenderTarget of the current HtmlNode's HTMLElement
@@ -101,4 +92,13 @@ export default class WebGLCanvas extends Canvas {
             ((event.clientY - rect.top) * this.height / this.element.clientHeight) / this.height * -2 + 1
         );
     }
+}
+
+function initContext(webGLCanvas, contextOptions) {
+    const newContext = new WebGLRenderer(webGLCanvas.element.getContext('webgl', contextOptions) || webGLCanvas.element.getContext('experimental-webgl', contextOptions));
+    if (!newContext) {
+        webGLCanvas.element.innerText = 'WebGL is not supported.';
+        throw new Error(webGLCanvas.element.innerText);
+    }
+    webGLCanvas.appendChild(newContext);
 }

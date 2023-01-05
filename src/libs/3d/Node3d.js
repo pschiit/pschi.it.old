@@ -9,18 +9,23 @@ export default class Node3d extends Render {
     */
     constructor() {
         super();
-        const colorId = Node3d.generateColorId(this);
+        const colorId = generateColorId();
         this.setParameter(Material.parameters.colorId, colorId);
         this.matrix = Matrix4.identityMatrix();
         this._target = new Vector3();
+
         this.castShadow = false;
-        this.receiveShadow = false;
         this.visible = true;
+
+    }
+
+    get colorId() {
+        return this.getParameter(Material.parameters.colorId);
     }
 
     get vertexMatrix() {
         let vertexMatrix = this.getParameter(Material.parameters.vertexMatrix)
-        if (!vertexMatrix){
+        if (!vertexMatrix) {
             const parentMatrix = this.parent?.vertexMatrix;
             vertexMatrix = parentMatrix instanceof Matrix4 ? parentMatrix.clone().multiply(this.matrix)
                 : this.matrix.clone();
@@ -37,20 +42,20 @@ export default class Node3d extends Render {
      * @return {Vector3} x axis vector
     */
     get xAxis() {
-        return this.matrix.xAxis;
+        return this.vertexMatrix.xAxis;
     }
 
     /** Return a Vector3 reflecting the y axis from the current Node3d
      * @return {Vector3} y axis vector
     */
     get yAxis() {
-        return this.matrix.yAxis;
+        return this.vertexMatrix.yAxis;
     }
     /** Return a Vector3 reflecting the z axis from the current Node3d
      * @return {Vector3} z axis vector
     */
     get zAxis() {
-        return this.matrix.zAxis;
+        return this.vertexMatrix.zAxis;
     }
 
     /** Return a Vector3 reflecting the position of the current Node3d
@@ -175,20 +180,17 @@ export default class Node3d extends Render {
         }
     }
 
-    static search(colorId) {
-        return cache[colorId];
-    }
-    static generateColorId(node) {
-        do {
-            const color = Color.random();
-            if (!cache[color]) {
-                cache[color] = node;
-                return color;
-            }
-        } while (true);
-    }
-
     static parameters = {
     }
 }
+
 const cache = {};
+function generateColorId() {
+    do {
+        const color = Color.random();
+        if (!cache[color]) {
+            cache[color] = true;
+            return color;
+        }
+    } while (true);
+}

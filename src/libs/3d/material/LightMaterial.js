@@ -231,9 +231,6 @@ export default class LightMaterial extends Material {
         if (!this.vertexShader || !this.fragmentShader) {
             this.createShader();
         }
-        if (this.texture?.projectionMatrix) {
-            this.setParameter(Material.parameters.textureProjectionMatrix, this.texture.projectionMatrix);
-        }
         return super.compiled;
     }
 
@@ -288,7 +285,7 @@ export default class LightMaterial extends Material {
             Operation.equal(Operation.declare(color), new Vector3())];
 
         if (this.texture) {
-            if (this.texture.projectionMatrix) {
+            if (this.getParameter(Material.parameters.projectionMatrix)) {
                 const vTextureProjection = Parameter.vector4('v_textureProjection', Parameter.qualifier.out);
                 this.vertexShader.operations.push(
                     Operation.equal(

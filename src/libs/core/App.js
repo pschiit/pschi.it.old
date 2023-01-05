@@ -1,12 +1,11 @@
-export default class App {
+import Node from './Node';
+
+export default class App extends Node{
     /** Create a new app 
     */
     constructor(canvas) {
+        super();
         this.canvas = canvas;
-    }
-
-    get renderTarget() {
-        return this.canvas.parent.renderTarget;
     }
 
     run() {
@@ -14,7 +13,6 @@ export default class App {
     }
 
     stop() {
-
         this.canvas.context?.dispatchCallback(this.canvas.context.removeChild);
     }
 }

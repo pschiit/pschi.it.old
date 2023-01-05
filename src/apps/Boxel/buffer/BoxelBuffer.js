@@ -6,8 +6,6 @@ import Buffer from '../../../libs/core/Buffer';
 export default class BoxelBuffer extends VertexBuffer {
     constructor(positions, colors) {
         super();
-        this.instancePositionLength = 3;
-        this.instanceColorLength = 3;
 
         this.primitive = Render.primitive.triangles;
         this.index = [
@@ -49,6 +47,8 @@ export default class BoxelBuffer extends VertexBuffer {
             1, 0, 0,
             1, 0, 1,];
 
+        this.instancePositionLength = 3;
+        this.instanceColorLength = 3;
         this.instancePosition = positions || [];
         this.instanceColor = colors || [];
         this.instancePosition.usage = Buffer.usage.stream;

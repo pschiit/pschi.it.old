@@ -13,9 +13,7 @@ export default class WebGLBuffer extends WebGLNode {
         super(renderer, buffer.id);
         this.target = webGLTarget;
         this.location = renderer.gl.createBuffer();
-        this.usage = buffer.usage === Buffer.usage.dynamic ? renderer.gl.DYNAMIC_DRAW
-            : buffer.usage === Buffer.usage.stream ? renderer.gl.STREAM_DRAW
-                : renderer.gl.STATIC_DRAW;
+        this.usage = getUsage(renderer, buffer);
 
         if (webGLTarget === renderer.gl.ELEMENT_ARRAY_BUFFER) {
             this.update = (buffer) => {
@@ -69,4 +67,10 @@ export default class WebGLBuffer extends WebGLNode {
 
         return webGLBuffer;
     }
+}
+
+function getUsage(renderer, buffer) {
+    return buffer.usage === Buffer.usage.dynamic ? renderer.gl.DYNAMIC_DRAW
+        : buffer.usage === Buffer.usage.stream ? renderer.gl.STREAM_DRAW
+            : renderer.gl.STATIC_DRAW;
 }

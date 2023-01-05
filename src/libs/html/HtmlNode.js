@@ -109,9 +109,19 @@ export default class HtmlNode extends Node {
         return this;
     }
 
+
+    /** Registers an event handler of a specific event type on the current Node
+     * @param {string} type the type of event for which to add an event listener
+     * @param {Function} listener event listener to be added
+     * @return {Node} the current Node
+    */
     addEventListener(type, listener) {
         super.addEventListener(type, listener);
-        this.element?.addEventListener(type, listener);
+        if (type.startsWith('key')) {
+            document.addEventListener(type, listener);
+        } else {
+            this.element?.addEventListener(type, listener);
+        }
         return this;
     }
 
@@ -122,7 +132,11 @@ export default class HtmlNode extends Node {
     */
     removeEventListener(type, listener) {
         super.removeEventListener(type, listener);
-        this.element?.removeEventListener(type, listener);
+        if (type.startsWith('key')) {
+            document.removeEventListener(type, listener);
+        } else {
+            this.element?.removeEventListener(type, listener);
+        }
         return this;
     }
 
@@ -133,7 +147,7 @@ export default class HtmlNode extends Node {
     */
     dispatchEvent(event) {
         super.dispatchEvent(event);
-        if(event instanceof Event){
+        if (event instanceof Event) {
             this.element?.dispatchEvent(event);
         }
         return this;

@@ -225,7 +225,7 @@ export default class Lights extends App {
             this.leftTarget,
             this.rightTarget
         ];
-        
+
         this.rotatingBox.castShadow = true;
 
         this.canvas.addEventListener('pointerdown', e => {
@@ -239,11 +239,12 @@ export default class Lights extends App {
             renderTarget.colorTexture = pickingTexture;
 
             this.canvas.render(renderTarget);
-            const color = new Color(renderTarget.output);
-            const node = Node3d.search(color.normalize());
-            if (node) {
-                node.dispatchEvent({ type: 'click' });
-            }
+            const color = new Color(renderTarget.output).normalize();
+            world.dispatchCallback((node) => {
+                if (node.colorId.equals(color)) {
+                    node.dispatchEvent({ type: 'click' });
+                }
+            });
             renderTarget.read = null;
             renderTarget.material = null;
             renderTarget.colorTexture = null;
