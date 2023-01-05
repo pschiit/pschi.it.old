@@ -80,7 +80,7 @@ function createAttribute(renderer, program, attribute) {
             let offset = v.BYTES_PER_OFFSET;
             for (let i = 1; i <= divisor; i++) {
                 renderer.gl.enableVertexAttribArray(location + i);
-                renderer.gl.vertexAttribPointer(location + i, v.step / divisor, WebGLRenderer.typeFrom(renderer, v.type), v.normalize, v.mainBuffer.BYTES_PER_STEP, offset);
+                renderer.gl.vertexAttribPointer(location + i, v.step / divisor, WebGLRenderer.typeFrom(renderer, v.type), v.normalize, v.root.BYTES_PER_STEP, offset);
                 offset += v.BYTES_PER_ELEMENT * divisor;
                 if (v.divisor) {
                     renderer.gl.vertexAttribDivisor(location + i, v.divisor);
@@ -113,7 +113,7 @@ function createAttribute(renderer, program, attribute) {
         if (v instanceof Buffer) {
             renderer.arrayBuffer = WebGLBuffer.from(renderer, v, renderer.gl.ARRAY_BUFFER);
             renderer.gl.enableVertexAttribArray(location);
-            renderer.gl.vertexAttribPointer(location, v.step, WebGLRenderer.typeFrom(renderer, v.type), v.normalize, v.mainBuffer.BYTES_PER_STEP, v.BYTES_PER_OFFSET);
+            renderer.gl.vertexAttribPointer(location, v.step, WebGLRenderer.typeFrom(renderer, v.type), v.normalize, v.root.BYTES_PER_STEP, v.BYTES_PER_OFFSET);
             if (v.divisor) {
                 renderer.gl.vertexAttribDivisor(location, v.divisor);
             }

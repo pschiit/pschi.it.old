@@ -31,7 +31,7 @@ export default class Render extends GraphicsNode {
     }
 
     getScene(renderTarget) {
-        const parameters = {};
+        const sceneParameters = {};
         const materials = {};
         const renders = [];
         if(renderTarget.material){
@@ -39,11 +39,11 @@ export default class Render extends GraphicsNode {
         }
         this.parameters[Material.parameters.backgroundColor] = renderTarget.backgroundColor;
 
-        update(this);
+        this.dispatchCallback(update);
         for (const id in materials) {
             const material = materials[id];
-            for (const name in parameters) {
-                const parameter = parameters[name];
+            for (const name in sceneParameters) {
+                const parameter = sceneParameters[name];
                 if(material.parameters.hasOwnProperty(name)){
                     material.setParameter(name, parameter);
                 }
@@ -62,8 +62,7 @@ export default class Render extends GraphicsNode {
                 }
                 renders.push(render);
             }
-            render.setScene(parameters);
-            render.childrens.forEach(update);
+            render.setScene(sceneParameters);
         }
     }
 

@@ -14,6 +14,7 @@ export default class App {
     }
 
     stop() {
-        this.canvas.context?.childrens.forEach(c => this.canvas.removeChild(c));
+
+        this.canvas.context?.dispatchCallback(this.canvas.context.removeChild);
     }
 }

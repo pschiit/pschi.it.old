@@ -56,7 +56,7 @@ export default class WebGLBuffer extends WebGLNode {
      * @returns {WebGLBuffer} the WebGLBuffer
      */
     static from(renderer, buffer, webGLTarget) {
-        var mainBuffer = buffer.mainBuffer;
+        var mainBuffer = buffer.root;
         if (!renderer.nodes[mainBuffer.id]) {
             mainBuffer.updated = true;
         }

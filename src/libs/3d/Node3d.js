@@ -156,14 +156,11 @@ export default class Node3d extends Render {
     }
 
     clearVertexMatrix(){
-        if(this.vertexMatrix){
-            this.parameters[Material.parameters.vertexMatrix] = null;
-            this.childrens.forEach(c => {
-                if(c instanceof Node3d){
-                    c.clearVertexMatrix();
-                }
-            });
-        }
+        this.dispatchCallback(()=>{
+            if(this.vertexMatrix){
+                this.parameters[Material.parameters.vertexMatrix] = null;
+            }
+        });
     }
     
     intersect(ray){

@@ -50,7 +50,7 @@ export default class Camera extends Node3d {
             materials[renderTarget.material.id] = renderTarget.material;
         }
 
-        update(this.root);
+        this.root.dispatchCallback(update);
 
         parameters[Material.parameters.backgroundColor] = renderTarget.backgroundColor;
         parameters[Material.parameters.fogDistance.name] = this.fog;
@@ -80,7 +80,6 @@ export default class Camera extends Node3d {
                 renders.push(render);
             }
             render.setScene(parameters);
-            render.childrens.forEach(update);
         }
 
 

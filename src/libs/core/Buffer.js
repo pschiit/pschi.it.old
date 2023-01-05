@@ -23,10 +23,6 @@ export default class Buffer extends Node {
         });
     }
 
-    get mainBuffer() {
-        return this.parent instanceof Buffer ? this.parent.mainBuffer : this;
-    }
-
     get type() {
         if (this.childrens.length > 0) {
             return new ArrayBuffer(0).constructor;
@@ -40,12 +36,10 @@ export default class Buffer extends Node {
             const length = this.BYTES_LENGTH;
             data = new ArrayBuffer(length);
             let offset = 0;
-            this.childrens.forEach(updateBuffer);
+            this.dispatchCallback(updateBuffer, false);
 
             function updateBuffer(b) {
-                if (b.childrens.length > 0) {
-                    b.childrens.forEach(updateBuffer);
-                } else {
+                if (b.childrens.length < 1) {
                     if (b.parent.interleaved) {
 
                     } else {
@@ -78,7 +72,9 @@ export default class Buffer extends Node {
 
     set updated(v) {
         if (this.childrens.length > 0) {
-            this.childrens.forEach(c => c.updated = v);
+            this.dispatchCallback((buffer) => {
+                buffer.updated = v;
+            }, false);
         }
         this._updated = v;
     }
@@ -155,7 +151,9 @@ export default class Buffer extends Node {
 
     scale(value) {
         if (this.childrens.length > 0) {
-            this.childrens.forEach(c => c.scale(value));
+            this.dispatchCallback((buffer) => {
+                buffer.scale(value)
+            }, false);
         } else {
             for (let i = 0; i < this.data.length; i++) {
                 this.data[i] *= value;

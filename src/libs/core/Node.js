@@ -132,14 +132,16 @@ export default class Node {
     }
 
     /** Dispatches a function to the current Node
-     * the function will carry the current Node as target
-     * @param {Function} callback the object to dispatch
+     * the function will have the current node has parameters
+     * @param {Function} callback the function to dispatch
+     * @param {Boolean} toChildrens whether to dispatch to this node or not
      * @param {Boolean} toChildrens whether to dispatch to chidlrens or not
      * @return {Node} the current Node
     */
-    dispatchCallback(callback, toChildrens = true) {
-        callback(this);
-
+    dispatchCallback(callback, toNode = true, toChildrens = true) {
+        if(toNode){
+            callback(this);
+        }
         if (toChildrens) {
             this.childrens.forEach(c => {
                 c.dispatchCallback(callback, toChildrens);
