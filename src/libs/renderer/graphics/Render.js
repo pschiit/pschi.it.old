@@ -31,7 +31,7 @@ export default class Render extends GraphicsNode {
         return this.vertexBuffer ? this.vertexBuffer.primitive : this._primitive;
     }
 
-    getScene(renderTarget, materialParameters) {
+    getScene(renderTarget, materialParameters = {}) {
         const filters = this.filters;
         const materials = {};
         const renders = [];

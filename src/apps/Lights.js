@@ -208,17 +208,15 @@ export default class Lights extends App {
         cameraHolder.appendChild(this.cameraRight);
         world.appendChild(cameraHolder);
 
-
-
         this.sun.shadow = new RenderTarget(null, 1024, 1024);
         this.spotLight.shadow = new RenderTarget(null, 1024, 1024);
 
-
+        const renderTarget = this.canvas.renderTarget;
+        renderTarget.data = [this.cameraLeft,this.cameraRight];
         this.renders = [
             this.sun.shadow,
             this.spotLight.shadow,
-            this.cameraLeft,
-            this.cameraRight,
+            renderTarget
         ];
 
         this.rotatingBox.castShadow = true;
@@ -245,6 +243,7 @@ export default class Lights extends App {
             renderTarget.read = null;
             renderTarget.material = null;
             renderTarget.colorTexture = null;
+            renderTarget.data = [this.cameraLeft,this.cameraRight];
         });
 
         this.canvas.addEventListener('keydown', e => {

@@ -171,6 +171,7 @@ export default class Node3d extends Render {
         this.dispatchCallback((node) => {
             if (node.vertexMatrix) {
                 node.setParameter(Material.parameters.vertexMatrix, null);
+                node.setParameter(Material.parameters.normalMatrix, null);
             }
         });
     }
@@ -180,7 +181,7 @@ export default class Node3d extends Render {
     }
 
     setScene(parameters) {
-        if (this.vertexMatrix) {
+        if (!this.normalMatrix) {
             this.setParameter(Material.parameters.normalMatrix, this.vertexMatrix.inverse.transpose());
         }
     }

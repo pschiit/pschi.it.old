@@ -333,71 +333,76 @@ export default class WebGLRenderer extends GraphicsRenderer {
  * @param {RenderTarget} renderTarget to render
  */
 function render(renderer, renderTarget) {
-    const renders = renderTarget.data.getScene(renderTarget);
-    let viewport = renderTarget.viewport;
-    const scissor = renderTarget.scissor;
-    const clearColor = renderTarget.backgroundColor || Color.black;
-    if (scissor) {
-        viewport = scissor;
-        if (!renderer.scissor) {
-            renderer.gl.enable(renderer.gl.SCISSOR_TEST);
-        }
-        if (!renderer.scissor?.equals(scissor)) {
-            renderer.gl.scissor(scissor[0], scissor[1], scissor[2], scissor[3]);
-            renderer.scissor = scissor;
-        }
-    } else if (renderer.scissor) {
-        renderer.gl.disable(renderer.gl.SCISSOR_TEST);
-        renderer.scissor = null;
-    }
-    if (!renderer.viewport.equals(viewport)) {
-        renderer.gl.viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-        renderer.viewport = viewport;
-    }
-    if (!renderer.clearColor.equals(clearColor)) {
-        renderer.gl.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
-        renderer.clearColor = clearColor;
-    }
-    clear();
-    const cache = {};
-    renders.forEach(r => {
-        const material = renderTarget.material ? renderTarget.material : r.material;
-        renderer.material = material;
-        if (!cache[material.id]) {
-            for (const name in material.parameters) {
-                renderer.program.updateParameter(name, material.getParameter(name));
+    const renders = renderTarget.data instanceof Render ? [renderTarget.data] : renderTarget.data;
+    renders.forEach(render => {
+        const scene = render.getScene(renderTarget);
+        let viewport = renderTarget.viewport;
+        const scissor = renderTarget.scissor;
+        const clearColor = renderTarget.backgroundColor || Color.black;
+        if (scissor) {
+            viewport = scissor;
+            if (!renderer.scissor) {
+                renderer.gl.enable(renderer.gl.SCISSOR_TEST);
             }
-        }
-        for (const name in r.parameters) {
-            renderer.program.updateParameter(name, r.getParameter(name));
-        }
-        if (r.vertexBuffer) {
-            renderer.vertexArray = WebGLVertexArray.from(renderer, r.vertexBuffer, renderer.material);
-            if (r.vertexBuffer.arrayBuffer.updated) {
-                WebGLBuffer.from(renderer, r.vertexBuffer.arrayBuffer, renderer.gl.ARRAY_BUFFER);
+            if (!renderer.scissor?.equals(scissor)) {
+                renderer.gl.scissor(scissor[0], scissor[1], scissor[2], scissor[3]);
+                renderer.scissor = scissor;
             }
-            const divisorCount = r.vertexBuffer.divisorCount;
-            if (r.vertexBuffer.index) {
-                if (r.vertexBuffer.index.updated) {
-                    WebGLBuffer.from(renderer, r.vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
+        } else if (renderer.scissor) {
+            renderer.gl.disable(renderer.gl.SCISSOR_TEST);
+            renderer.scissor = null;
+        }
+        if (!renderer.viewport.equals(viewport)) {
+            renderer.gl.viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+            renderer.viewport = viewport;
+        }
+        if (!renderer.clearColor.equals(clearColor)) {
+            renderer.gl.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
+            renderer.clearColor = clearColor;
+        }
+        clear();
+        const cache = {};
+        scene.forEach(r => {
+            const material = renderTarget.material ? renderTarget.material : r.material;
+            renderer.material = material;
+            if (!cache[material.id]) {
+                for (const name in material.parameters) {
+                    renderer.program.updateParameter(name, material.getParameter(name));
                 }
-                if (divisorCount) {
-                    if (r.vertexBuffer.instanceArrayBuffer.updated) {
-                        WebGLBuffer.from(renderer, r.vertexBuffer.instanceArrayBuffer, renderer.gl.ARRAY_BUFFER);
+                cache[material.id] = true;
+            }
+            for (const name in r.parameters) {
+                renderer.program.updateParameter(name, r.getParameter(name));
+            }
+            if (r.vertexBuffer) {
+                renderer.vertexArray = WebGLVertexArray.from(renderer, r.vertexBuffer, renderer.material);
+                if (r.vertexBuffer.arrayBuffer.updated) {
+                    WebGLBuffer.from(renderer, r.vertexBuffer.arrayBuffer, renderer.gl.ARRAY_BUFFER);
+                }
+                const divisorCount = r.vertexBuffer.divisorCount;
+                if (r.vertexBuffer.index) {
+                    if (r.vertexBuffer.index.updated) {
+                        WebGLBuffer.from(renderer, r.vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
                     }
-                    renderer.gl.drawElementsInstanced(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, r.vertexBuffer.index.type), r.vertexBuffer.index.BYTES_PER_OFFSET, divisorCount);
+                    if (divisorCount) {
+                        if (r.vertexBuffer.instanceArrayBuffer.updated) {
+                            WebGLBuffer.from(renderer, r.vertexBuffer.instanceArrayBuffer, renderer.gl.ARRAY_BUFFER);
+                        }
+                        renderer.gl.drawElementsInstanced(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, r.vertexBuffer.index.type), r.vertexBuffer.index.BYTES_PER_OFFSET, divisorCount);
+                    } else {
+                        renderer.gl.drawElements(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, r.vertexBuffer.index.type), r.vertexBuffer.index.BYTES_PER_OFFSET);
+                    }
+                } else if (divisorCount) {
+                    renderer.gl.drawArraysInstanced(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.offset, r.vertexBuffer.count, divisorCount);
                 } else {
-                    renderer.gl.drawElements(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, r.vertexBuffer.index.type), r.vertexBuffer.index.BYTES_PER_OFFSET);
+                    renderer.gl.drawArrays(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.offset, r.vertexBuffer.count);
                 }
-            } else if (divisorCount) {
-                renderer.gl.drawArraysInstanced(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.offset, r.vertexBuffer.count, divisorCount);
             } else {
-                renderer.gl.drawArrays(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.offset, r.vertexBuffer.count);
+                renderer.gl.drawArrays(renderer.gl[r.primitive], r.offset, r.count);
             }
-        } else {
-            renderer.gl.drawArrays(renderer.gl[r.primitive], r.offset, r.count);
-        }
-    });
+        });
+
+    })
     renderer.vertexArray = null;
 
 

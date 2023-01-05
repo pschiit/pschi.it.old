@@ -5,11 +5,7 @@ import GraphicsNode from './GraphicsNode';
 export default class RenderTarget extends GraphicsNode {
     constructor(data, width = null, height = null, x = 0, y = 0) {
         super();
-        this.viewport = new Vector4();
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
+        this.viewport = new Vector4(x,y,width,height);
         this.data = data;
         this.format = RenderTarget.format.rgba;
         this.type = Uint8Array;
