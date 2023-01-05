@@ -23,6 +23,10 @@ export default class Node {
         return this.parent ? this.parent.root : this;
     }
 
+    getParameter(name) {
+        return this.parameters[name];
+    }
+
     setParameter(name, value) {
         if (!this.parameters[name] || this.parameters[name] != value) {
             this.parameters[name] = value;
@@ -122,6 +126,24 @@ export default class Node {
             for (let i = 0, l = listeners.length; i < l; i++) {
                 listeners[i].call(this, event);
             }
+        }
+
+        return this;
+    }
+
+    /** Dispatches a function to the current Node
+     * the function will carry the current Node as target
+     * @param {Function} callback the object to dispatch
+     * @param {Boolean} toChildrens whether to dispatch to chidlrens or not
+     * @return {Node} the current Node
+    */
+    dispatchCallback(callback, toChildrens = true) {
+        callback(this);
+
+        if (toChildrens) {
+            this.childrens.forEach(c => {
+                c.dispatchCallback(callback, toChildrens);
+            });
         }
 
         return this;

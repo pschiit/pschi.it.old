@@ -5,7 +5,6 @@ import App from '../../libs/core/App';
 import Buffer from '../../libs/core/Buffer';
 import Color from '../../libs/core/Color';
 import Vector3 from '../../libs/math/Vector3';
-import Vector4 from '../../libs/math/Vector4';
 import Texture from '../../libs/renderer/graphics/Texture';
 import BoxelSelectionMaterial from './material/BoxelSelectionMaterial';
 import Boxel from './node/Boxel';
@@ -13,8 +12,8 @@ import BoxelSprite from './node/BoxelSprite';
 import Grid from './node/Grid';
 
 export default class Editor extends App {
-    constructor(graphicRenderer, eventInterface) {
-        super(graphicRenderer, eventInterface);
+    constructor(canvas) {
+        super(canvas);
         this.movementX = 0;
         this.movementY = 0;
         this.step = 0.01;
@@ -53,7 +52,7 @@ export default class Editor extends App {
         const pickingTexture = new Texture();
         const pickingMaterial = new BoxelSelectionMaterial();
 
-        this.addEventListener('pointerdown', e => {
+        this.canvas.addEventListener('pointerdown', e => {
             // const mousePosition = this.getPointerPosition(e);
             // const renderTarget = this.renderTarget;
 
@@ -71,7 +70,7 @@ export default class Editor extends App {
             //     return;
             // }
 
-            const ray = this.camera.raycast(this.getNormalizedPointerPosition(e));
+            const ray = this.camera.raycast(this.canvas.getNormalizedPointerPosition(e));
             const intersection = grid.intersect(ray);
             if (intersection) {
                 this.sprite.set(intersection);
@@ -92,7 +91,7 @@ export default class Editor extends App {
         // });
         // this.addEventListener('pointermove', this.updateMovement.bind(this));
 
-        this.addEventListener('wheel', e => {
+        this.canvas.addEventListener('wheel', e => {
             this.wheelDelta -= e.deltaY * this.step
         });
     }
@@ -128,7 +127,7 @@ export default class Editor extends App {
             }
         }
 
-        this.graphicsRenderer.render(this.camera);
+        this.canvas.render(this.camera);
     }
 
     static randomBoxel() {

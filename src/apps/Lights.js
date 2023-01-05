@@ -19,8 +19,8 @@ import RenderTarget from '../libs/renderer/graphics/RenderTarget';
 import Texture from '../libs/renderer/graphics/Texture';
 
 export default class Lights extends App {
-    constructor(graphicRenderer, eventInterface) {
-        super(graphicRenderer, eventInterface);
+    constructor(canvas) {
+        super(canvas);
         this.width = 0;
         this.height = 0;
     }
@@ -228,8 +228,8 @@ export default class Lights extends App {
         
         this.rotatingBox.castShadow = true;
 
-        this.addEventListener('pointerdown', e => {
-            const mousePosition = this.getPointerPosition(e);
+        this.canvas.addEventListener('pointerdown', e => {
+            const mousePosition = this.canvas.getPointerPosition(e);
             const renderTarget = this.leftTarget.isIn(mousePosition) ?
                 this.leftTarget :
                 this.rightTarget;
@@ -238,7 +238,7 @@ export default class Lights extends App {
             renderTarget.material = pickingMaterial;
             renderTarget.colorTexture = pickingTexture;
 
-            this.graphicsRenderer.render(renderTarget);
+            this.canvas.render(renderTarget);
             const color = new Color(renderTarget.output);
             const node = Node3d.search(color.normalize());
             if (node) {
@@ -249,7 +249,7 @@ export default class Lights extends App {
             renderTarget.colorTexture = null;
         });
 
-        this.addEventListener('keydown', e => {
+        this.canvas.addEventListener('keydown', e => {
             const step = 0.1;
             switch (e.code) {
                 case 'a':
@@ -312,7 +312,7 @@ export default class Lights extends App {
         if (!this.renders) {
             this.init();
         }
-        const renderTarget = this.renderTarget;
+        const renderTarget = this.canvas.renderTarget;
         if (this.width != renderTarget.width) {
             this.width = renderTarget.width;
             this.leftTarget.viewport = new Vector4(0, 0, this.width / 2, this.height);
@@ -328,6 +328,6 @@ export default class Lights extends App {
         this.cameraHolder.rotate(0.01, 0, 1, 0);
         this.rightTarget.data.projectionUpdated = true;
         this.rotatingBox.rotate(0.01, 1, 1, 1);
-        this.renders.forEach(r => this.graphicsRenderer.render(r));
+        this.renders.forEach(r => this.canvas.render(r));
     }
 }

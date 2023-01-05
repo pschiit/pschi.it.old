@@ -31,10 +31,10 @@ function getApp(name) {
     }
     switch (name) {
         case 'lights':
-            return new Lights(canvas.context, document);
+            return new Lights(canvas);
         case 'editor':
         default:
-            return new Editor(canvas.context, document);
+            return new Editor(canvas);
     }
 }
 

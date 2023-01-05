@@ -109,6 +109,36 @@ export default class HtmlNode extends Node {
         return this;
     }
 
+    addEventListener(type, listener) {
+        super.addEventListener(type, listener);
+        this.element?.addEventListener(type, listener);
+        return this;
+    }
+
+    /** Removes an event listener from the current Node
+     * @param {string} type the type of event for which to remove an event listener
+     * @param {Function} listener the event listener to be removed
+     * @return {Node} the current Node
+    */
+    removeEventListener(type, listener) {
+        super.removeEventListener(type, listener);
+        this.element?.removeEventListener(type, listener);
+        return this;
+    }
+
+    /** Dispatches an event to the current Node
+     * the event will carry the current Node as target
+     * @param {Object} event the object to dispatch
+     * @return {Node} the current Node
+    */
+    dispatchEvent(event) {
+        super.dispatchEvent(event);
+        if(event instanceof Event){
+            this.element?.dispatchEvent(event);
+        }
+        return this;
+    }
+
     /** Get the pointer position from an Pointer(or Mouse) Event,
      * assumes HTMLElement doesn't have padding or border
      * @param {PointerEvent} event Pointer event
@@ -121,12 +151,12 @@ export default class HtmlNode extends Node {
             Math.round((rect.bottom - event.clientY) * this.height / this.element.clientHeight)
         );
     }
-    
-    setPointerCapture(pointerId){
+
+    setPointerCapture(pointerId) {
         this.element.setPointerCapture(pointerId);
     };
-    
-    releasePointerCapture(pointerId){
+
+    releasePointerCapture(pointerId) {
         this.element.releasePointerCapture(pointerId);
     };
 
