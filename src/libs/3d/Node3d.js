@@ -1,6 +1,6 @@
 import Color from '../core/Color';
 import Matrix4 from '../math/Matrix4';
-import Ray from '../math/Ray';
+import Quaternion from '../math/Quaternion';
 import Vector3 from '../math/Vector3';
 import Material from '../renderer/graphics/Material';
 import Render from '../renderer/graphics/Render';
@@ -12,7 +12,8 @@ export default class Node3d extends Render {
         super();
         const colorId = generateColorId();
         this.setParameter(Material.parameters.colorId, colorId);
-        this.matrix = Matrix4.identityMatrix();
+        this._matrix = Matrix4.identityMatrix();
+        this._quaternion = new Quaternion();
 
         this.castShadow = false;
         this.visible = true;
@@ -24,11 +25,11 @@ export default class Node3d extends Render {
     }
 
     get vertexMatrix() {
-        let vertexMatrix = this.getParameter(Material.parameters.vertexMatrix)
+        let vertexMatrix = this.getParameter(Material.parameters.vertexMatrix);
         if (!vertexMatrix) {
             const parentMatrix = this.parent?.vertexMatrix;
-            vertexMatrix = parentMatrix instanceof Matrix4 ? parentMatrix.clone().multiply(this.matrix)
-                : this.matrix.clone();
+            vertexMatrix = parentMatrix instanceof Matrix4 ? parentMatrix.clone().multiply(this._matrix)
+                : this._matrix.clone();
             if (this.target) {
                 vertexMatrix.target(this.target);
             }
@@ -69,52 +70,36 @@ export default class Node3d extends Render {
      * @return {Vector3} scale vector
     */
     get position() {
-        return this.matrix.positionVector;
-    }
-
-    /** Set the Node3d position 
-     * @return {Vector3} position vector
-    */
-    set position(v) {
-        this.matrix.positionVector = v;
-        this.clearVertexMatrix();
+        return this.vertexMatrix.positionVector;
     }
 
     /** Return a Vector3 reflecting the scale of the current Node3d
      * @return {Vector3} scale vector
     */
     get scale() {
-        return this.matrix.scaleVector;
+        return this.vertexMatrix.scaleVector;
     }
 
-    /** Return the Vector3 target direction of the current Node3d from the world perspective
-     * @return {Vector3} node Vector3 target direction
+    /** Return the Vector3 target
+     * @return {Vector3} node Vector3 target
     */
     get target() {
         return this._target;
     }
 
-    /** Set the target direction of the current Node3d from the world perspective
-     * @param {Vector3} v Vector3 target direction
+    /** Set the target of the current Node3d
+     * @param {Vector3} v Vector3 target
     */
     set target(v) {
         this._target = v;
         this.clearVertexMatrix();
     }
 
-    /** Return the Matrix4 of the current Node3d
-     * @return {Matrix4} node Matrix4
+    /** Return the Quaternion of the current Node3d
+     * @return {Quaternion} node Quaternion
     */
-    get matrix() {
-        return this._matrix;
-    }
-
-    /** Set the Matrix4 of the current Node3d
-     * @param {Matrix4} v Matrix4
-    */
-    set matrix(v) {
-        this._matrix = v;
-        this.clearVertexMatrix();
+    get quaternion() {
+        return this.vertexMatrix.quaternion;
     }
 
     /** Translate the Node3d by a Vector3 array
@@ -124,7 +109,7 @@ export default class Node3d extends Render {
      * @return the current Node3d
     */
     translate(x = 0, y = 0, z = 0) {
-        this.matrix.translate(x instanceof Vector3 ? x : new Vector3(x, y, z));
+        this._matrix.translate(x instanceof Vector3 ? x : new Vector3(x, y, z));
         this.clearVertexMatrix();
 
         return this;
@@ -137,21 +122,39 @@ export default class Node3d extends Render {
      * @return the current Node3d
     */
     rescale(x = 0, y = 0, z = 0) {
-        this.matrix.scale(x instanceof Vector3 ? x : new Vector3(x, y, z));
+        this._matrix.scale(x instanceof Vector3 ? x : new Vector3(x, y, z));
         this.clearVertexMatrix();
 
         return this;
     }
 
-    /** Rotate the Node3d by a Vector3 array
-     * @param {Number} radians angle in radians of the rotation
-     * @param {Number|Vector3} x first coordinate of the  Vector3
-     * @param {Number} y second coordinate of the  Vector3
-     * @param {Number} z third coordinate of the  Vector3
+    /** Rotate the Node3d by a Euler rotation Vector3
+     * @param {Number|Vector3} x angle in radians of the rotation around xAxis
+     * @param {Number} y angle in radians of the rotation around yAxis
+     * @param {Number} z angle in radians of the rotation around zAxis
      * @return the current Node3d
     */
-    rotate(radians, x = 0, y = 0, z = 0) {
-        this.matrix.rotate(radians, x instanceof Vector3 ? x : new Vector3(x, y, z));
+    rotate(x = 0, y = 0, z = 0) {
+        if (x instanceof Vector3) {
+            z = x[2];
+            y = x[1];
+            x = x[0];
+        }
+        const quaternion = Quaternion.fromEuler(x, y, z);
+        this.transform(quaternion.matrix4);
+        this.clearVertexMatrix();
+
+        return this;
+    }
+
+    /** Make the Node3d look at a Vector3 positon
+     * @param {Number|Vector3} x first coordinate of the Vector3
+     * @param {Number} y second coordinate of the Vector3
+     * @param {Number} z third coordinate of the Vector3
+     * @return the current Node3d
+    */
+    lookAt(x = 0, y = 0, z = 0) {
+        this._matrix.target(x instanceof Vector3 ? x : new Vector3(x, y, z));
         this.clearVertexMatrix();
 
         return this;
@@ -162,7 +165,7 @@ export default class Node3d extends Render {
      * @return the current Node3d
     */
     transform(matrix) {
-        this.matrix.multiply(matrix);
+        this._matrix.multiply(matrix);
         this.clearVertexMatrix();
 
         return this;
@@ -189,9 +192,6 @@ export default class Node3d extends Render {
         if (!this.normalMatrix) {
             this.setParameter(Material.parameters.normalMatrix, this.vertexMatrix.inverse.transpose());
         }
-    }
-
-    static parameters = {
     }
 }
 

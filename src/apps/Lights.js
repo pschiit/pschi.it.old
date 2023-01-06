@@ -13,6 +13,7 @@ import Buffer from '../libs/core/Buffer';
 import Color from '../libs/core/Color';
 import Angle from '../libs/math/Angle';
 import Matrix4 from '../libs/math/Matrix4';
+import Quaternion from '../libs/math/Quaternion';
 import Vector3 from '../libs/math/Vector3';
 import Vector4 from '../libs/math/Vector4';
 import RenderTarget from '../libs/renderer/graphics/RenderTarget';
@@ -198,7 +199,7 @@ export default class Lights extends App {
 
         this.cameraLeft = new PerspectiveCamera(55, 1, 0.1, 2000);
         this.cameraLeft.translate(7, 5, 7);
-        this.cameraLeft.target = new Vector3(0, 0, 0);
+        this.cameraLeft.lookAt(new Vector3(0, 0, 0));
         this.cameraLeft.frustum = new Node3d();
         world.appendChild(this.cameraLeft);
 
@@ -247,42 +248,43 @@ export default class Lights extends App {
             renderTarget.data = [this.cameraLeft, this.cameraRight];
         });
 
+        this.cameraLeftMovement = new Vector4();
         this.canvas.addEventListener('keydown', e => {
-            const step = 0.1;
+            const step = 1;
             switch (e.code) {
                 case 'a':
                 case 'KeyA':
                 case 'ArrowLeft':
-                    this.cameraLeft.rotate(step * 0.1, 0, 1, 0);
+                    this.cameraLeftMovement[1] += step;
                     break;
                 case 'd':
                 case 'KeyD':
                 case 'ArrowRight':
-                    this.cameraLeft.rotate(step * 0.1, 0, -1, 0);
+                    this.cameraLeftMovement[1] -= step;
                     break;
                 case 'w':
                 case 'KeyW':
                 case 'ArrowUp':
-                    this.cameraLeft.translate(0, 0, -step);
+                    this.cameraLeftMovement[3] -= step;
                     break;
                 case 's':
                 case 'KeyS':
                 case 'ArrowDown':
-                    this.cameraLeft.translate(0, 0, step);
+                    this.cameraLeftMovement[3] += step;
                     break;
                 case 'ControlLeft':
-                    this.cameraLeft.rotate(step * 0.1, -1, 0, 0);
+                    this.cameraLeftMovement[0] += step;
                     break;
                 case 'Space':
-                    this.cameraLeft.rotate(step * 0.1, 1, 0, 0);
+                    this.cameraLeftMovement[0] -= step;
                     break;
                 case 'q':
                 case 'KeyQ':
-                    this.cameraLeft.rotate(step * 0.1, 0, 0, 1,);
+                    this.cameraLeftMovement[2] += step;
                     break;
                 case 'e':
                 case 'KeyE':
-                    this.cameraLeft.rotate(step * 0.1, 0, 0, -1);
+                    this.cameraLeftMovement[2] -= step;
                     break;
                 default:
                     return;
@@ -295,8 +297,7 @@ export default class Lights extends App {
             this.init();
         }
         this.updateCameras(this.canvas.renderTarget);
-        this.cameraRight.parent.rotate(0.01, 0, 1, 0);
-        this.rotatingBox.rotate(0.01, 1, 1, 1);
+        this.rotatingBox.rotate(Angle.toRadian(45), Angle.toRadian(45), Angle.toRadian(45));
 
         this.renders.forEach(r => this.canvas.render(r));
     }
@@ -308,6 +309,17 @@ export default class Lights extends App {
             this.height = renderTarget.height;
             this.cameraLeft.viewport = new Vector4(0, 0, this.width / 2, this.height);
             this.cameraRight.viewport = new Vector4(this.width / 2, 0, this.width / 2, this.height);
+        }
+        this.cameraRight.parent.rotate(0, Angle.toRadian(45), 0);
+        if (this.cameraLeftMovement[3]) {
+            this.cameraLeft.translate(0, 0, this.cameraLeftMovement[3]);
+            this.cameraLeftMovement[3] = 0;
+        }
+        if (this.cameraLeftMovement[0] != 0
+            || this.cameraLeftMovement[1] != 0
+            || this.cameraLeftMovement[2] != 0) {
+            this.cameraLeft.rotate(this.cameraLeftMovement.toVector3());
+            this.cameraLeftMovement.set([0, 0, 0]);
         }
     }
 }

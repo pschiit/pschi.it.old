@@ -18,20 +18,23 @@ export default class Editor extends App {
     }
 
     init() {
-        const scale = 1;
-        this.camera = new OrthographicCamera(-scale, scale, -scale, scale, 0.1, 2000);
+        const scale = 64;
 
         const mainBuffer = new Buffer();
         const mainInstanceBuffer = new Buffer();
         const mainIndexBuffer = new Buffer();
 
+        const world = new Node3d();
+
         const orbit = new Node3d();
-        this.camera.translate(50, 50, -50);
+        world.appendChild(orbit);
+
+        this.camera = new OrthographicCamera(-scale, scale, -scale, scale, 0.1, 2000);
+        this.camera.zoom = scale;
+        this.camera.translate(0, 0, -50);
         this.camera.target = orbit.position;
         orbit.appendChild(this.camera);
 
-        const world = new Node3d();
-        world.appendChild(orbit);
 
         const grid = new Grid();
         world.appendChild(grid);
@@ -46,10 +49,11 @@ export default class Editor extends App {
 
         const pickingTexture = new Texture();
         const pickingMaterial = new BoxelSelectionMaterial();
-        const step = 0.01;
-        let movementX = 0;
-        let movementY = 0;
-        let movementZ = 0;
+        const zoomStep = 1;
+        const rotationStep = 15;
+        let rotationY = 0;
+        let rotationX = 0;
+        let zoom = 0;
         let rightClicked = false;
         this.canvas.addEventListener('pointerdown', e => {
             if (e.button != 0) {
@@ -88,33 +92,34 @@ export default class Editor extends App {
 
         });
         this.canvas.addEventListener('wheel', e => {
-            movementZ += e.deltaY * step;
+            zoom -= zoomStep * Math.sign(e.deltaY);
         });
         this.canvas.addEventListener('pointerup', e => {
             this.canvas.releasePointerCapture(e.pointerId);
-            movementX = 0;
-            movementY = 0;
+            rightClicked = false;
         });
         this.canvas.addEventListener('pointermove', updateMovement.bind(this));
 
         function updateMovement(e) {
             if (rightClicked) {
-                movementX -= e.movementX * step;
-                movementY += e.movementY * step;
+                rotationY -= rotationStep * Math.sign(e.movementX);
+                rotationX += rotationStep * Math.sign(e.movementY);
             }
         }
-        this.updateCamera = ()=>{
-            if(movementX || movementY ||movementZ){
-                this.camera.translate(movementX,movementY,movementZ)
+        this.updateCamera = () => {
+            if (zoom) {
+                this.camera.zoom += zoom;
+                if (this.camera.zoom > scale) {
+                    this.camera.zoom = scale;
+                }
+                zoom = 0;
             }
-            // if (rightClicked) {
-            //     if (movementX) {
-            //         orbit.rotate(Angle.toRadian(movementX % 180) * step, 0, 1, 0);
-            //     }
-            //     if (movementY) {
-            //         orbit.rotate(Angle.toRadian(movementY % 180) * step, 1, 0, 0);
-            //     }
-            // }
+            if (rotationX || rotationY) {
+                console.log(rotationX, rotationY)
+                orbit.rotate(Angle.toRadian(rotationX), Angle.toRadian(rotationY), 0);
+                rotationY = 0;
+                rotationX = 0;
+            }
         }
     }
 

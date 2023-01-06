@@ -123,7 +123,7 @@ export default class OrthographicCamera extends Camera {
 
             this._orthographicMatrix = Matrix4.orthographicMatrix(left, right, bottom, top, this.near, this.far);
             if (this.frustum) {
-                this.frustum.matrix = this._orthographicMatrix.inverse;
+                this.frustum.transform(this._orthographicMatrix.inverse);
                 this.frustum.vertexMatrix;
             }
         }

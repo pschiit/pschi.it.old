@@ -3,6 +3,7 @@ import Matrix4 from'./Matrix4';
 import Vector2 from'./Vector2';
 import Vector4 from'./Vector4';
 import FloatArray from'./FloatArray';
+import Quaternion from './Quaternion';
 
 export default class  Vector3 extends FloatArray {
     static xAxis = new Vector3(1, 0, 0);
@@ -207,7 +208,6 @@ export default class  Vector3 extends FloatArray {
     toVector2() {
         return new Vector2(this[0], this[1]);
     }
-
 
     /** Convert the current Vector3 to a Vector4
      * @param {Number} w fourth coordinate of Vector4

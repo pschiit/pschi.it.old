@@ -28,6 +28,9 @@ export default class WebGLCanvas extends Canvas {
                 this.removeChild(child);
             }
         });
+        this.element.addEventListener('contextmenu', (ev) => {
+            ev.preventDefault(); // this will prevent browser contextmenu default behavior on this canvas
+        });
     }
 
     /** Return the RenderTarget of the current HtmlNode's HTMLElement
@@ -64,7 +67,7 @@ export default class WebGLCanvas extends Canvas {
 
         return this;
     }
-    
+
     /** Remove all dependencies from GraphicsNode in the current Renderer
      * @param {GraphicsNode} node Node to render
      * @returns {WebGLCanvas} the current Renderer
@@ -86,7 +89,7 @@ export default class WebGLCanvas extends Canvas {
     */
     getNormalizedPointerPosition(event) {
         const rect = this.element.getBoundingClientRect();
-        
+
         return new Vector2(
             ((event.clientX - rect.left) * this.width / this.element.clientWidth) / this.width * 2 - 1,
             ((event.clientY - rect.top) * this.height / this.element.clientHeight) / this.height * -2 + 1

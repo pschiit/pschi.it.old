@@ -4,6 +4,7 @@ import FloatArray from './FloatArray';
 import Vector3 from './Vector3';
 import Vector4 from './Vector4';
 import Ray from './Ray';
+import Quaternion from './Quaternion';
 
 export default class Matrix4 extends FloatArray {
     /** Create a new Matrix3 from an array of number
@@ -28,15 +29,6 @@ export default class Matrix4 extends FloatArray {
     */
     get xAxis() {
         return new Vector3(this[0], this[1], this[2]);
-    }
-
-    /** Set the Matrix4 y axis component 
-     * @return {Vector3} y axis vector
-    */
-    set yAxis(v) {
-        this[4] = v[0];
-        this[5] = v[1];
-        this[6] = v[2];
     }
 
     /** Return a Vector3 reflecting the y axis from the current Matrix
@@ -92,11 +84,10 @@ export default class Matrix4 extends FloatArray {
         this[10] = v[2];
     }
 
-    /** Return the Vector4 rotation component 
-     * @return {Vector4} rotation quaternion
+    /** Return the Vector4 Quaternion component 
+     * @return {Quaternion} quaternion of Matrix4
     */
     get quaternion() {
-        const out = new Vector4();
         let scaling = this.scaleVector;
         let is1 = 1 / scaling[0];
         let is2 = 1 / scaling[1];
@@ -112,32 +103,40 @@ export default class Matrix4 extends FloatArray {
         let sm33 = this[10] * is3;
         let trace = sm11 + sm22 + sm33;
         let S = 0;
+        const result = new Quaternion();
         if (trace > 0) {
             S = Math.sqrt(trace + 1.0) * 2;
-            out[3] = 0.25 * S;
-            out[0] = (sm23 - sm32) / S;
-            out[1] = (sm31 - sm13) / S;
-            out[2] = (sm12 - sm21) / S;
+            result[3] = 0.25 * S;
+            result[0] = (sm23 - sm32) / S;
+            result[1] = (sm31 - sm13) / S;
+            result[2] = (sm12 - sm21) / S;
         } else if (sm11 > sm22 && sm11 > sm33) {
             S = Math.sqrt(1.0 + sm11 - sm22 - sm33) * 2;
-            out[3] = (sm23 - sm32) / S;
-            out[0] = 0.25 * S;
-            out[1] = (sm12 + sm21) / S;
-            out[2] = (sm31 + sm13) / S;
+            result[3] = (sm23 - sm32) / S;
+            result[0] = 0.25 * S;
+            result[1] = (sm12 + sm21) / S;
+            result[2] = (sm31 + sm13) / S;
         } else if (sm22 > sm33) {
             S = Math.sqrt(1.0 + sm22 - sm11 - sm33) * 2;
-            out[3] = (sm31 - sm13) / S;
-            out[0] = (sm12 + sm21) / S;
-            out[1] = 0.25 * S;
-            out[2] = (sm23 + sm32) / S;
+            result[3] = (sm31 - sm13) / S;
+            result[0] = (sm12 + sm21) / S;
+            result[1] = 0.25 * S;
+            result[2] = (sm23 + sm32) / S;
         } else {
             S = Math.sqrt(1.0 + sm33 - sm11 - sm22) * 2;
-            out[3] = (sm12 - sm21) / S;
-            out[0] = (sm31 + sm13) / S;
-            out[1] = (sm23 + sm32) / S;
-            out[2] = 0.25 * S;
+            result[3] = (sm12 - sm21) / S;
+            result[0] = (sm31 + sm13) / S;
+            result[1] = (sm23 + sm32) / S;
+            result[2] = 0.25 * S;
         }
-        return out;
+        return result;
+    }
+
+    /** Return the Vector3 Euler rotation component 
+     * @return {Vector3} Euler rotation of Matrix4
+    */
+    get euler() {
+        return this.quaternion.euler;
     }
 
     /** Return the inverse of this Matrix4 
@@ -353,7 +352,6 @@ export default class Matrix4 extends FloatArray {
         return this;
     }
 
-
     /** Rotate the current Matrix4 by an angle around an axis
      * @param {Number} radians angle of rotation
      * @param {Vector3} vector axis of the rotation
@@ -428,7 +426,6 @@ export default class Matrix4 extends FloatArray {
         return this;
     }
 
-
     /** Transpose the current Matrix4
      * @return the current updated Matrix4
     */
@@ -492,6 +489,11 @@ export default class Matrix4 extends FloatArray {
         return b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
     }
 
+
+    /** Make the current Matrix4 zAxis target a Vector3
+     * @param {Vector3} vector axis of the rotation
+     * @return the current updated Matrix4
+    */
     target(vector) {
         const eye = this.positionVector;
         const up = this.yAxis;

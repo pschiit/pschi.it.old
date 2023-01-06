@@ -7,6 +7,7 @@ const defaultStyle = {
     width: '100%',
     height: '100%',
     margin: 0,
+    padding: 0,
     background: '#000000'
 };
 HtmlNode.document.style = defaultStyle;
@@ -14,7 +15,6 @@ const body = HtmlNode.body;
 body.style = defaultStyle;
 const canvas = new WebGLCanvas();
 body.appendChild(canvas);
-canvas.style = defaultStyle;
 canvas.fitParent();
 
 window.onresize = (e) => {
@@ -30,11 +30,11 @@ function getApp(name) {
         app.stop();
     }
     switch (name) {
-        case 'lights':
-            return new Lights(canvas);
         case 'editor':
-        default:
             return new Editor(canvas);
+        case 'lights':
+            default:
+            return new Lights(canvas);
     }
 }
 
