@@ -5,6 +5,7 @@ import Shader from '../../renderer/graphics/shader/Shader';
 export default class ShadowMaterial extends Material {
     constructor() {
         super();
+        this.culling = Material.culling.front;
 
         this.setParameter(Material.parameters.projectionMatrix);
 

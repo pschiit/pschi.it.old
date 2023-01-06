@@ -26,7 +26,6 @@ export default class BoxelSelectionMaterial extends Material {
                     Material.parameters.projectionMatrix,
                     Material.parameters.vertexMatrix,
                     position)),
-            Operation.equal(vInstanceColor, BoxelMaterial.parameters.instanceColor),
             Operation.equal(vPosition, Operation.divide(BoxelMaterial.parameters.instancePosition, 256)),]);
 
         this.fragmentShader = Shader.fragmentShader(

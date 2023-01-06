@@ -1,5 +1,6 @@
 import Matrix4 from '../../math/Matrix4';
 import Ray from '../../math/Ray';
+import Material from '../../renderer/graphics/Material';
 import Camera from './Camera';
 
 export default class PerspectiveCamera extends Camera {
@@ -9,7 +10,41 @@ export default class PerspectiveCamera extends Camera {
         this._aspectRatio = aspectRatio;
         this._near = near;
         this._far = far;
-        this.perspectiveUpdated = true;
+		this.focus = 10;
+		this.filmGauge = 35;
+		this.filmOffset = 0;
+    }
+
+    get focalLength(){
+		const vExtentSlope = Math.tan( Math.PI / 180 * 0.5 * this.fov );
+
+		return 0.5 * this.filmHeigth / vExtentSlope;
+    }
+
+    set focalLength(v){
+		const vExtentSlope = 0.5 * this.filmHeigth / v;
+
+		this.fov =180 / Math.PI * 2 * Math.atan( vExtentSlope );
+    }
+
+    get filmWidth(){
+		return this.filmGauge * Math.min( this.aspectRatio, 1 );
+    }
+
+    get filmHeigth(){
+		return this.filmGauge * Math.max( this.aspectRatio, 1 );
+    }
+
+    get zoom() {
+        return this._zoom;
+    }
+
+    set zoom(v) {
+        if (v != this._zoom && v > 0) {
+            this._zoom = v;
+            this._perspectiveMatrix = null;
+            this.setParameter(Material.parameters.projectionMatrix, null);
+        }
     }
 
     get fovY() {
@@ -18,8 +53,8 @@ export default class PerspectiveCamera extends Camera {
 
     set fovY(v) {
         this._fovY = v;
-        this.perspectiveUpdated = true;
-        this.projectionUpdated = true;
+        this._perspectiveMatrix = null;
+        this.setParameter(Material.parameters.projectionMatrix, null);
     }
 
     get aspectRatio() {
@@ -28,8 +63,8 @@ export default class PerspectiveCamera extends Camera {
 
     set aspectRatio(v) {
         this._aspectRatio = v;
-        this.perspectiveUpdated = true;
-        this.projectionUpdated = true;
+        this._perspectiveMatrix = null;
+        this.setParameter(Material.parameters.projectionMatrix, null);
     }
 
     get near() {
@@ -38,8 +73,8 @@ export default class PerspectiveCamera extends Camera {
 
     set near(v) {
         this._near = v;
-        this.perspectiveUpdated = true;
-        this.projectionUpdated = true;
+        this._perspectiveMatrix = null;
+        this.setParameter(Material.parameters.projectionMatrix, null);
     }
 
     get far() {
@@ -48,14 +83,13 @@ export default class PerspectiveCamera extends Camera {
 
     set far(v) {
         this._far = v;
-        this.perspectiveUpdated = true;
-        this.projectionUpdated = true;
+        this._perspectiveMatrix = null;
+        this.setParameter(Material.parameters.projectionMatrix, null);
     }
 
     get perspectiveMatrix() {
-        if (this.perspectiveUpdated) {
-            this._perspectiveMatrix = Matrix4.perspectiveMatrix(this.fovY, this.aspectRatio, this.near, this.far);
-            this.perspectiveUpdated = false;
+        if (!this._perspectiveMatrix) {
+            this._perspectiveMatrix = Matrix4.perspectiveMatrix(this.fovY, this.aspectRatio, this.near, this.far, this.zoom);
             if (this.frustum) {
                 this.frustum.matrix = this._perspectiveMatrix.inverse;
                 this.frustum.vertexMatrix;
@@ -65,21 +99,22 @@ export default class PerspectiveCamera extends Camera {
     }
 
     get projectionMatrix() {
-        if (this.projectionUpdated) {
-            this._projectionMatrix = this.perspectiveMatrix.clone().multiply(this.vertexMatrix.inverse);
-            this.projectionUpdated = false;
+        let result = this.getParameter(Material.parameters.projectionMatrix);
+        if(!result){
+            result = this.perspectiveMatrix.clone().multiply(this.vertexMatrix.inverse);
+            this.setParameter(Material.parameters.projectionMatrix, result);
         }
-        return this._projectionMatrix;
+        return result;
     }
 
     raycast(vector2) {
-        const origin = this.vertexMatrix.positionVector;
+        const origin = this.position;
         const direction = this.unproject(vector2.toVector3(0)).substract(origin).normalize();
         return new Ray(origin, direction);
     }
 
     getScene(renderTarget, materialParameters) {
-        if (!this.viewport) {
+        if (!this.viewport && this.aspectRatio != renderTarget.aspectRatio) {
             this.aspectRatio = renderTarget.aspectRatio;
         }
         return super.getScene(renderTarget, materialParameters);

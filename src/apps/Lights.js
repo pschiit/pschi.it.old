@@ -199,12 +199,12 @@ export default class Lights extends App {
         this.cameraLeft = new PerspectiveCamera(55, 1, 0.1, 2000);
         this.cameraLeft.translate(7, 5, 7);
         this.cameraLeft.target = new Vector3(0, 0, 0);
+        this.cameraLeft.frustum = new Node3d();
         world.appendChild(this.cameraLeft);
 
-        this.cameraRight = new OrthographicCamera(-4, 4, -4, 6, 0.1, 100);
+        this.cameraRight = new OrthographicCamera(-4, 4, -4, 8, 0.1, 100);
         this.cameraRight.translate(-7, 5, -7);
         this.cameraRight.target = new Vector3(0, 0, 0);
-        this.cameraRight.frustum = new Node3d();
         const cameraHolder = new Node3d();
         cameraHolder.appendChild(this.cameraRight);
         world.appendChild(cameraHolder);
@@ -254,43 +254,35 @@ export default class Lights extends App {
                 case 'KeyA':
                 case 'ArrowLeft':
                     this.cameraLeft.rotate(step * 0.1, 0, 1, 0);
-                    this.cameraLeft.projectionUpdated = true;
                     break;
                 case 'd':
                 case 'KeyD':
                 case 'ArrowRight':
                     this.cameraLeft.rotate(step * 0.1, 0, -1, 0);
-                    this.cameraLeft.projectionUpdated = true;
                     break;
                 case 'w':
                 case 'KeyW':
                 case 'ArrowUp':
                     this.cameraLeft.translate(0, 0, -step);
-                    this.cameraLeft.projectionUpdated = true;
                     break;
                 case 's':
                 case 'KeyS':
                 case 'ArrowDown':
                     this.cameraLeft.translate(0, 0, step);
-                    this.cameraLeft.projectionUpdated = true;
                     break;
                 case 'ControlLeft':
                     this.cameraLeft.rotate(step * 0.1, -1, 0, 0);
-                    this.cameraLeft.projectionUpdated = true;
                     break;
                 case 'Space':
                     this.cameraLeft.rotate(step * 0.1, 1, 0, 0);
-                    this.cameraLeft.projectionUpdated = true;
                     break;
                 case 'q':
                 case 'KeyQ':
                     this.cameraLeft.rotate(step * 0.1, 0, 0, 1,);
-                    this.cameraLeft.projectionUpdated = true;
                     break;
                 case 'e':
                 case 'KeyE':
                     this.cameraLeft.rotate(step * 0.1, 0, 0, -1);
-                    this.cameraLeft.projectionUpdated = true;
                     break;
                 default:
                     return;
@@ -304,7 +296,6 @@ export default class Lights extends App {
         }
         this.updateCameras(this.canvas.renderTarget);
         this.cameraRight.parent.rotate(0.01, 0, 1, 0);
-        this.cameraRight.projectionUpdated = true;
         this.rotatingBox.rotate(0.01, 1, 1, 1);
 
         this.renders.forEach(r => this.canvas.render(r));

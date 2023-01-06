@@ -53,8 +53,8 @@ export default class Matrix4 extends FloatArray {
         return new Vector3(this[8], this[9], this[10]);
     }
 
-    get ray(){
-        return new Ray(this.positionVector,this.zAxis);
+    get ray() {
+        return new Ray(this.positionVector, this.zAxis);
     }
 
     /** Return a Vector3 reflecting the position from the current Matrix
@@ -205,7 +205,7 @@ export default class Matrix4 extends FloatArray {
      * @return {Boolean} true if matrices are equals
     */
     equals(matrix) {
-        return matrix?.length == this.length && 
+        return matrix?.length == this.length &&
             this[0] === matrix[0] &&
             this[1] === matrix[1] &&
             this[2] === matrix[2] &&
@@ -737,22 +737,30 @@ export default class Matrix4 extends FloatArray {
      * @param {Number} far bound of the frustum
      * @return {Matrix4} the perspective Matrix4
     */
-    static perspectiveMatrix(fovy, aspect, near, far) {
-        const result = new Matrix4();
-        let f = 1.0 / Math.tan(fovy / 2),
-            nf;
-        result[0] = f / aspect;
-        result[5] = f;
-        result[11] = -1;
-        if (far != null && far !== Infinity) {
-            nf = 1 / (near - far);
-            result[10] = (far + near) * nf;
-            result[14] = 2 * far * near * nf;
-        } else {
-            result[10] = -1;
-            result[14] = -2 * near;
-        }
+    static perspectiveMatrix(fovy, aspect, near, far, zoom) {
+        let top = near * Math.tan(Math.PI / 180 * 0.5 * fovy) / zoom;
+        let height = 2 * top;
+        let bottom = top - height;
+        let width = aspect * height;
+        let left = - 0.5 * width;
+        let right = left + width;
 
+        const result = new Matrix4();
+        const x = 2 * near / (right - left);
+        const y = 2 * near / (top - bottom);
+
+        const a = (right + left) / (right - left);
+        const b = (top + bottom) / (top - bottom);
+        const c = - (far + near) / (far - near);
+        const d = - 2 * far * near / (far - near);
+
+        result[0] = x;
+        result[5] = y;
+        result[8] = a;
+        result[9] = b;
+        result[10] = c;
+        result[11] = - 1;
+        result[14] = d;
         return result;
     }
 

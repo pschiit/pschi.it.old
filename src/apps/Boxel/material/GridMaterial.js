@@ -139,8 +139,7 @@ export default class GridMaterial extends Material {
                 Shader.parameters.output,
                 Operation.toVector4(
                     GridMaterial.parameters.color,
-                    Operation.multiply(Operation.mix(g2, g1, g1), 
-                    Operation.pow(d,2))),
+                    Operation.multiply(Operation.mix(g2, g1, g1), d)),
             ),
             Operation.equal(
                 outputAlpha,

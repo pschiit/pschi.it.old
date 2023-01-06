@@ -13,7 +13,6 @@ export default class Node3d extends Render {
         const colorId = generateColorId();
         this.setParameter(Material.parameters.colorId, colorId);
         this.matrix = Matrix4.identityMatrix();
-        this._target = new Vector3();
 
         this.castShadow = false;
         this.visible = true;
@@ -30,6 +29,9 @@ export default class Node3d extends Render {
             const parentMatrix = this.parent?.vertexMatrix;
             vertexMatrix = parentMatrix instanceof Matrix4 ? parentMatrix.clone().multiply(this.matrix)
                 : this.matrix.clone();
+            if (this.target) {
+                vertexMatrix.target(this.target);
+            }
             this.setParameter(Material.parameters.vertexMatrix, vertexMatrix);
         }
         return vertexMatrix;
@@ -39,7 +41,7 @@ export default class Node3d extends Render {
         return this.getParameter(Material.parameters.normalMatrix);
     }
 
-    get ray(){
+    get ray() {
         return this.vertexMatrix.ray;
     }
 
@@ -97,7 +99,6 @@ export default class Node3d extends Render {
     */
     set target(v) {
         this._target = v;
-        this.matrix.target(this._target);
         this.clearVertexMatrix();
     }
 
@@ -167,11 +168,15 @@ export default class Node3d extends Render {
         return this;
     }
 
+    clearMatrix() {
+        this.setParameter(Material.parameters.vertexMatrix, null);
+        this.setParameter(Material.parameters.normalMatrix, null);
+    }
+
     clearVertexMatrix() {
         this.dispatchCallback((node) => {
             if (node.vertexMatrix) {
-                node.setParameter(Material.parameters.vertexMatrix, null);
-                node.setParameter(Material.parameters.normalMatrix, null);
+                node.clearMatrix();
             }
         });
     }

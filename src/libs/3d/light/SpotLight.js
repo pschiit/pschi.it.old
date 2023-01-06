@@ -33,7 +33,7 @@ export default class SpotLight extends Node3d {
         if (v != this.shadow) {
             if (v) {
                 if (!v.data) {
-                    v.data = new PerspectiveCamera(Math.cos(this.radius), 1, 0.5, 500);
+                    v.data = new PerspectiveCamera(70, 1, 0.5, 500);
                     v.data.filters.push('castShadow');
                 }
                 if (v.data.parent != this) {

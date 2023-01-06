@@ -10,8 +10,8 @@ import Node3d from '../Node3d';
 export default class Camera extends Node3d {
     constructor() {
         super();
+        this._zoom = 1;
         this.fog = new Vector2(0, 50);
-        this.projectionUpdated = true;
         this.updateAspectRatio = true;
         this.filters.push('visible');
         this.viewport = null;
@@ -29,13 +29,23 @@ export default class Camera extends Node3d {
 
     }
 
+    get zoom() {
+        return this._zoom;
+    }
+
+    set zoom(v) {
+        if (v != this._zoom && v > 0) {
+            this._zoom = v;
+        }
+    }
+
     get aspectRatio() {
         return this._aspectRatio;
     }
 
     set aspectRatio(v) {
         this._aspectRatio = v;
-        this.projectionUpdated = true;
+        this.setParameter(Material.parameters.projectionMatrix, null);
     }
 
     get frustum() {
@@ -78,11 +88,16 @@ export default class Camera extends Node3d {
     }
 
     project(position) {
-        return position.transform(this.vertexMatrix.inverse).transform(this.projectionMatrix);
+        return position.transform(this.projectionMatrix);
     }
 
     unproject(position) {
         return position.transform(this.projectionMatrix.inverse);
+    }
+
+    clearMatrix(){
+        super.clearMatrix();
+        this.setParameter(Material.parameters.projectionMatrix, null);
     }
 
     static frustum() {
