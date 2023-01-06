@@ -13,12 +13,13 @@ export default class GridMaterial extends Material {
         this.setParameter(Material.parameters.cameraPosition);
         this.setParameter(Material.parameters.projectionMatrix);
 
-        this.color = Color.white.clone().scale(0.5);
+        this.color = Color.black();
         this.sizes = new Vector2(1, 10);
-        this.distance = 10000;
+        this.distance = 1000;
         this.axes = 'xzy';
+        this.fading = 25;
 
-        const planeAxes = this.axes.substring(0, 2);
+        const planeAxes = '.' +  this.axes.substring(0, 2);
 
         const position = Parameter.vector3('pos');
         const vPosition = Parameter.vector3('v_' + Material.parameters.position, Parameter.qualifier.out);
@@ -30,8 +31,8 @@ export default class GridMaterial extends Material {
                     Operation.selection(Material.parameters.position, '.' + this.axes),
                     GridMaterial.parameters.distance)),
             Operation.addTo(
-                Operation.selection(position, '.' + planeAxes),
-                Operation.selection(Material.parameters.cameraPosition, '.' + planeAxes)),
+                Operation.selection(position, planeAxes),
+                Operation.selection(Material.parameters.cameraPosition, planeAxes)),
             Operation.equal(
                 Shader.parameters.output,
                 Operation.multiply(
@@ -53,7 +54,7 @@ export default class GridMaterial extends Material {
         const g2 = Parameter.number('g2');
 
         const outputAlpha = Operation.selection(Shader.parameters.output, '.a');
-        const planeAxesSelection = Operation.selection(vPosition, '.' + planeAxes);
+        const planeAxesSelection = Operation.selection(vPosition, planeAxes);
 
 
         const size = Parameter.number('size');
@@ -74,8 +75,8 @@ export default class GridMaterial extends Material {
                     Operation.divide(
                         Operation.abs(
                             Operation.substract(
-                                Operation.fract(Operation.substract(r, 1)),
-                                1
+                                Operation.fract(Operation.substract(r, 0.5)),
+                                0.5
                             ),
                         ),
                         Operation.fWidth(
@@ -111,15 +112,17 @@ export default class GridMaterial extends Material {
                 Operation.declare(d),
                 Operation.substract(
                     1,
-                    Operation.min(
-                        Operation.distance(
-                            Operation.selection(viewPosition, '.' + planeAxes),
-                            Operation.divide(
+                    Operation.divide(
+                        Operation.len(
+                            Operation.substract(
                                 planeAxesSelection,
-                                GridMaterial.parameters.distance
-                            ),
+                                Operation.selection(
+                                    Material.parameters.cameraTarget,
+                                    planeAxes
+                                )
+                            )
                         ),
-                        1
+                        GridMaterial.parameters.fading,
                     )
                 )
             ),
@@ -139,7 +142,9 @@ export default class GridMaterial extends Material {
                 Shader.parameters.output,
                 Operation.toVector4(
                     GridMaterial.parameters.color,
-                    Operation.multiply(Operation.mix(g2, g1, g1), d)),
+                    Operation.multiply(
+                        Operation.mix(g2, g1, g1),
+                        Operation.pow(d,3))),
             ),
             Operation.equal(
                 outputAlpha,
@@ -147,14 +152,15 @@ export default class GridMaterial extends Material {
                     Operation.multiply(0.5, outputAlpha),
                     outputAlpha,
                     g2
-                ),),
+                )),
             Operation.if(
                 Operation.lessEquals(
                     outputAlpha,
                     0
                 ),
                 Operation.discard()
-            )],
+            ),
+            Material.operation.gammaCorrection],
             Shader.precision.high);
     }
 
@@ -182,9 +188,18 @@ export default class GridMaterial extends Material {
         this.setParameter(GridMaterial.parameters.color, v);
     }
 
+    get fading() {
+        return this.getParameter(GridMaterial.parameters.fading);
+    }
+
+    set fading(v) {
+        this.setParameter(GridMaterial.parameters.fading, v);
+    }
+
     static parameters = {
         distance: Parameter.number('gridDistance', Parameter.qualifier.const),
         sizes: Parameter.vector2('gridSizes', Parameter.qualifier.const),
         color: Parameter.vector3('gridColor', Parameter.qualifier.const),
+        fading: Parameter.number('gridFading', Parameter.qualifier.const),
     };
 }

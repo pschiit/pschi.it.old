@@ -9,7 +9,7 @@ export default class RenderTarget extends GraphicsNode {
         this.data = data;
         this.format = RenderTarget.format.rgba;
         this.type = Uint8Array;
-        this.backgroundColor = Color.black;
+        this.backgroundColor = Color.black();
         this.scissor = null;
         this.read = null;
         this.material = null;

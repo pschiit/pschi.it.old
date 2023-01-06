@@ -18,7 +18,8 @@ export default class Editor extends App {
     }
 
     init() {
-        const scale = 64;
+        this.canvas.renderTarget.backgroundColor = Color.white();
+        const scale = 32;
 
         const mainBuffer = new Buffer();
         const mainInstanceBuffer = new Buffer();
@@ -30,9 +31,9 @@ export default class Editor extends App {
         world.appendChild(orbit);
 
         this.camera = new OrthographicCamera(-scale, scale, -scale, scale, 0.1, 2000);
-        this.camera.zoom = scale;
-        this.camera.translate(0, 0, -50);
-        this.camera.target = orbit.position;
+        this.camera.zoom = scale / 6;
+        this.camera.translate(100, 100, -100);
+        this.camera.lookAt(0, 0, 0);
         orbit.appendChild(this.camera);
 
 
@@ -50,12 +51,19 @@ export default class Editor extends App {
         const pickingTexture = new Texture();
         const pickingMaterial = new BoxelSelectionMaterial();
         const zoomStep = 1;
-        const rotationStep = 15;
-        let rotationY = 0;
-        let rotationX = 0;
+        const rotationStep = 10;
+        const translationStep = 0.5;
+        const rotation = new Vector3();
+        const translation = new Vector3();
+        let clicked = -1;
         let zoom = 0;
-        let rightClicked = false;
         this.canvas.addEventListener('pointerdown', e => {
+            if (e.pointerType == 'mouse') {
+                clicked = e.button;
+            }
+            this.canvas.setPointerCapture(e.pointerId);
+            updateMovement(e);
+            console.log(e);
             if (e.button != 0) {
                 if (this.sprite.count > 0) {
                     const mousePosition = this.canvas.getPointerPosition(e);
@@ -85,9 +93,6 @@ export default class Editor extends App {
                     this.sprite.set(intersection);
                 }
             } else {
-                this.canvas.setPointerCapture(e.pointerId);
-                rightClicked = true;
-                updateMovement(e);
             }
 
         });
@@ -96,14 +101,17 @@ export default class Editor extends App {
         });
         this.canvas.addEventListener('pointerup', e => {
             this.canvas.releasePointerCapture(e.pointerId);
-            rightClicked = false;
+            clicked = -1;
         });
         this.canvas.addEventListener('pointermove', updateMovement.bind(this));
 
         function updateMovement(e) {
-            if (rightClicked) {
-                rotationY -= rotationStep * Math.sign(e.movementX);
-                rotationX += rotationStep * Math.sign(e.movementY);
+            if (clicked == 0) {
+                rotation[1] -= rotationStep * e.movementX;
+                rotation[0] += rotationStep * e.movementY;
+            } else if (clicked == 2) {
+                translation[0] -= translationStep * e.movementX;
+                translation[1] += translationStep * e.movementY;
             }
         }
         this.updateCamera = () => {
@@ -114,11 +122,13 @@ export default class Editor extends App {
                 }
                 zoom = 0;
             }
-            if (rotationX || rotationY) {
-                console.log(rotationX, rotationY)
-                orbit.rotate(Angle.toRadian(rotationX), Angle.toRadian(rotationY), 0);
-                rotationY = 0;
-                rotationX = 0;
+            if (rotation[0] || rotation[1]) {
+                orbit.rotate(Angle.toRadian(rotation[0]), Angle.toRadian(rotation[1]), 0);
+                rotation.scale(0);
+            }
+            if (translation[0] || translation[2]) {
+                orbit.translate(translation[0], 0, translation[2]);
+                translation.scale(0);
             }
         }
     }

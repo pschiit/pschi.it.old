@@ -22,7 +22,7 @@ export default class WebGLRenderer extends GraphicsRenderer {
         this.gl = gl;
         polyfillExtension(this);
         this.viewport = new Vector4();
-        this.clearColor = Color.black;
+        this.clearColor = Color.black();
         this.scissor = null;
         this.culling = null;
         this.depth = null;
@@ -338,7 +338,7 @@ function render(renderer, renderTarget) {
         const scene = render.getScene(renderTarget);
         let viewport = renderTarget.viewport;
         const scissor = renderTarget.scissor;
-        const clearColor = renderTarget.backgroundColor || Color.black;
+        const clearColor = renderTarget.backgroundColor || Color.black();
         if (scissor) {
             viewport = scissor;
             if (!renderer.scissor) {
@@ -408,7 +408,6 @@ function render(renderer, renderTarget) {
 
     function clear(color = true, depth = true, stencil = true) {
         let bits = 0;
-
         if (color) bits |= renderer.gl.COLOR_BUFFER_BIT;
         if (depth) bits |= renderer.gl.DEPTH_BUFFER_BIT;
         if (stencil) bits |= renderer.gl.STENCIL_BUFFER_BIT;

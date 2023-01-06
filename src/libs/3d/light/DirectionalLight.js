@@ -45,7 +45,7 @@ export default class DirectionalLight extends Node3d {
                     v.colorTexture = new Texture();
                     v.colorTexture.minification = Texture.filter.linear;
                 }
-                v.backgroundColor = Color.transparent;
+                v.backgroundColor = Color.transparent();
                 this._shadow = v;
                 this.light.parameters = {};
             } else if (this.shadow) {

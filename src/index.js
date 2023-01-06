@@ -8,12 +8,13 @@ const defaultStyle = {
     height: '100%',
     margin: 0,
     padding: 0,
-    background: '#000000'
+    background: 'transparent',
+    'touch-action': 'none'
 };
 HtmlNode.document.style = defaultStyle;
 const body = HtmlNode.body;
 body.style = defaultStyle;
-const canvas = new WebGLCanvas();
+const canvas = new WebGLCanvas( {antialias: true});
 body.appendChild(canvas);
 canvas.fitParent();
 

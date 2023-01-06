@@ -1,4 +1,5 @@
 import Color from '../../core/Color';
+import Angle from '../../math/Angle';
 import Light from '../../renderer/graphics/Light';
 import Texture from '../../renderer/graphics/Texture';
 import PerspectiveCamera from '../camera/PerspectiveCamera';
@@ -33,7 +34,7 @@ export default class SpotLight extends Node3d {
         if (v != this.shadow) {
             if (v) {
                 if (!v.data) {
-                    v.data = new PerspectiveCamera(70, 1, 0.5, 500);
+                    v.data = new PerspectiveCamera(Angle.toDegree(this.radius * 2), 1, 0.5, 500);
                     v.data.filters.push('castShadow');
                 }
                 if (v.data.parent != this) {
@@ -46,7 +47,7 @@ export default class SpotLight extends Node3d {
                     v.colorTexture = new Texture();
                     v.colorTexture.minification = Texture.filter.linear;
                 }
-                v.backgroundColor = Color.transparent;
+                v.backgroundColor = Color.transparent();
                 this._shadow = v;
                 this.light.parameters = {};
             } else if (this.shadow) {

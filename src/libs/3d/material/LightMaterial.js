@@ -14,10 +14,10 @@ export default class LightMaterial extends Material {
         this.depth = Material.depth.less;
 
         this.shininess = 32;
-        this.ambientColor = Color.white;
-        this.diffuseColor = Color.white;
-        this.specularColor = Color.white;
-        this.emissiveColor = Color.black;
+        this.ambientColor = Color.white();
+        this.diffuseColor = Color.white();
+        this.specularColor = Color.white();
+        this.emissiveColor = Color.black();
 
         [Material.parameters.texture,
         Material.parameters.textureProjectionMatrix,
@@ -276,13 +276,11 @@ export default class LightMaterial extends Material {
         const normal = Parameter.vector3('normal');
         const fragmentColor = Parameter.vector4('fragmentColor');
         const fragmentRGB = Operation.selection(fragmentColor, '.rgb');
-        const color = Parameter.vector3('color');
         const nCameraPosition = Parameter.vector3('nCameraPosition');
         const operations = [
             Operation.equal(Operation.declare(normal), Operation.normalize(vNormal)),
             Operation.equal(Operation.declare(nCameraPosition), Operation.normalize(Operation.substract(Material.parameters.cameraPosition, vPosition))),
-            Operation.equal(Operation.declare(fragmentColor), vColor),
-            Operation.equal(Operation.declare(color), new Vector3())];
+            Operation.equal(Operation.declare(fragmentColor), vColor),];
 
         if (this.texture) {
             if (this.getParameter(Material.parameters.projectionMatrix)) {
@@ -320,6 +318,8 @@ export default class LightMaterial extends Material {
             }
         }
         if (hasLight) {
+            const lightColor = Parameter.vector3('lightColor');
+            operations.push(Operation.equal(Operation.declare(lightColor), new Vector3()))
             const calculateLight = LightMaterial.shaderFunction.calculateLight();
             const calculateVisibility = LightMaterial.shaderFunction.calculateVisibility();
             const materialAmbient = Parameter.vector3('materialAmbient');
@@ -361,7 +361,7 @@ export default class LightMaterial extends Material {
                 LightMaterial.parameters.directionalLightAmbientStrength.length = this.directionalLightsCount;
                 operations.push(
                     Operation.for('int i = 0', 'i < ' + this.directionalLightsCount, 'i++',
-                        Operation.addTo(color, Operation.do(calculateLight, [
+                        Operation.addTo(lightColor, Operation.do(calculateLight, [
                             Operation.selection(LightMaterial.parameters.directionalLightDirection, '[i]'),
                             Operation.selection(LightMaterial.parameters.directionalLightColor, '[i]'),
                             Operation.selection(LightMaterial.parameters.directionalLightAmbientStrength, '[i]'),
@@ -400,7 +400,7 @@ export default class LightMaterial extends Material {
                                 Operation.selection(vPositionFromDirectionalShadowLight, '[i]'),
                                 Operation.selection(LightMaterial.parameters.directionalShadowLightShadowMap, '[i]'),
                             ])),
-                        Operation.addTo(color, Operation.do(calculateLight, [
+                        Operation.addTo(lightColor, Operation.do(calculateLight, [
                             Operation.selection(LightMaterial.parameters.directionalShadowLightDirection, '[i]'),
                             Operation.selection(LightMaterial.parameters.directionalShadowLightColor, '[i]'),
                             Operation.selection(LightMaterial.parameters.directionalShadowLightAmbientStrength, '[i]'),
@@ -439,7 +439,7 @@ export default class LightMaterial extends Material {
                                 Operation.clamp(Operation.divide(intensity, Operation.len(lightDistance)), 0, 1)
                             ),
                             Operation.if(Operation.notEquals(attenuation, 0),
-                                Operation.addTo(color, Operation.multiply(
+                                Operation.addTo(lightColor, Operation.multiply(
                                     attenuation,
                                     Operation.do(calculateLight, [
                                         lightDirection,
@@ -504,7 +504,7 @@ export default class LightMaterial extends Material {
                                         Operation.selection(LightMaterial.parameters.pointShadowLightShadowMap, '[i]'),
                                     ])
                                 ),
-                                Operation.addTo(color, Operation.multiply(
+                                Operation.addTo(lightColor, Operation.multiply(
                                     attenuation,
                                     Operation.do(calculateLight, [
                                         lightDirection,
@@ -567,7 +567,7 @@ export default class LightMaterial extends Material {
                                 )
                             ),
                             Operation.if(Operation.notEquals(attenuation, 0),
-                                Operation.addTo(color, Operation.multiply(
+                                Operation.addTo(lightColor, Operation.multiply(
                                     attenuation,
                                     Operation.do(calculateLight, [
                                         Operation.selection(LightMaterial.parameters.spotLightDirection, '[i]'),
@@ -649,7 +649,7 @@ export default class LightMaterial extends Material {
                                 )
                             ),
                             Operation.if(Operation.notEquals(attenuation, 0),
-                                Operation.addTo(color, Operation.multiply(
+                                Operation.addTo(lightColor, Operation.multiply(
                                     attenuation,
                                     Operation.do(calculateLight, [
                                         Operation.selection(LightMaterial.parameters.spotShadowLightDirection, '[i]'),
@@ -670,9 +670,7 @@ export default class LightMaterial extends Material {
                 );
             }
 
-            operations.push(Operation.multiplyTo(color, fragmentRGB));
-        } else {
-            operations.push(Operation.addTo(color, fragmentRGB));
+            operations.push(Operation.multiplyTo(fragmentColor, Operation.toVector4(lightColor, 1)));
         }
         if (this.fog) {
             const distance = Parameter.number('distance');
@@ -683,16 +681,19 @@ export default class LightMaterial extends Material {
                 Operation.substract(fogDistanceY, vDistance)
             ));
             operations.push(Operation.equal(
-                color, Operation.mix(
+                fragmentRGB,
+                Operation.mix(
                     Material.parameters.backgroundColor,
-                    color,
+                    fragmentRGB,
                     Operation.clamp(
                         Operation.substract(
                             Operation.divide(distance, fogDistanceY),
                             Operation.selection(fogDistance, '.x'))
-                        , 0, 1))));
+                        , 0, 1))
+            ));
         }
-        operations.push(Operation.equal(Shader.parameters.output, Operation.toVector4(color, Operation.selection(fragmentColor, '.a'))));
+        operations.push(Operation.equal(Shader.parameters.output, fragmentColor));
+        operations.push(Material.operation.gammaCorrection);
         this.fragmentShader = Shader.fragmentShader(operations);
     }
 
@@ -728,7 +729,7 @@ export default class LightMaterial extends Material {
         pointShadowLightPosition: Parameter.vector3('pointShadowLightPosition', Parameter.qualifier.const),
         pointShadowLightAmbientStrength: Parameter.number('pointShadowLightAmbientStrength', Parameter.qualifier.const),
         pointShadowLightIntensity: Parameter.number('pointShadowLightIntensity', Parameter.qualifier.const),
-        
+
 
         spotLightColor: Parameter.vector3('spotLightColor', Parameter.qualifier.const),
         spotLightPosition: Parameter.vector3('spotLightPosition', Parameter.qualifier.const),

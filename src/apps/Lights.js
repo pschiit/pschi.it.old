@@ -33,7 +33,7 @@ export default class Lights extends App {
         const mainIndexBuffer = new Buffer();
 
         const cube = new BoxBuffer();
-        cube.setColor(Color.white);
+        cube.setColor(Color.white());
         cube.uv = [
             0, 0, //F
             0, 1,
@@ -70,7 +70,7 @@ export default class Lights extends App {
 
         const reverseCube = new BoxBuffer();
         reverseCube.normal.scale(-1);
-        reverseCube.setColor(Color.white);
+        reverseCube.setColor(Color.white());
         reverseCube.uv = [
             0, 0, //F
             0, 1,
@@ -106,7 +106,7 @@ export default class Lights extends App {
         mainIndexBuffer.appendChild(reverseCube.index);
 
         const plane = new PlaneBuffer(10, 10);
-        plane.setColor(Color.white);
+        plane.setColor(Color.white());
         plane.transform(Matrix4.identityMatrix().rotate(Math.PI / 2, new Vector3(1, 0, 0)));
         plane.uv = [
             0, 0,
@@ -131,16 +131,17 @@ export default class Lights extends App {
         floor.appendChild(this.rotatingBox);
 
         this.sun = new DirectionalLight(
-            Color.white.clone().scale(0.5),
+            Color.grey(),
             new Vector3(10, 20, 10),
             new Vector3(0, 0, 0));
         floor.appendChild(this.sun);
+        this.sun.light.toggle();
         this.rotatingBox.addEventListener('click', (e) => {
             this.sun.light.toggle();
         });
 
         const redLight = new PointLight(
-            Color.red,
+            Color.red(),
             new Vector3(5, 3, -5));
         redLight.material = lightMaterial;
         redLight.vertexBuffer = reverseCube;
@@ -150,7 +151,7 @@ export default class Lights extends App {
         });
 
         const greenLight = new PointLight(
-            Color.green,
+            Color.green(),
             new Vector3(-5, 3, -5));
         greenLight.material = lightMaterial;
         greenLight.vertexBuffer = reverseCube;
@@ -160,7 +161,7 @@ export default class Lights extends App {
         });
 
         const blueLight = new PointLight(
-            Color.blue,
+            Color.blue(),
             new Vector3(-5, 3, 5));
         blueLight.material = lightMaterial;
         blueLight.vertexBuffer = reverseCube;
@@ -169,19 +170,8 @@ export default class Lights extends App {
             blueLight.light.toggle();
         });
 
-        const whiteLight = new PointLight(
-            Color.white,
-            new Vector3(5, 3, 5));
-        whiteLight.material = lightMaterial;
-        whiteLight.vertexBuffer = reverseCube;
-        floor.appendChild(whiteLight);
-        whiteLight.addEventListener('click', (e) => {
-            whiteLight.light.toggle();
-        });
-
-
         this.spotLight = new SpotLight(
-            Color.magenta,
+            Color.magenta(),
             Math.cos(Angle.toRadian(40)),
             new Vector3(-3, 3, -3),
             new Vector3(0, 0, 0));
@@ -210,8 +200,8 @@ export default class Lights extends App {
         cameraHolder.appendChild(this.cameraRight);
         world.appendChild(cameraHolder);
 
-        this.sun.shadow = new RenderTarget(null, 1024, 1024);
-        this.spotLight.shadow = new RenderTarget(null, 1024, 1024);
+        this.sun.shadow = new RenderTarget(null, 2048, 2048);
+        this.spotLight.shadow = new RenderTarget(null, 2048, 2048);
 
         const renderTarget = this.canvas.renderTarget;
         renderTarget.data = [this.cameraLeft, this.cameraRight];

@@ -79,6 +79,7 @@ export default class Camera extends Node3d {
         }
         materialParameters[Material.parameters.fogDistance.name] = this.fog;
         materialParameters[Material.parameters.cameraPosition.name] = this.position;
+        materialParameters[Material.parameters.cameraTarget.name] = this.target;
         materialParameters[Material.parameters.projectionMatrix.name] = this.projectionMatrix;
         return super.getScene(renderTarget, materialParameters);
     }
@@ -111,5 +112,5 @@ export default class Camera extends Node3d {
 
 const frustumMaterial = new ColorMaterial();
 const frustumBuffer = new BoxBuffer(2, 2, 2);
-frustumBuffer.setColor(Color.white);
+frustumBuffer.setColor(Color.white());
 frustumBuffer.setPrimitive(Render.primitive.lines);

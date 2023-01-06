@@ -19,7 +19,7 @@ export default class BoxelSprite extends Node3d {
         this.z = new Vector2();
     }
 
-    set(position, color = Color.white) {
+    set(position, color = Color.white()) {
         const x = position[0];
         const y = position[1];
         const z = position[2];
