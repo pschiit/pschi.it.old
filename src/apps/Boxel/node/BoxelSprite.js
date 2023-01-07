@@ -1,6 +1,5 @@
 import Node3d from '../../../libs/3d/Node3d';
-import Color from '../../../libs/core/Color';
-import Vector2 from '../../../libs/math/Vector2';
+import Box from '../../../libs/math/Box';
 import BoxelBuffer from '../buffer/BoxelBuffer';
 import BoxelMaterial from '../material/BoxelMaterial';
 
@@ -9,47 +8,43 @@ export default class BoxelSprite extends Node3d {
         super();
         this.vertexBuffer = new BoxelBuffer();
         this.material = BoxelSprite.material;
-        this.colors = {};
+        this.boxels = {};
+        this.boundingBox = new Box();
 
         this.updated = false;
         this.boxelCount = 0;
-
-        this.x = new Vector2();
-        this.y = new Vector2();
-        this.z = new Vector2();
     }
 
-    set(position, color = Color.white()) {
-        const x = position[0];
-        const y = position[1];
-        const z = position[2];
-        if (!this.colors[x]) {
-            this.colors[x] = {};
+    intersect(ray) {
+        return ray.intersectBox(this.boundingBox);
+    }
+
+    get(x, y, z) {
+        if (x.length > 0) {
+            z = x[2];
+            y = x[1];
+            x = x[0];
         }
-        if (!this.colors[x][y]) {
-            this.colors[x][y] = {};
+        return this.boxels[x] && this.boxels[x][y] && this.boxels[x][y][z] ? this.boxels[x][y][z] : null;
+    }
+
+    set(boxel) {
+        const x = boxel.position[0];
+        const y = boxel.position[1];
+        const z = boxel.position[2];
+        if (!this.boxels[x]) {
+            this.boxels[x] = {};
         }
-        if (this.colors[x][y][z] != color) {
-            this.colors[x][y][z] = color;
+        if (!this.boxels[x][y]) {
+            this.boxels[x][y] = {};
+        }
+        if (this.boxels[x][y][z] != boxel.color) {
+            this.boxels[x][y][z] = boxel;
             this.updated = true;
-            if(color){
+            if (boxel) {
                 this.boxelCount++;
-                if(x < this.x[0]){
-                    this.x[0] = x;
-                } else if(x > this.x[1]){
-                    this.x[1] = x;
-                }
-                if(y < this.y[0]){
-                    this.y[0] = y;
-                } else if(y > this.y[1]){
-                    this.y[1] = y;
-                }
-                if(z < this.z[0]){
-                    this.z[0] = z;
-                } else if(z > this.z[1]){
-                    this.z[1] = z;
-                }
-            }else{
+                this.boundingBox.union(boxel.boundingBox);
+            } else {
                 this.boxelCount--;
             }
         }
@@ -62,17 +57,17 @@ export default class BoxelSprite extends Node3d {
             const colors = new Float32Array(this.boxelCount * 4);
             let iPositions = 0;
             let iColors = 0;
-            for (const x in this.colors) {
-                for (const y in this.colors[x]) {
-                    for (const z in this.colors[x][y]) {
-                        const color = this.colors[x][y][z];
-                        positions[iPositions++] = Number(x);
-                        positions[iPositions++] = Number(y);
-                        positions[iPositions++] = Number(z);
-                        colors[iColors++] = color[0];
-                        colors[iColors++] = color[1];
-                        colors[iColors++] = color[2];
-                        colors[iColors++] = color[3];
+            for (const x in this.boxels) {
+                for (const y in this.boxels[x]) {
+                    for (const z in this.boxels[x][y]) {
+                        const boxel = this.boxels[x][y][z];
+                        positions[iPositions++] = boxel.position[0]
+                        positions[iPositions++] = boxel.position[1];
+                        positions[iPositions++] = boxel.position[2];
+                        colors[iColors++] = boxel.color[0];
+                        colors[iColors++] = boxel.color[1];
+                        colors[iColors++] = boxel.color[2];
+                        colors[iColors++] = boxel.color[3];
                     }
                 }
             }

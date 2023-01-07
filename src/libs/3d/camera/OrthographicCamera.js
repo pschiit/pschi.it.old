@@ -5,7 +5,7 @@ import Material from '../../renderer/graphics/Material';
 import Camera from './Camera';
 
 export default class OrthographicCamera extends Camera {
-    constructor(left, right, bottom, top, near, far) {
+    constructor(left = -1, right = 1, bottom = -1, top = 1, near = 0.1, far = 1000) {
         super();
         this._left = left;
         this._right = right;
@@ -132,7 +132,7 @@ export default class OrthographicCamera extends Camera {
 
     get projectionMatrix() {
         let result = this.getParameter(Material.parameters.projectionMatrix);
-        if(!result){
+        if (!result) {
             result = this.orthographicMatrix.clone().multiply(this.vertexMatrix.inverse);
             this.setParameter(Material.parameters.projectionMatrix, result);
         }
@@ -142,7 +142,7 @@ export default class OrthographicCamera extends Camera {
     raycast(vector2) {
         const z = (this.near + this.far) / (this.near + this.far);
         const origin = this.unproject(vector2.toVector3(z));
-        const direction = new Vector3(0, 0, -1).transformMatrix4(this.vertexMatrix).normalize();
+        const direction = this.vertexMatrix.zAxis;
 
         return new Ray(origin, direction);
     }

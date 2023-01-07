@@ -1,3 +1,4 @@
+import FloatArray from '../math/FloatArray';
 import Vector2 from '../math/Vector2';
 import Vector3 from '../math/Vector3';
 import Vector4 from '../math/Vector4';
@@ -162,20 +163,41 @@ export default class Buffer extends Node {
     }
 
     transform(matrix) {
-        if (!(this.childrens.length > 0)) {
-            let vector = this.step == 4 ? new Vector4()
-                : this.step == 3 ? new Vector3() :
-                    new Vector2();
-            for (let i = 0; i < this.length; i += vector.length) {
-                for (let j = 0; j < vector.length; j++) {
-                    vector[j] = this.data[i + j];
-                }
-                vector.transform(matrix);
-                for (let j = 0; j < vector.length; j++) {
-                    this.data[i + j] = vector[j];
+        this.dispatchCallback((buffer) => {
+            if (buffer.childrens.length == 0) {
+                let vector = buffer.step == 4 ? new Vector4()
+                    : buffer.step == 3 ? new Vector3() :
+                        new Vector2();
+                for (let i = 0; i < buffer.length; i += vector.length) {
+                    for (let j = 0; j < vector.length; j++) {
+                        vector[j] = buffer.data[i + j];
+                    }
+                    vector.transform(matrix);
+                    for (let j = 0; j < vector.length; j++) {
+                        this.data[i + j] = vector[j];
+                    }
                 }
             }
-        }
+        },);
+    }
+
+    /** Dispatches a function to the Buffer elements
+     * the function will have each FloatArray element
+     * @param {Function} callback the function to dispatch
+     * @param {Number} step the FloatArray length used for each callback (default is buffer.step)
+    */
+    dispatch(callback, step) {
+        this.dispatchCallback((buffer) => {
+            if (buffer.childrens.length == 0) {
+                let floatArray = new FloatArray(step || buffer.step);
+                for (let i = 0; i < buffer.length; i += floatArray.length) {
+                    for (let j = 0; j < floatArray.length; j++) {
+                        floatArray[j] = buffer.data[i + j];
+                    }
+                    callback(floatArray);
+                }
+            }
+        },);
     }
 
     static usage = {

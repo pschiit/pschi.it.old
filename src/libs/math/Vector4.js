@@ -12,13 +12,12 @@ export default class Vector4 extends FloatArray {
     constructor(x, y, z, w) {
         super(4);
         if (typeof x !== 'undefined') {
-            if (!Number.isFinite(x)) {
+            if (x.length >= 0) {
                 this[0] = x[0];
                 this[1] = x[1];
                 this[2] = x[2];
                 this[3] = x[3];
-            }
-            else {
+            } else {
                 this[0] = x;
                 if (Number.isFinite(y)) {
                     this[1] = y;

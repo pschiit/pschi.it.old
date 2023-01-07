@@ -3,14 +3,11 @@ import Node3d from '../../libs/3d/Node3d';
 import App from '../../libs/core/App';
 import Buffer from '../../libs/core/Buffer';
 import Color from '../../libs/core/Color';
-import Angle from '../../libs/math/Angle';
+import Vector2 from '../../libs/math/Vector2';
 import Vector3 from '../../libs/math/Vector3';
-import Vector4 from '../../libs/math/Vector4';
-import Texture from '../../libs/renderer/graphics/Texture';
-import BoxelSelectionMaterial from './material/BoxelSelectionMaterial';
 import Boxel from './node/Boxel';
+import BoxelGrid from './node/BoxelGrid';
 import BoxelSprite from './node/BoxelSprite';
-import Grid from './node/Grid';
 
 export default class Editor extends App {
     constructor(canvas) {
@@ -19,7 +16,7 @@ export default class Editor extends App {
 
     init() {
         this.canvas.renderTarget.backgroundColor = Color.white();
-        const scale = 32;
+        const scale = this.canvas.renderTarget.height / 2;
 
         const mainBuffer = new Buffer();
         const mainInstanceBuffer = new Buffer();
@@ -30,14 +27,15 @@ export default class Editor extends App {
         const orbit = new Node3d();
         world.appendChild(orbit);
 
-        this.camera = new OrthographicCamera(-scale, scale, -scale, scale, 0.1, 2000);
+        this.camera = new OrthographicCamera(-scale, scale, -scale, scale, 1, 2000);
+        //this.camera = new PerspectiveCamera(70,1,0.1,2000)
         this.camera.zoom = scale / 6;
         this.camera.translate(100, 100, -100);
-        this.camera.lookAt(0, 0, 0);
+        this.camera.target = orbit;
         orbit.appendChild(this.camera);
 
 
-        const grid = new Grid();
+        const grid = new BoxelGrid();
         world.appendChild(grid);
         mainBuffer.appendChild(grid.vertexBuffer.arrayBuffer);
         mainIndexBuffer.appendChild(grid.vertexBuffer.index);
@@ -48,13 +46,11 @@ export default class Editor extends App {
         mainIndexBuffer.appendChild(this.sprite.vertexBuffer.index);
         mainInstanceBuffer.appendChild(this.sprite.vertexBuffer.instanceArrayBuffer);
 
-        const pickingTexture = new Texture();
-        const pickingMaterial = new BoxelSelectionMaterial();
-        const zoomStep = 1;
-        const rotationStep = 10;
-        const translationStep = 0.5;
-        const rotation = new Vector3();
-        const translation = new Vector3();
+        const zoomStep = 0.5;
+        const rotationStep = 1;
+        const orbitStep = 0.1;
+        const cameraMovement = new Vector2();
+        const orbitMovement = new Vector2();
         let clicked = -1;
         let zoom = 0;
         this.canvas.addEventListener('pointerdown', e => {
@@ -63,36 +59,21 @@ export default class Editor extends App {
             }
             this.canvas.setPointerCapture(e.pointerId);
             updateMovement(e);
-            console.log(e);
             if (e.button != 0) {
-                if (this.sprite.count > 0) {
-                    const mousePosition = this.canvas.getPointerPosition(e);
-                    const renderTarget = this.canvas.renderTarget;
-
-                    renderTarget.read = new Vector4(mousePosition[0], mousePosition[1], 1, 1);
-                    renderTarget.colorTexture = pickingTexture;
-                    renderTarget.material = pickingMaterial;
-                    this.canvas.render(this.camera);
-                    renderTarget.read = null;
-                    renderTarget.material = null;
-                    renderTarget.colorTexture = null;
-
-                    if (renderTarget.output) {
-                        const position = new Color(renderTarget.output);
-                        if (position) {
-                            console.log(position);
-                            this.sprite.set(position, null);
-                            return;
-                        }
-                    }
-                }
-
                 const ray = this.camera.raycast(this.canvas.getNormalizedPointerPosition(e));
-                const intersection = grid.intersect(ray);
-                if (intersection) {
-                    this.sprite.set(intersection);
+                let boxelPosition = this.sprite.intersect(ray);
+                if (boxelPosition) {
+                    const boxel = this.sprite.get(boxelPosition.floor());
+                    console.log(boxel?.intersect(ray))
+                    boxelPosition = boxel?.intersect(ray).floor();
                 }
-            } else {
+                if (!boxelPosition) {
+                    boxelPosition = grid.intersect(ray).floor();
+                }
+                if (boxelPosition) {
+                    const boxel = new Boxel(boxelPosition, Color.random());
+                    this.sprite.set(boxel);
+                }
             }
 
         });
@@ -107,28 +88,49 @@ export default class Editor extends App {
 
         function updateMovement(e) {
             if (clicked == 0) {
-                rotation[1] -= rotationStep * e.movementX;
-                rotation[0] += rotationStep * e.movementY;
+                cameraMovement[0] -= rotationStep * e.movementX;
+                cameraMovement[1] += rotationStep * e.movementY;
             } else if (clicked == 2) {
-                translation[0] -= translationStep * e.movementX;
-                translation[1] += translationStep * e.movementY;
+                orbitMovement[0] -= orbitStep * e.movementX;
+                orbitMovement[1] += orbitStep * e.movementY;
             }
         }
         this.updateCamera = () => {
+            const scale = this.canvas.renderTarget.height * 0.5;
+            if(this.camera.top != scale){
+                this.camera.top = scale;
+            }
             if (zoom) {
                 this.camera.zoom += zoom;
-                if (this.camera.zoom > scale) {
-                    this.camera.zoom = scale;
-                }
                 zoom = 0;
             }
-            if (rotation[0] || rotation[1]) {
-                orbit.rotate(Angle.toRadian(rotation[0]), Angle.toRadian(rotation[1]), 0);
-                rotation.scale(0);
+            if (this.camera.zoom > scale) {
+                this.camera.zoom = scale;
+            }
+            grid.fading = scale / this.camera.zoom * 5;
+            console.log(grid.fading);
+            let v = new Vector3();
+            if (cameraMovement[0]) {
+                v.add(this.camera.xAxis.scale(cameraMovement[0]));
+            }
+            if (cameraMovement[1]) {
+                v.add(this.camera.yAxis.scale(cameraMovement[1]));
+            }
+            if (v[0] || v[2]) {
+                this.camera.translate(v);
+                cameraMovement.scale(0);
+            }
+
+            let translation = new Vector3();
+            if (orbitMovement[0]) {
+                translation.add(this.camera.xAxis.scale(orbitMovement[0] / this.camera.zoom));
+            }
+            if (orbitMovement[1]) {
+                translation.add(this.camera.yAxis.scale(orbitMovement[1] / this.camera.zoom));
             }
             if (translation[0] || translation[2]) {
-                orbit.translate(translation[0], 0, translation[2]);
-                translation.scale(0);
+                orbit.translate(translation);
+                orbitMovement.scale(0);
             }
         }
     }
@@ -139,9 +141,5 @@ export default class Editor extends App {
         }
         this.updateCamera();
         this.canvas.render(this.camera);
-    }
-
-    static randomBoxel() {
-        return new Boxel(Vector3.random(), Color.random())
     }
 }

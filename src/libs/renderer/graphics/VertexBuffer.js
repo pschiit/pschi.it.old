@@ -1,4 +1,6 @@
 import Buffer from '../../core/Buffer';
+import Box from '../../math/Box';
+import Vector3 from '../../math/Vector3';
 import GraphicsNode from './GraphicsNode';
 import Material from './Material';
 
@@ -69,6 +71,17 @@ export default class VertexBuffer extends GraphicsNode {
 
     set position(v) {
         this.setParameter(Material.parameters.position.name, v, this.positionLength);
+    }
+
+    get boundingBox() {
+        const box = new Box();
+        if (this.position) {
+            this.position.dispatch((vector3) => {
+                box.expandByPoint(vector3)
+            });
+        }
+
+        return box;
     }
 
     get normal() {

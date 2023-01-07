@@ -84,11 +84,11 @@ export default class Node3d extends Render {
      * @return {Vector3} node Vector3 target
     */
     get target() {
-        return this._target;
+        return this._target instanceof Node3d ? this._target.position : this._target;
     }
 
     /** Set the target of the current Node3d
-     * @param {Vector3} v Vector3 target
+     * @param {Vector3|Node3d} v Vector3 target
     */
     set target(v) {
         this._target = v;

@@ -11,6 +11,20 @@ export default class FloatArray extends Float32Array {
         return mathArray?.every((e, i) => e == this[i]);
     }
 
+    min(mathArray) {
+        for (let i = 0; i < this.length; i++) {
+            this[i] = Math.min(this[i], mathArray[i]);
+        }
+        return this;
+    }
+
+    max(mathArray) {
+        for (let i = 0; i < this.length; i++) {
+            this[i] = Math.max(this[i], mathArray[i]);
+        }
+        return this;
+    }
+
     floor() {
         for (let i = 0; i < this.length; i++) {
             this[i] = Math.floor(this[i]);

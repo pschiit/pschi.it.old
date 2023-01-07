@@ -1,11 +1,10 @@
-import Matrix3 from'./Matrix3';
-import Matrix4 from'./Matrix4';
-import Vector2 from'./Vector2';
-import Vector4 from'./Vector4';
-import FloatArray from'./FloatArray';
-import Quaternion from './Quaternion';
+import FloatArray from './FloatArray';
+import Matrix3 from './Matrix3';
+import Matrix4 from './Matrix4';
+import Vector2 from './Vector2';
+import Vector4 from './Vector4';
 
-export default class  Vector3 extends FloatArray {
+export default class Vector3 extends FloatArray {
     static xAxis = new Vector3(1, 0, 0);
     static yAxis = new Vector3(0, 1, 0);
     static zAxis = new Vector3(0, 0, 1);
@@ -18,12 +17,11 @@ export default class  Vector3 extends FloatArray {
     constructor(x, y, z) {
         super(3);
         if (typeof x !== 'undefined') {
-            if (!Number.isFinite(x)) {
+            if (x.length >= 0) {
                 this[0] = x[0];
                 this[1] = x[1];
                 this[2] = x[2];
-            }
-            else{
+            } else {
                 this[0] = x;
                 if (Number.isFinite(y)) {
                     this[1] = y;
@@ -40,12 +38,12 @@ export default class  Vector3 extends FloatArray {
      * @return {Boolean} true if vectors are equals
     */
     equals(vector) {
-        return vector?.length == this.length && 
+        return vector?.length == this.length &&
             this[0] === vector[0] &&
             this[1] === vector[1] &&
             this[2] === vector[2];
     }
-    
+
     /** Add a vector array to the current Vector3
      * @param {Vector3} vector right operand
      * @return the current updated Vector3
@@ -91,6 +89,18 @@ export default class  Vector3 extends FloatArray {
         this[0] /= vector[0];
         this[1] /= vector[1];
         this[2] /= vector[2];
+
+        return this;
+    }
+
+    /** Add a scalar the current Vector3
+     * @param {Number} value scale
+     * @return the current updated Vector3
+    */
+    addScalar(value) {
+        this[0] = this[0] + value;
+        this[1] = this[1] + value;
+        this[2] = this[2] + value;
 
         return this;
     }
@@ -217,7 +227,7 @@ export default class  Vector3 extends FloatArray {
         return new Vector4(this[0], this[1], this[2], w);
     }
 
-    static random(){
+    static random() {
         return new Vector3(Math.random(), Math.random(), Math.random());
     }
 }
