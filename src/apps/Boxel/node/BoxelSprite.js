@@ -1,3 +1,4 @@
+import BoxBuffer from '../../../libs/3d/buffer/BoxBuffer';
 import Node3d from '../../../libs/3d/Node3d';
 import Box from '../../../libs/math/Box';
 import BoxelBuffer from '../buffer/BoxelBuffer';
@@ -16,7 +17,20 @@ export default class BoxelSprite extends Node3d {
     }
 
     intersect(ray) {
-        return ray.intersectBox(this.boundingBox);
+        let intersection = ray.intersectBox(this.boundingBox);
+        console.log('sprite intersection', intersection);
+        if (intersection) {
+            const boxel = this.get(intersection.floor());
+            if (boxel) {
+                intersection = boxel?.intersect(ray);
+                if (intersection) {
+                    const plane = boxel.getPlane(intersection);
+                }
+            };
+            //move to the next coordinate until out of the bounding box :)
+        }
+
+        return intersection;
     }
 
     get(x, y, z) {
@@ -38,12 +52,12 @@ export default class BoxelSprite extends Node3d {
         if (!this.boxels[x][y]) {
             this.boxels[x][y] = {};
         }
-        if (this.boxels[x][y][z] != boxel.color) {
+        if (this.boxels[x][y][z] != boxel) {
             this.boxels[x][y][z] = boxel;
             this.updated = true;
             if (boxel) {
                 this.boxelCount++;
-                this.boundingBox.union(boxel.boundingBox);
+                this.boundingBox.expandByPoint(boxel.position);
             } else {
                 this.boxelCount--;
             }

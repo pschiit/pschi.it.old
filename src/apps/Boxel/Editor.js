@@ -46,9 +46,9 @@ export default class Editor extends App {
         mainIndexBuffer.appendChild(this.sprite.vertexBuffer.index);
         mainInstanceBuffer.appendChild(this.sprite.vertexBuffer.instanceArrayBuffer);
 
-        const zoomStep = 0.5;
-        const rotationStep = 1;
-        const orbitStep = 0.1;
+        const zoomStep = 1;
+        const cameraStep = 1;
+        const orbitStep = 1;
         const cameraMovement = new Vector2();
         const orbitMovement = new Vector2();
         let clicked = -1;
@@ -62,13 +62,8 @@ export default class Editor extends App {
             if (e.button != 0) {
                 const ray = this.camera.raycast(this.canvas.getNormalizedPointerPosition(e));
                 let boxelPosition = this.sprite.intersect(ray);
-                if (boxelPosition) {
-                    const boxel = this.sprite.get(boxelPosition.floor());
-                    console.log(boxel?.intersect(ray))
-                    boxelPosition = boxel?.intersect(ray).floor();
-                }
                 if (!boxelPosition) {
-                    boxelPosition = grid.intersect(ray).floor();
+                    boxelPosition = grid.intersect(ray);
                 }
                 if (boxelPosition) {
                     const boxel = new Boxel(boxelPosition, Color.random());
@@ -88,8 +83,8 @@ export default class Editor extends App {
 
         function updateMovement(e) {
             if (clicked == 0) {
-                cameraMovement[0] -= rotationStep * e.movementX;
-                cameraMovement[1] += rotationStep * e.movementY;
+                cameraMovement[0] -= cameraStep * e.movementX;
+                cameraMovement[1] += cameraStep * e.movementY;
             } else if (clicked == 2) {
                 orbitMovement[0] -= orbitStep * e.movementX;
                 orbitMovement[1] += orbitStep * e.movementY;
@@ -97,7 +92,7 @@ export default class Editor extends App {
         }
         this.updateCamera = () => {
             const scale = this.canvas.renderTarget.height * 0.5;
-            if(this.camera.top != scale){
+            if (this.camera.top != scale) {
                 this.camera.top = scale;
             }
             if (zoom) {
@@ -107,29 +102,28 @@ export default class Editor extends App {
             if (this.camera.zoom > scale) {
                 this.camera.zoom = scale;
             }
-            grid.fading = scale / this.camera.zoom * 5;
-            console.log(grid.fading);
-            let v = new Vector3();
+            grid.fading = scale / this.camera.zoom * 4;
+            let cameraTranslation = new Vector3();
             if (cameraMovement[0]) {
-                v.add(this.camera.xAxis.scale(cameraMovement[0]));
+                cameraTranslation.add(this.camera.xAxis.scale(cameraMovement[0]));
             }
             if (cameraMovement[1]) {
-                v.add(this.camera.yAxis.scale(cameraMovement[1]));
+                cameraTranslation.add(this.camera.yAxis.scale(cameraMovement[1]));
             }
-            if (v[0] || v[2]) {
-                this.camera.translate(v);
+            if (cameraTranslation[0] || cameraTranslation[2]) {
+                this.camera.translate(cameraTranslation);
                 cameraMovement.scale(0);
             }
 
-            let translation = new Vector3();
+            let orbitTranslation = new Vector3();
             if (orbitMovement[0]) {
-                translation.add(this.camera.xAxis.scale(orbitMovement[0] / this.camera.zoom));
+                orbitTranslation.add(this.camera.xAxis.scale(orbitMovement[0] / this.camera.zoom));
             }
             if (orbitMovement[1]) {
-                translation.add(this.camera.yAxis.scale(orbitMovement[1] / this.camera.zoom));
+                orbitTranslation.add(this.camera.yAxis.scale(orbitMovement[1] / this.camera.zoom));
             }
-            if (translation[0] || translation[2]) {
-                orbit.translate(translation);
+            if (orbitTranslation[0] || orbitTranslation[2]) {
+                orbit.translate(orbitTranslation);
                 orbitMovement.scale(0);
             }
         }

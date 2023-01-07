@@ -25,6 +25,14 @@ export default class FloatArray extends Float32Array {
         return this;
     }
 
+    clamp(a, b) {
+        for (let i = 0; i < this.length; i++) {
+            this[i] = Math.max(a[i], Math.min(b[i], this[i]));
+        }
+
+        return this;
+    }
+
     floor() {
         for (let i = 0; i < this.length; i++) {
             this[i] = Math.floor(this[i]);

@@ -32,6 +32,14 @@ export default class Vector4 extends FloatArray {
         }
     }
 
+	get lenSq() {
+		return this[0] * this[0] + this[1] * this[1] + this[2] * this[2] + this[3] * this[3];
+	}
+
+	get len() {
+		return Math.sqrt( this.lenSq);
+	}
+
     /** Return whether or not a Vector4 array is equals the current Vector4
      * @param {Vector4} vector the vector to compare
      * @return {Boolean} true if vectors are equals

@@ -10,67 +10,13 @@ import Operation from '../Operation';
 import Parameter from '../Parameter';
 import Shader from '../Shader';
 import ShaderFunction from '../ShaderFunction';
-import GLSLParameter from './GLSLParameter';
 
-export default class GLSLShader extends Shader {
-    /** Create a GLSLShader
-     * @param {GLSLParameter[]} parameters GLSLShader parameters
-     * @param {string} script source code of GLSL without parameter declaration
-     * @param {string} precision GLSLShader precision
-     */
-    constructor(parameters = [], script = '', precision = null) {
-        super();
-        this.parameters = parameters;
-        this.script = script;
-        this.precision = precision;
-    }
-
-    /** Return all the attributes of the current GLSLShader.
-     * @returns {GLSLParameter[]} the attributes list
-    */
-    get attributes() {
-        return this.parameters.filter(p => p.type == GLSLParameter.qualifier.attribute);
-    }
-
-    /** Return all the uniforms of the current GLSLShader.
-     * @returns {GLSLParameter[]} the uniforms list
-    */
-    get uniforms() {
-        return this.parameters.filter(p => p.type == GLSLParameter.qualifier.uniform);
-    }
-
-    /** Return all the varyings of the current GLSLShader.
-     * @returns {GLSLParameter[]} the varyings list
-    */
-    get varyings() {
-        return this.parameters.filter(p => p.type == GLSLParameter.qualifier.varying);
-    }
-
-    /** Return the source code of the GLSLShader.
-     * @returns {string} the shader source code
-    */
-    get source() {
-        const result = [];
-        if (this.precision) {
-            result.push(`precision ${this.precision}p float;`);
-        }
-        this.parameters.forEach(p => {
-            result.push(p.declaration);
-        });
-        result.push(this.script);
-
-        return result.join('\n');
-    }
-
+export default class GLSLShader{
     /** Create a new GLSLShader code source from a Shader
      * @param {Shader} shader Shader to convert
      * @returns {string} the GLSLShader code source
     */
     static from(shader) {
-        if (shader instanceof GLSLShader) {
-            return shader.source;
-        }
-
         const qualifier = {};
         let parameters = {};
         const extensions = [];

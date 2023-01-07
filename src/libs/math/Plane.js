@@ -10,8 +10,15 @@ export default class Plane {
         this.normal = normal;
     }
 
-    distanceToPoint(point) {
-        return this.normal.dot(point) + this.distance;
+    signedDistanceToPoint(point) {
+        return this.normal.clone().dot(point) - this.distance;
+    }
 
+    distanceToPoint(point) {
+        return this.normal.clone().dot(point) + this.distance;
+    }
+
+    clone() {
+        return new Plane(this.distance, this.normal);
     }
 }

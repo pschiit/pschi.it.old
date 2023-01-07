@@ -1,5 +1,5 @@
 import Editor from './apps/Boxel/Editor';
-import Lights from './apps/Lights';
+import Lights from './apps/lights/Lights';
 import HtmlNode from './libs/html/HtmlNode';
 import WebGLCanvas from './libs/html/WebGLCanvas';
 

@@ -1,3 +1,4 @@
+import Sphere from './Sphere';
 import Vector3 from './Vector3';
 
 export default class Box {
@@ -8,6 +9,18 @@ export default class Box {
     constructor(min = new Vector3(+Infinity, +Infinity, +Infinity), max = new Vector3(-Infinity, -Infinity, -Infinity)) {
         this.min = min;
         this.max = max;
+    }
+
+    get isEmpty() {
+        return (this.max[0] < this.min[0]) || (this.max[1] < this.min[1]) || (this.max[2] < this.min[2]);
+    }
+
+    get center() {
+        return this.isEmpty ? new Vector3(0, 0, 0) : this.min.clone().add(this.max).scale(0.5);
+    }
+
+    get size() {
+        return this.isEmpty ? new Vector3(0, 0, 0) : this.max.clone().substract(this.min);
     }
 
     translate(vector3) {
@@ -24,12 +37,12 @@ export default class Box {
         return this;
     }
 
-	intersect( box ) {
-		this.min.max( box.min );
-		this.max.min( box.max );
+    intersect(box) {
+        this.min.max(box.min);
+        this.max.min(box.max);
 
-		return this;
-	}
+        return this;
+    }
 
     expandByPoint(vector3) {
         this.min.min(vector3);
@@ -52,6 +65,10 @@ export default class Box {
         return this;
     }
 
+    get boundingSphere() {
+        return new Sphere(this.center, this.size.len * 0.5);
+    }
+
     setFromCenterAndSize(center, size) {
         const half = size.clone().scale(0.5);
 
@@ -59,6 +76,12 @@ export default class Box {
         this.max = center.clone().add(half);
 
         return this;
+    }
+
+    distanceToPoint(point) {
+        console.log(point, point.clone().clamp(this.min, this.max))
+        return point.clone().clamp(this.min, this.max).substract(point).len;
+
     }
 
     containsPoint(vector3) {
@@ -114,5 +137,16 @@ export default class Box {
 
         return (min <= - plane.constant && max >= - plane.constant);
 
+    }
+
+    empty() {
+        this.min[0] = this.min[1] = this.min[2] = + Infinity;
+        this.max[0] = this.max[1] = this.max[2] = - Infinity;
+
+        return this;
+    }
+
+    clone() {
+        return new Box(this.min, this.max);
     }
 }
