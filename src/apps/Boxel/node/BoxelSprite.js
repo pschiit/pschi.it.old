@@ -83,17 +83,15 @@ export default class BoxelSprite extends Node3d {
         super.setScene(parameters);
         if (this.updated) {
             const values = Object.values(this.boxels);
-            const positions = new Float32Array(values.length * 3);
-            const colors = new Float32Array(values.length * 3);
+            const positions = new Int8Array(values.length * 3);
+            const colors = new Uint8Array(values.length * 3);
             for (let i = 0; i < values.length; i++) {
                 const boxel = values[i];
                 const index = i * 3;
                 positions[index] = boxel.position[0];
                 positions[index + 1] = boxel.position[1];
                 positions[index + 2] = boxel.position[2];
-                colors[index] = boxel.color[0];
-                colors[index + 1] = boxel.color[1];
-                colors[index + 2] = boxel.color[2];
+                colors.set(boxel.color.toUint8(),index);
             }
             this.vertexBuffer.instancePosition = positions;
             this.vertexBuffer.instanceColor = colors;

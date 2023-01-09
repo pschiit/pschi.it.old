@@ -58,7 +58,6 @@ export default class Buffer extends Node {
                         }
                     }
                 }, false);
-                console.log(new Float32Array(data), this.usage);
             } else {
                 let offset = 0;
                 this.dispatchCallback((b) => {

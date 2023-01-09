@@ -31,11 +31,11 @@ function getApp(name) {
         app.stop();
     }
     switch (name) {
-        case 'editor':
-            return new Editor(canvas);
         case 'lights':
-            default:
             return new Lights(canvas);
+        case 'editor':
+            default:
+            return new Editor(canvas);
     }
 }
 
