@@ -13,20 +13,31 @@ export default class WebGLBuffer extends WebGLNode {
         super(renderer, buffer.id);
         this.target = webGLTarget;
         this.location = renderer.gl.createBuffer();
-        this.usage = buffer.usage === Buffer.usage.dynamic ? renderer.gl.DYNAMIC_DRAW
-            : buffer.usage === Buffer.usage.stream ? renderer.gl.STREAM_DRAW
-                : renderer.gl.STATIC_DRAW;
+        this.usage = getUsage(renderer, buffer);
 
         if (webGLTarget === renderer.gl.ELEMENT_ARRAY_BUFFER) {
             this.update = (buffer) => {
                 renderer.elementArrayBuffer = this;
-                renderer.gl.bufferData(this.target, buffer.data, this.usage);
+                const newLength = buffer.length;
+                if (this.length >= newLength) {
+                    renderer.gl.bufferSubData(this.target, 0, buffer.data);
+                } else {
+                    renderer.gl.bufferData(this.target, buffer.data, this.usage);
+                    this.length = newLength;
+                }
             };
         } else {
             this.update = (buffer) => {
                 renderer.arrayBuffer = this;
-                const data = buffer.data;
-                renderer.gl.bufferData(this.target, data, this.usage);
+                const newLength = buffer.length;
+                if (this.length >= newLength) {
+                    const data = buffer.data;
+                    renderer.gl.bufferSubData(this.target, 0, data);
+                } else {
+                    const data = buffer.data;
+                    renderer.gl.bufferData(this.target, data, this.usage);
+                    this.length = newLength;
+                }
             };
         }
     }
@@ -45,8 +56,8 @@ export default class WebGLBuffer extends WebGLNode {
      * @returns {WebGLBuffer} the WebGLBuffer
      */
     static from(renderer, buffer, webGLTarget) {
-        var mainBuffer = buffer.mainBuffer;
-        if(!renderer.nodes[mainBuffer.id]){
+        var mainBuffer = buffer.root;
+        if (!renderer.nodes[mainBuffer.id]) {
             mainBuffer.updated = true;
         }
         const webGLBuffer = renderer.nodes[mainBuffer.id] || new WebGLBuffer(renderer, mainBuffer, webGLTarget);
@@ -58,4 +69,10 @@ export default class WebGLBuffer extends WebGLNode {
 
         return webGLBuffer;
     }
+}
+
+function getUsage(renderer, buffer) {
+    return buffer.usage === Buffer.usage.dynamic ? renderer.gl.DYNAMIC_DRAW
+        : buffer.usage === Buffer.usage.stream ? renderer.gl.STREAM_DRAW
+            : renderer.gl.STATIC_DRAW;
 }

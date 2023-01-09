@@ -1,22 +1,11 @@
-export default class App {
+import Node from './Node';
+
+export default class App extends Node{
     /** Create a new app 
     */
-    constructor(graphicRenderer, eventInterface) {
-        this.graphicsRenderer = graphicRenderer;
-        this.eventInterface = eventInterface;
-        this.then = 0;
-    }
-
-    get renderTarget() {
-        return this.graphicsRenderer.parent.renderTarget;
-    }
-
-    addEventListener(event, callback) {
-        this.eventInterface.addEventListener(event, callback);
-    }
-
-    getPointerPosition(e) {
-        return this.graphicsRenderer.parent.getPointerPosition(e);
+    constructor(canvas) {
+        super();
+        this.canvas = canvas;
     }
 
     run() {
@@ -24,7 +13,6 @@ export default class App {
     }
 
     stop() {
-        this.then = 0;
-        this.graphicsRenderer.childrens.forEach(c => this.graphicsRenderer.removeChild(c));
+        this.canvas.context?.dispatchCallback(this.canvas.context.removeChild);
     }
 }

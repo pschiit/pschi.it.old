@@ -1,4 +1,5 @@
 import Color from '../../core/Color';
+import Angle from '../../math/Angle';
 import Light from '../../renderer/graphics/Light';
 import Texture from '../../renderer/graphics/Texture';
 import PerspectiveCamera from '../camera/PerspectiveCamera';
@@ -15,16 +16,6 @@ export default class SpotLight extends Node3d {
         this.target = target;
     }
 
-    get showFrustum() {
-        return this.shadow?.data.showFrustum;
-    }
-
-    set showFrustum(v) {
-        if (this.shadow) {
-            this.shadow.data.showFrustum = v;
-        }
-    }
-
     get shadow() {
         return this._shadow;
     }
@@ -33,7 +24,7 @@ export default class SpotLight extends Node3d {
         if (v != this.shadow) {
             if (v) {
                 if (!v.data) {
-                    v.data = new PerspectiveCamera(Math.cos(this.radius), 1, 0.5, 500);
+                    v.data = new PerspectiveCamera(Angle.toDegree(this.radius * 2), 1, 0.5, 500);
                     v.data.filters.push('castShadow');
                 }
                 if (v.data.parent != this) {
@@ -46,7 +37,7 @@ export default class SpotLight extends Node3d {
                     v.colorTexture = new Texture();
                     v.colorTexture.minification = Texture.filter.linear;
                 }
-                v.backgroundColor = Color.transparent;
+                v.backgroundColor = Color.transparent();
                 this._shadow = v;
                 this.light.parameters = {};
             } else if (this.shadow) {
@@ -73,16 +64,16 @@ export default class SpotLight extends Node3d {
             this.light.setParameter(LightMaterial.parameters.spotShadowLightShadowMatrix, this.shadow.data.projectionMatrix);
             this.light.setParameter(LightMaterial.parameters.spotShadowLightShadowMap, this.shadow.colorTexture);
             this.light.setParameter(LightMaterial.parameters.spotShadowLightColor, this.light.color.rgb);
-            this.light.setParameter(LightMaterial.parameters.spotShadowLightPosition, this.vertexMatrix.positionVector);
-            this.light.setParameter(LightMaterial.parameters.spotShadowLightDirection, this.vertexMatrix.zAxis);
+            this.light.setParameter(LightMaterial.parameters.spotShadowLightPosition, this.position);
+            this.light.setParameter(LightMaterial.parameters.spotShadowLightDirection, this.zAxis);
             this.light.setParameter(LightMaterial.parameters.spotShadowLightInnerRadius, this.innerRadius);
             this.light.setParameter(LightMaterial.parameters.spotShadowLightRadius, this.radius);
             this.light.setParameter(LightMaterial.parameters.spotShadowLightAmbientStrength, this.light.ambientStrength);
             this.light.setParameter(LightMaterial.parameters.spotShadowLightIntensity, this.light.intensity);
         } else {
             this.light.setParameter(LightMaterial.parameters.spotLightColor, this.light.color.rgb);
-            this.light.setParameter(LightMaterial.parameters.spotLightPosition, this.vertexMatrix.positionVector);
-            this.light.setParameter(LightMaterial.parameters.spotLightDirection, this.vertexMatrix.zAxis);
+            this.light.setParameter(LightMaterial.parameters.spotLightPosition, this.position);
+            this.light.setParameter(LightMaterial.parameters.spotLightDirection, this.zAxis);
             this.light.setParameter(LightMaterial.parameters.spotLightInnerRadius, this.innerRadius);
             this.light.setParameter(LightMaterial.parameters.spotLightRadius, this.radius);
             this.light.setParameter(LightMaterial.parameters.spotLightAmbientStrength, this.light.ambientStrength);

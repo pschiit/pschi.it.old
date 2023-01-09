@@ -5,15 +5,11 @@ import GraphicsNode from './GraphicsNode';
 export default class RenderTarget extends GraphicsNode {
     constructor(data, width = null, height = null, x = 0, y = 0) {
         super();
-        this.viewport = new Vector4();
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
+        this.viewport = new Vector4(x,y,width,height);
         this.data = data;
         this.format = RenderTarget.format.rgba;
         this.type = Uint8Array;
-        this.backgroundColor = Color.black;
+        this.backgroundColor = Color.black();
         this.scissor = null;
         this.read = null;
         this.material = null;
@@ -158,21 +154,6 @@ export default class RenderTarget extends GraphicsNode {
                 }
             }
         }
-    }
-
-    /* Return wheter the Vector2 is inside the RenderTarget 
-    * @param {Number|Number[]} x first coordinate or vector array
-    * @param {Number} y second coordinate
-   */
-    isIn(x, y) {
-        if (x.length > 1) {
-            y = x[1];
-            x = x[0];
-        }
-        return x > this.x
-            && x < this.x + this.width
-            && y > this.y
-            && x < this.y + this.height;
     }
 
     static format = {

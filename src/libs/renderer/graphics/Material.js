@@ -1,37 +1,50 @@
 import GraphicsNode from './GraphicsNode';
+import Operation from './shader/Operation';
 import Parameter from './shader/Parameter';
+import Shader from './shader/Shader';
 
+const rgb = Operation.selection(Shader.parameters.output, '.rgb');
 export default class Material extends GraphicsNode {
     /** Create a new Material
     */
-    constructor(){
+    constructor() {
         super();
 
         this.culling = null;
         this.depth = null;
         this.vertexShader = null;
         this.fragmentShader = null
+        this.gammaCorrection = 2.2;
     }
 
-    get compiled(){
+    get gammaCorrection() {
+        return this.getParameter(Material.parameters.gammaCorrection);
+    }
+
+    set gammaCorrection(v) {
+        this.setParameter(Material.parameters.gammaCorrection, v);
+    }
+
+    get compiled() {
         return this.vertexShader?.compiled && this.fragmentShader?.compiled;
     }
 
     static parameters = {
         backgroundColor: Parameter.vector3('backgroundColor', Parameter.qualifier.const),
-        
+        gammaCorrection: Parameter.number('gammaCorrection', Parameter.qualifier.const),
+
         position: Parameter.vector4('vertexPosition', Parameter.qualifier.let),
         normal: Parameter.vector4('vertexNormal', Parameter.qualifier.let),
         color: Parameter.vector4('vertexColor', Parameter.qualifier.let),
         uv: Parameter.vector2('vertexUV', Parameter.qualifier.let),
-        
+
         vertexMatrix: Parameter.matrix4('vertexMatrix', Parameter.qualifier.const),
         normalMatrix: Parameter.matrix4('normalMatrix', Parameter.qualifier.const),
         colorId: Parameter.vector3('colorId', Parameter.qualifier.const),
-        
-        texture: Parameter.texture('texture',Parameter.qualifier.const),
-        textureProjectionMatrix: Parameter.matrix4('textureProjectionMatrix',Parameter.qualifier.const),
-        
+
+        texture: Parameter.texture('texture', Parameter.qualifier.const),
+        textureProjectionMatrix: Parameter.matrix4('textureProjectionMatrix', Parameter.qualifier.const),
+
         projectionMatrix: Parameter.matrix4('projectionMatrix', Parameter.qualifier.const),
         cameraPosition: Parameter.vector3('cameraPosition', Parameter.qualifier.const),
         cameraTarget: Parameter.vector3('cameraTarget', Parameter.qualifier.const),
@@ -46,12 +59,21 @@ export default class Material extends GraphicsNode {
 
     static depth = {
         never: 'never',
-        always:'always',
-        equal:'equal',
-        notEqual:'notEqual',
+        always: 'always',
+        equal: 'equal',
+        notEqual: 'notEqual',
         less: 'less',
-        lessEqual:'lessEqual',
+        lessEqual: 'lessEqual',
         greater: 'greater',
-        greaterEqual:'greaterEqual',
+        greaterEqual: 'greaterEqual',
+    }
+
+    static operation = {
+        gammaCorrection: Operation.equal(
+            rgb,
+            Operation.pow(
+                rgb,
+                Operation.toVector3(Operation.divide(1,Material.parameters.gammaCorrection)))
+        ),
     }
 }

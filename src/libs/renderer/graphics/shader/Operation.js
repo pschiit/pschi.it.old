@@ -301,7 +301,7 @@ export default class Operation extends ShaderNode {
     }
 
     static return(value) {
-        return new Operation(Operation.symbol.return, [value]);
+        return new Operation(Operation.symbol.return, value != null ? [value] : []);
     }
 
     static discard() {

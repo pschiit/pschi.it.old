@@ -13,7 +13,6 @@ export default class Texture extends GraphicsNode {
         this.format = RenderTarget.format.rgba;
         this.type = Uint8Array;
         this.mipmap = false;
-        this.projectionMatrix = null;
         this.magnification = Texture.filter.linear;
         this.minification = Texture.filter.nearestMipmaplinear;
         this.wrapS = Texture.wrapping.repeat;

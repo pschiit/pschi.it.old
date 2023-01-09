@@ -6,23 +6,133 @@ import Parameter from '../../renderer/graphics/shader/Parameter';
 import Shader from '../../renderer/graphics/shader/Shader';
 import ShaderFunction from '../../renderer/graphics/shader/ShaderFunction';
 import VertexBuffer from '../../renderer/graphics/VertexBuffer';
-import Camera from '../camera/Camera';
+import PerspectiveCamera from '../camera/PerspectiveCamera';
 import Node3d from '../Node3d';
 
-export default class GridMaterial extends Material {
-    constructor(color = Color.white, sizes = new Vector2(1, 10), distance = 100, axes = 'xzy') {
+export default class Grid extends Node3d {
+    constructor(camera) {
         super();
-        
+        this.vertexBuffer = new GridBuffer();
+        this.material = new GridMaterial();
+        this.mode = camera instanceof PerspectiveCamera ? Grid.mode.perspective
+            : Grid.mode.orthographic;
+
+    }
+
+    get color() {
+        return this.getParameter(GridMaterial.parameters.color);
+    }
+
+    set color(v) {
+        this.setParameter(GridMaterial.parameters.color, v);
+    }
+
+    get sizes() {
+        return this.getParameter(GridMaterial.parameters.sizes);
+    }
+
+    set sizes(v) {
+        this.setParameter(GridMaterial.parameters.sizes, v);
+    }
+
+    get distance() {
+        return this.getParameter(GridMaterial.parameters.distance);
+    }
+
+    set distance(v) {
+        this.setParameter(GridMaterial.parameters.distance, v);
+    }
+
+    get fading() {
+        return this.getParameter(GridMaterial.parameters.fading);
+    }
+
+    set fading(v) {
+        this.setParameter(GridMaterial.parameters.fading, v);
+    }
+
+    get mode() {
+        return this._mode;
+    }
+
+    set mode(v) {
+        if (v != this.mode) {
+            this._mode = v;
+            this.material.init(v)
+        };
+    }
+
+    static mode = {
+        orthographic: 'orthographic',
+        perspective: 'perspective'
+    }
+}
+
+export class GridBuffer extends VertexBuffer {
+    constructor() {
+        super();
+
+        this.primitive = Node3d.primitive.triangleFan;
+        this.index = [
+            0, 1, 2, 3,];
+        this.position = [
+            -1, -1, 0,
+            -1, 1, 0,
+            1, 1, 0,
+            1, -1, 0,];
+    }
+}
+
+export class GridMaterial extends Material {
+    constructor() {
+        super();
+        this.depth = Material.depth.less;
+
         this.setParameter(Material.parameters.cameraPosition);
+        this.setParameter(Material.parameters.cameraTarget);
         this.setParameter(Material.parameters.projectionMatrix);
 
-        this.color = color;
-        this.sizes = sizes;
-        this.distance = distance;
-        this.axes = axes;
-        this.culling = null;
+        this.color = Color.black();
+        this.sizes = new Vector2(1, 10);
+        this.distance = 10000;
+        this.axes = 'xzy';
+        this.fading = 25;
+    }
 
-        const planeAxes = this.axes.substring(0, 2);
+    get distance() {
+        return this.getParameter(GridMaterial.parameters.distance);
+    }
+
+    set distance(v) {
+        this.setParameter(GridMaterial.parameters.distance, v);
+    }
+
+    get sizes() {
+        return this.getParameter(GridMaterial.parameters.sizes);
+    }
+
+    set sizes(v) {
+        this.setParameter(GridMaterial.parameters.sizes, v);
+    }
+
+    get color() {
+        return this.getParameter(GridMaterial.parameters.color);
+    }
+
+    set color(v) {
+        this.setParameter(GridMaterial.parameters.color, v);
+    }
+
+    get fading() {
+        return this.getParameter(GridMaterial.parameters.fading);
+    }
+
+    set fading(v) {
+        this.setParameter(GridMaterial.parameters.fading, v);
+    }
+
+    init(mode) {
+        const planeAxes = '.' + this.axes.substring(0, 2);
 
         const position = Parameter.vector3('pos');
         const vPosition = Parameter.vector3('v_' + Material.parameters.position, Parameter.qualifier.out);
@@ -34,8 +144,8 @@ export default class GridMaterial extends Material {
                     Operation.selection(Material.parameters.position, '.' + this.axes),
                     GridMaterial.parameters.distance)),
             Operation.addTo(
-                Operation.selection(position, '.' + planeAxes),
-                Operation.selection(Material.parameters.cameraPosition, '.' + planeAxes)),
+                Operation.selection(position, planeAxes),
+                Operation.selection(Material.parameters.cameraPosition, planeAxes)),
             Operation.equal(
                 Shader.parameters.output,
                 Operation.multiply(
@@ -57,7 +167,41 @@ export default class GridMaterial extends Material {
         const g2 = Parameter.number('g2');
 
         const outputAlpha = Operation.selection(Shader.parameters.output, '.a');
-        const planeAxesSelection = Operation.selection(vPosition, '.' + planeAxes);
+        const planeAxesSelection = Operation.selection(vPosition, planeAxes);
+
+        const dOperation = mode == Grid.mode.perspective ?
+            Operation.equal(
+                Operation.declare(d),
+                Operation.substract(
+                    1,
+                    Operation.min(
+                        Operation.distance(
+                            Operation.selection(viewPosition, planeAxes),
+                            Operation.divide(
+                                planeAxesSelection,
+                                GridMaterial.parameters.distance
+                            ),
+                        ),
+                        1
+                    )
+                )
+            ) : //Orthographic mode
+            Operation.equal(
+                Operation.declare(d),
+                Operation.substract(
+                    1,
+                    Operation.divide(
+                        Operation.distance(
+                            planeAxesSelection,
+                            Operation.selection(
+                                Material.parameters.cameraTarget,
+                                planeAxes
+                            )
+                        ),
+                        GridMaterial.parameters.fading,
+                    )
+                )
+            );
 
 
         const size = Parameter.number('size');
@@ -78,8 +222,8 @@ export default class GridMaterial extends Material {
                     Operation.divide(
                         Operation.abs(
                             Operation.substract(
-                                Operation.fract(Operation.substract(r, 1)),
-                                1
+                                Operation.fract(Operation.substract(r, 0.5)),
+                                0.5
                             ),
                         ),
                         Operation.fWidth(
@@ -98,6 +242,8 @@ export default class GridMaterial extends Material {
                     Operation.substract(1, Operation.min(line, 1))
                 ),
             ]);
+        const x = Operation.selection(viewPosition, '.x');
+        const y = Operation.selection(viewPosition, '.y');
 
         this.fragmentShader = Shader.fragmentShader([
             Operation.equal(
@@ -109,22 +255,7 @@ export default class GridMaterial extends Material {
                     )
                 )
             ),
-            Operation.equal(
-                Operation.declare(d),
-                Operation.substract(
-                    1,
-                    Operation.min(
-                        Operation.distance(
-                            Operation.selection(viewPosition, '.' + planeAxes),
-                            Operation.divide(
-                                planeAxesSelection,
-                                GridMaterial.parameters.distance
-                            ),
-                        ),
-                        1
-                    )
-                )
-            ),
+            dOperation,
             Operation.equal(
                 Operation.declare(g1),
                 Operation.do(
@@ -143,8 +274,7 @@ export default class GridMaterial extends Material {
                     GridMaterial.parameters.color,
                     Operation.multiply(
                         Operation.mix(g2, g1, g1),
-                        Operation.pow(d, 3)
-                    )),
+                        Operation.pow(d, 3))),
             ),
             Operation.equal(
                 outputAlpha,
@@ -152,44 +282,22 @@ export default class GridMaterial extends Material {
                     Operation.multiply(0.5, outputAlpha),
                     outputAlpha,
                     g2
-                ),),
+                )),
             Operation.if(
                 Operation.lessEquals(
                     outputAlpha,
                     0
                 ),
                 Operation.discard()
-            )],
+            ),
+            Material.operation.gammaCorrection],
             Shader.precision.high);
-    }
-
-    get distance() {
-        return this.parameters[GridMaterial.parameters.distance];
-    }
-
-    set distance(v) {
-        this.setParameter(GridMaterial.parameters.distance, v);
-    }
-
-    get sizes() {
-        return this.parameters[GridMaterial.parameters.sizes];
-    }
-
-    set sizes(v) {
-        this.setParameter(GridMaterial.parameters.sizes, v);
-    }
-
-    get color() {
-        return this.parameters[GridMaterial.parameters.color];
-    }
-
-    set color(v) {
-        this.setParameter(GridMaterial.parameters.color, v);
     }
 
     static parameters = {
         distance: Parameter.number('gridDistance', Parameter.qualifier.const),
         sizes: Parameter.vector2('gridSizes', Parameter.qualifier.const),
         color: Parameter.vector3('gridColor', Parameter.qualifier.const),
+        fading: Parameter.number('gridFading', Parameter.qualifier.const),
     };
 }

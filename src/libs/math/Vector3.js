@@ -1,10 +1,10 @@
-import Matrix3 from'./Matrix3';
-import Matrix4 from'./Matrix4';
-import Vector2 from'./Vector2';
-import Vector4 from'./Vector4';
-import MathArray from'./MathArray';
+import FloatArray from './FloatArray';
+import Matrix3 from './Matrix3';
+import Matrix4 from './Matrix4';
+import Vector2 from './Vector2';
+import Vector4 from './Vector4';
 
-export default class  Vector3 extends MathArray {
+export default class Vector3 extends FloatArray {
     static xAxis = new Vector3(1, 0, 0);
     static yAxis = new Vector3(0, 1, 0);
     static zAxis = new Vector3(0, 0, 1);
@@ -17,21 +17,28 @@ export default class  Vector3 extends MathArray {
     constructor(x, y, z) {
         super(3);
         if (typeof x !== 'undefined') {
-            if (!Number.isFinite(x)) {
+            if (x.length >= 0) {
                 this[0] = x[0];
                 this[1] = x[1];
                 this[2] = x[2];
-            }
-            else{
+            } else {
                 this[0] = x;
-                if (Number.isFinite(y)) {
+                if (y) {
                     this[1] = y;
                 }
-                if (Number.isFinite(z)) {
+                if (z) {
                     this[2] = z;
                 }
             }
         }
+    }
+
+    get lenSq() {
+        return this[0] * this[0] + this[1] * this[1] + this[2] * this[2];
+    }
+
+    get len() {
+        return Math.sqrt(this.lenSq);
     }
 
     /** Return whether or not a Vector3 array is equals the current Vector3
@@ -39,12 +46,12 @@ export default class  Vector3 extends MathArray {
      * @return {Boolean} true if vectors are equals
     */
     equals(vector) {
-        return vector?.length == this.length && 
+        return vector?.length == this.length &&
             this[0] === vector[0] &&
             this[1] === vector[1] &&
             this[2] === vector[2];
     }
-    
+
     /** Add a vector array to the current Vector3
      * @param {Vector3} vector right operand
      * @return the current updated Vector3
@@ -94,6 +101,18 @@ export default class  Vector3 extends MathArray {
         return this;
     }
 
+    /** Add a scalar the current Vector3
+     * @param {Number} value scale
+     * @return the current updated Vector3
+    */
+    addScalar(value) {
+        this[0] = this[0] + value;
+        this[1] = this[1] + value;
+        this[2] = this[2] + value;
+
+        return this;
+    }
+
     /** Scale the current Vector3
      * @param {Number} value scale
      * @return the current updated Vector3
@@ -124,6 +143,42 @@ export default class  Vector3 extends MathArray {
         this[2] = z * dot;
 
         return this;
+    }
+    
+    /** Negate the current Vector3
+     * @return the current updated Vector3
+    */
+    negate() {
+        this[0] = -this[0];
+        this[1] = -this[1];
+        this[2] = -this[2];
+        return this;
+    }
+
+    /**
+     * Calculates the euclidian distance between two Vector3
+     * @param {Vector3} vector the second operand
+     * @returns {Number} distance
+     */
+    distance(vector) {
+        let x = vector[0] - this[0];
+        let y = vector[1] - this[1];
+        let z = vector[2] - this[2];
+
+        return Math.hypot(x, y, z);
+    }
+
+    /**
+     * Calculates the squared euclidian distance between two Vector3
+     * @param {Vector3} vector the second operand
+     * @returns {Number} squared distance
+     */
+    squaredDistance(vector) {
+        let x = vector[0] - this[0];
+        let y = vector[1] - this[1];
+        let z = vector[2] - this[2];
+
+        return x * x + y * y + z * z;
     }
 
     /** Transform the current Vector3 from a matrix array
@@ -208,12 +263,15 @@ export default class  Vector3 extends MathArray {
         return new Vector2(this[0], this[1]);
     }
 
-
     /** Convert the current Vector3 to a Vector4
      * @param {Number} w fourth coordinate of Vector4
      * @return {Vector4} converted Vector4
     */
     toVector4(w) {
         return new Vector4(this[0], this[1], this[2], w);
+    }
+
+    static random() {
+        return new Vector3(Math.random(), Math.random(), Math.random());
     }
 }

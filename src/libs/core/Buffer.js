@@ -1,3 +1,4 @@
+import FloatArray from '../math/FloatArray';
 import Vector2 from '../math/Vector2';
 import Vector3 from '../math/Vector3';
 import Vector4 from '../math/Vector4';
@@ -23,48 +24,63 @@ export default class Buffer extends Node {
         });
     }
 
-    get mainBuffer() {
-        return this.parent instanceof Buffer ? this.parent.mainBuffer : this;
+    get interleaved() {
+        return this.parent?.interleaved || this._interleaved;
+    }
+
+    set interleaved(v) {
+        this._interleaved = v;
     }
 
     get type() {
         if (this.childrens.length > 0) {
-            return new ArrayBuffer(0).constructor;
+            return ArrayBuffer;
         }
         return this.data.constructor;
     }
 
     get data() {
-        let data = this._data;
         if (this.childrens.length > 0) {
             const length = this.BYTES_LENGTH;
-            data = new ArrayBuffer(length);
-            let offset = 0;
-            this.childrens.forEach(updateBuffer);
-
-            function updateBuffer(b) {
-                if (b.childrens.length > 0) {
-                    b.childrens.forEach(updateBuffer);
-                } else {
-                    if (b.parent.interleaved) {
-
-                    } else {
+            const data = new ArrayBuffer(length);
+            if (this.interleaved) {
+                const step = this.step;
+                const startAt = this.root.offset;
+                this.dispatchCallback((b) => {
+                    if (b.childrens.length < 1) {
+                        const view = new b.type(data);
+                        const bufferOffset = b.offset;
+                        let i = 0;
+                        for (let j = startAt + bufferOffset; j < length; j += step) {
+                            for (let k = 0; k < b.step; k++) {
+                                view[j + k] = b.data[i++];
+                            }
+                        }
+                    }
+                }, false);
+            } else {
+                let offset = 0;
+                this.dispatchCallback((b) => {
+                    if (b.childrens.length < 1) {
                         const view = new b.type(data);
                         let index = offset / b.BYTES_PER_ELEMENT;
-                        b.data.forEach(v => {
-                            view[index++] = v;
-                        })
+                        for (let i = 0; i < b.data.length; i++) {
+                            view[index++] = b.data[i];
+
+                        }
                         offset += b.BYTES_LENGTH;
                     }
-                }
-            };
+                });
+            }
+            this._data = data;
         }
-        return data;
+        return this._data;
     }
 
     set data(v) {
         if (!(this.childrens.length > 0)) {
             this._data = v;
+            this.updated = true;
         }
     }
 
@@ -77,7 +93,9 @@ export default class Buffer extends Node {
 
     set updated(v) {
         if (this.childrens.length > 0) {
-            this.childrens.forEach(c => c.updated = v);
+            this.dispatchCallback((buffer) => {
+                buffer.updated = v;
+            }, false);
         }
         this._updated = v;
     }
@@ -130,7 +148,7 @@ export default class Buffer extends Node {
 
     get BYTES_PER_OFFSET() {
         if (this.parent instanceof Buffer) {
-            const name = this.interleaved ? 'BYTES_PER_STEP' : 'BYTES_LENGTH'
+            const name = this.interleaved ? 'BYTES_PER_STEP' : 'BYTES_LENGTH';
             return this.parent.BYTES_PER_OFFSET + this.parent.childrens
                 .slice(0, this.parent.childrens.indexOf(this))
                 .reduce((r, b) => { return r + b[name]; }, 0);
@@ -154,7 +172,9 @@ export default class Buffer extends Node {
 
     scale(value) {
         if (this.childrens.length > 0) {
-            this.childrens.forEach(c => c.scale(value));
+            this.dispatchCallback((buffer) => {
+                buffer.scale(value)
+            }, false);
         } else {
             for (let i = 0; i < this.data.length; i++) {
                 this.data[i] *= value;
@@ -163,20 +183,41 @@ export default class Buffer extends Node {
     }
 
     transform(matrix) {
-        if (!(this.childrens.length > 0)) {
-            let vector = this.step == 4 ? new Vector4()
-                : this.step == 3 ? new Vector3() :
-                    new Vector2();
-            for (let i = 0; i < this.length; i += vector.length) {
-                for (let j = 0; j < vector.length; j++) {
-                    vector[j] = this.data[i + j];
-                }
-                vector.transform(matrix);
-                for (let j = 0; j < vector.length; j++) {
-                    this.data[i + j] = vector[j];
+        this.dispatchCallback((buffer) => {
+            if (buffer.childrens.length == 0) {
+                let vector = buffer.step == 4 ? new Vector4()
+                    : buffer.step == 3 ? new Vector3() :
+                        new Vector2();
+                for (let i = 0; i < buffer.length; i += vector.length) {
+                    for (let j = 0; j < vector.length; j++) {
+                        vector[j] = buffer.data[i + j];
+                    }
+                    vector.transform(matrix);
+                    for (let j = 0; j < vector.length; j++) {
+                        this.data[i + j] = vector[j];
+                    }
                 }
             }
-        }
+        },);
+    }
+
+    /** Dispatches a function to the Buffer elements
+     * the function will have each FloatArray element
+     * @param {Function} callback the function to dispatch
+     * @param {Number} step the FloatArray length used for each callback (default is buffer.step)
+    */
+    dispatch(callback, step) {
+        this.dispatchCallback((buffer) => {
+            if (buffer.childrens.length == 0) {
+                let floatArray = new FloatArray(step || buffer.step);
+                for (let i = 0; i < buffer.length; i += floatArray.length) {
+                    for (let j = 0; j < floatArray.length; j++) {
+                        floatArray[j] = buffer.data[i + j];
+                    }
+                    callback(floatArray);
+                }
+            }
+        },);
     }
 
     static usage = {

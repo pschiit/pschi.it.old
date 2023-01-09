@@ -1,4 +1,6 @@
 import Buffer from '../../core/Buffer';
+import Box from '../../math/Box';
+import Vector3 from '../../math/Vector3';
 import GraphicsNode from './GraphicsNode';
 import Material from './Material';
 
@@ -53,24 +55,37 @@ export default class VertexBuffer extends GraphicsNode {
         this._offset = v;
     }
 
-    get divisor(){
-        return this.arrayBuffer.divisor;
+    get divisor() {
+        return this.instanceArrayBuffer?.divisor ||
+            this.buffers.find(b => b.divisor > 0)?.divisor;
     }
 
-    get divisorCount(){
-        return this.arrayBuffer.divisorCount;
+    get divisorCount() {
+        return this.instanceArrayBuffer?.divisorCount ||
+            this.buffers.find(b => b.divisor > 0)?.divisorCount;
     }
 
     get position() {
-        return this.parameters[Material.parameters.position.name];
+        return this.getParameter(Material.parameters.position);
     }
 
     set position(v) {
         this.setParameter(Material.parameters.position.name, v, this.positionLength);
     }
 
+    get boundingBox() {
+        const box = new Box();
+        if (this.position) {
+            this.position.dispatch((vector3) => {
+                box.expandByPoint(vector3)
+            });
+        }
+
+        return box;
+    }
+
     get normal() {
-        return this.parameters[Material.parameters.normal.name];
+        return this.getParameter(Material.parameters.normal);
     }
 
     set normal(v) {
@@ -78,7 +93,7 @@ export default class VertexBuffer extends GraphicsNode {
     }
 
     get color() {
-        return this.parameters[Material.parameters.color.name];
+        return this.getParameter(Material.parameters.color);
     }
 
     set color(v) {
@@ -86,7 +101,7 @@ export default class VertexBuffer extends GraphicsNode {
     }
 
     get uv() {
-        return this.parameters[Material.parameters.uv.name];
+        return this.getParameter(Material.parameters.uv);
     }
 
     set uv(v) {
@@ -96,7 +111,7 @@ export default class VertexBuffer extends GraphicsNode {
     get buffers() {
         const result = [];
         for (const name in this.parameters) {
-            const parameter = this.parameters[name];
+            const parameter = this.getParameter(name);
             if (parameter instanceof Buffer) {
                 result.push(parameter);
             }
@@ -104,36 +119,65 @@ export default class VertexBuffer extends GraphicsNode {
         return result;
     }
 
-    get arrayBuffer(){
-        if(!this._arrayBuffer){
-            const buffer = new Buffer();
-            this.buffers.forEach(b =>{
-                buffer.appendChild(b);
-            });
-            this._arrayBuffer = buffer
+    get arrayBuffer() {
+        if (!this._arrayBuffer) {
+            this._arrayBuffer = new Buffer();
         }
+        this.buffers.forEach(b => {
+            if (!b.divisor && b.parent != this._arrayBuffer) {
+                this._arrayBuffer.appendChild(b);
+            }
+        });
         return this._arrayBuffer;
     }
 
+    get instanceBuffers() {
+        const result = [];
+        for (const name in this.parameters) {
+            const parameter = this.getParameter(name);
+            if (parameter instanceof Buffer && parameter.divisor > 0) {
+                result.push(parameter);
+            }
+        }
+        return result;
+    }
+
+    get instanceArrayBuffer() {
+        const buffers = this.instanceBuffers;
+        if (buffers.length > 1) {
+            if (!this._instanceArrayBuffer) {
+                this._instanceArrayBuffer = new Buffer();
+            }
+            buffers.forEach(b => {
+                if (b.divisor && b.parent != this._instanceArrayBuffer) {
+                    this._instanceArrayBuffer.appendChild(b);
+                }
+            });
+            return this._instanceArrayBuffer;
+        }
+        return null;
+    }
+
     setParameter(name, v, step, divisor) {
-        let buffer = this.parameters[name];
+        let buffer = this.getParameter(name);
         if (v) {
             if (v instanceof Buffer && v != buffer) {
-                this.parameters[name] = v;
+                super.setParameter(name, v);
             } else {
                 if (Array.isArray(v)) {
                     v = new Float32Array(v);
                 }
                 if (!buffer) {
                     buffer = new Buffer(v, step, divisor);
-                    this.parameters[name] = buffer;
+                    buffer.name = name;
+                    super.setParameter(name, buffer);
 
                 } else {
                     buffer.data = v;
                 }
             }
         } else if (buffer) {
-            this.parameters[name] = null;
+            super.setParameter(name, null);
         }
 
         return buffer;
@@ -146,7 +190,7 @@ export default class VertexBuffer extends GraphicsNode {
         }
         buffer = this.normal;
         if (buffer) {
-            buffer.transform(matrix.clone().invert().transpose());
+            buffer.transform(matrix.inverse.transpose());
         }
     }
 }

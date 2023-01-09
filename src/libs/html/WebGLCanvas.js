@@ -1,5 +1,7 @@
 import Node from '../core/Node';
+import Ray from '../math/Ray';
 import Vector2 from '../math/Vector2';
+import Vector3 from '../math/Vector3';
 import GraphicsNode from '../renderer/graphics/GraphicsNode';
 import RenderTarget from '../renderer/graphics/RenderTarget';
 import WebGLRenderer from '../renderer/graphics/webgl/WebGLRenderer';
@@ -28,15 +30,9 @@ export default class WebGLCanvas extends Canvas {
                 this.removeChild(child);
             }
         });
-
-        function initContext(webGLCanvas, contextOptions) {
-            const newContext = new WebGLRenderer(webGLCanvas.element.getContext('webgl', contextOptions) || webGLCanvas.element.getContext('experimental-webgl', contextOptions));
-            if (!newContext) {
-                webGLCanvas.element.innerText = 'WebGL is not supported.';
-                throw new Error(webGLCanvas.element.innerText);
-            }
-            webGLCanvas.appendChild(newContext);
-        }
+        this.element.addEventListener('contextmenu', (ev) => {
+            ev.preventDefault(); // this will prevent browser contextmenu default behavior on this canvas
+        });
     }
 
     /** Return the RenderTarget of the current HtmlNode's HTMLElement
@@ -73,7 +69,7 @@ export default class WebGLCanvas extends Canvas {
 
         return this;
     }
-    
+
     /** Remove all dependencies from GraphicsNode in the current Renderer
      * @param {GraphicsNode} node Node to render
      * @returns {WebGLCanvas} the current Renderer
@@ -93,12 +89,21 @@ export default class WebGLCanvas extends Canvas {
      * @param {PointerEvent} event Pointer event
      * @return {Vector2} the pointer position as Vector2
     */
-    getPointerRelativePositon(event) {
+    getNormalizedPointerPosition(event) {
         const rect = this.element.getBoundingClientRect();
-        
+
         return new Vector2(
             ((event.clientX - rect.left) * this.width / this.element.clientWidth) / this.width * 2 - 1,
             ((event.clientY - rect.top) * this.height / this.element.clientHeight) / this.height * -2 + 1
         );
     }
+}
+
+function initContext(webGLCanvas, contextOptions) {
+    const newContext = new WebGLRenderer(webGLCanvas.element.getContext('webgl', contextOptions) || webGLCanvas.element.getContext('experimental-webgl', contextOptions));
+    if (!newContext) {
+        webGLCanvas.element.innerText = 'WebGL is not supported.';
+        throw new Error(webGLCanvas.element.innerText);
+    }
+    webGLCanvas.appendChild(newContext);
 }

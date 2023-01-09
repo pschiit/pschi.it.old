@@ -14,16 +14,6 @@ export default class DirectionalLight extends Node3d {
         this.target = target;
     }
 
-    get showFrustum() {
-        return this.shadow?.data.showFrustum;
-    }
-
-    set showFrustum(v) {
-        if (this.shadow) {
-            this.shadow.data.showFrustum = v;
-        }
-    }
-
     get shadow() {
         return this._shadow;
     }
@@ -45,7 +35,7 @@ export default class DirectionalLight extends Node3d {
                     v.colorTexture = new Texture();
                     v.colorTexture.minification = Texture.filter.linear;
                 }
-                v.backgroundColor = Color.transparent;
+                v.backgroundColor = Color.transparent();
                 this._shadow = v;
                 this.light.parameters = {};
             } else if (this.shadow) {
@@ -72,11 +62,11 @@ export default class DirectionalLight extends Node3d {
             this.light.setParameter(LightMaterial.parameters.directionalShadowLightShadowMatrix, this.shadow.data.projectionMatrix);
             this.light.setParameter(LightMaterial.parameters.directionalShadowLightShadowMap, this.shadow.colorTexture);
             this.light.setParameter(LightMaterial.parameters.directionalShadowLightColor, this.light.color.rgb.scale(this.light.intensity));
-            this.light.setParameter(LightMaterial.parameters.directionalShadowLightDirection, this.vertexMatrix.zAxis);
+            this.light.setParameter(LightMaterial.parameters.directionalShadowLightDirection, this.zAxis);
             this.light.setParameter(LightMaterial.parameters.directionalShadowLightAmbientStrength, this.light.ambientStrength);
         } else {
             this.light.setParameter(LightMaterial.parameters.directionalLightColor, this.light.color.rgb.scale(this.light.intensity));
-            this.light.setParameter(LightMaterial.parameters.directionalLightDirection, this.vertexMatrix.zAxis);
+            this.light.setParameter(LightMaterial.parameters.directionalLightDirection, this.zAxis);
             this.light.setParameter(LightMaterial.parameters.directionalLightAmbientStrength, this.light.ambientStrength);
         }
         this.light.setScene(parameters);

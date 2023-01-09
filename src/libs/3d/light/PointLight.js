@@ -11,17 +11,7 @@ export default class PointLight extends Node3d {
         this.light = new Light(color);
         this.translate(position);
     }
-
-    get showFrustum() {
-        return this.shadow?.data.showFrustum;
-    }
-
-    set showFrustum(v) {
-        if (this.shadow) {
-            this.shadow.data.showFrustum = v;
-        }
-    }
-
+    
     get shadow() {
         return this._shadow;
     }
@@ -43,7 +33,7 @@ export default class PointLight extends Node3d {
                     v.colorTexture = new Texture();
                     v.colorTexture.minification = Texture.filter.linear;
                 }
-                v.backgroundColor = Color.transparent;
+                v.backgroundColor = Color.transparent();
                 this._shadow = v;
                 this.light.parameters = {};
             } else if (this.shadow) {
@@ -70,12 +60,12 @@ export default class PointLight extends Node3d {
             this.light.setParameter(LightMaterial.parameters.pointShadowLightShadowMatrix, this.shadow.data.projectionMatrix);
             this.light.setParameter(LightMaterial.parameters.pointShadowLightShadowMap, this.shadow.colorTexture);
             this.light.setParameter(LightMaterial.parameters.pointShadowLightColor,this.light.color.rgb);
-            this.light.setParameter(LightMaterial.parameters.pointShadowLightPosition,this.vertexMatrix.positionVector);
+            this.light.setParameter(LightMaterial.parameters.pointShadowLightPosition,this.position);
             this.light.setParameter(LightMaterial.parameters.pointShadowLightAmbientStrength,this.light.ambientStrength);
             this.light.setParameter(LightMaterial.parameters.pointShadowLightIntensity,this.light.intensity);
         }else{
             this.light.setParameter(LightMaterial.parameters.pointLightColor,this.light.color.rgb);
-            this.light.setParameter(LightMaterial.parameters.pointLightPosition,this.vertexMatrix.positionVector);
+            this.light.setParameter(LightMaterial.parameters.pointLightPosition,this.position);
             this.light.setParameter(LightMaterial.parameters.pointLightAmbientStrength,this.light.ambientStrength);
             this.light.setParameter(LightMaterial.parameters.pointLightIntensity,this.light.intensity);
         }

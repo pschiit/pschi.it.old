@@ -1,17 +1,31 @@
 import Matrix4 from '../../math/Matrix4';
+import Ray from '../../math/Ray';
+import Vector3 from '../../math/Vector3';
+import Material from '../../renderer/graphics/Material';
 import Camera from './Camera';
 
 export default class OrthographicCamera extends Camera {
-    constructor(left, right, bottom, top, near, far) {
+    constructor(left = -1, right = 1, bottom = -1, top = 1, near = 0.1, far = 1000) {
         super();
-        this.zoom = 1;
         this._left = left;
         this._right = right;
         this._bottom = bottom;
         this._top = top;
         this._near = near;
         this._far = far;
-        this.orthograpicUpdated = true;
+        this.setParameter(Material.parameters.projectionMatrix, null);
+    }
+
+    get zoom() {
+        return this._zoom;
+    }
+
+    set zoom(v) {
+        if (v != this._zoom && v > 0) {
+            this._zoom = v;
+            this._orthographicMatrix = null;
+            this.setParameter(Material.parameters.projectionMatrix, null);
+        }
     }
 
     get left() {
@@ -21,8 +35,8 @@ export default class OrthographicCamera extends Camera {
     set left(v) {
         if (v != this._left) {
             this._left = v;
-            this.orthograpicUpdated = true;
-            this.projectionUpdated = true;
+            this._orthographicMatrix = null;
+            this.setParameter(Material.parameters.projectionMatrix, null);
         }
     }
 
@@ -33,8 +47,7 @@ export default class OrthographicCamera extends Camera {
     set right(v) {
         if (v != this._right) {
             this._right = v;
-            this.orthograpicUpdated = true;
-            this.projectionUpdated = true;
+            this.setParameter(Material.parameters.projectionMatrix, null);
         }
     }
 
@@ -45,8 +58,8 @@ export default class OrthographicCamera extends Camera {
     set bottom(v) {
         if (v != this._bottom) {
             this._bottom = v;
-            this.orthograpicUpdated = true;
-            this.projectionUpdated = true;
+            this._orthographicMatrix = null;
+            this.setParameter(Material.parameters.projectionMatrix, null);
         }
     }
 
@@ -57,8 +70,8 @@ export default class OrthographicCamera extends Camera {
     set top(v) {
         if (v != this._top) {
             this._top = v;
-            this.orthograpicUpdated = true;
-            this.projectionUpdated = true;
+            this._orthographicMatrix = null;
+            this.setParameter(Material.parameters.projectionMatrix, null);
         }
     }
 
@@ -69,8 +82,8 @@ export default class OrthographicCamera extends Camera {
     set near(v) {
         if (v != this._near) {
             this._near = v;
-            this.orthograpicUpdated = true;
-            this.projectionUpdated = true;
+            this._orthographicMatrix = null;
+            this.setParameter(Material.parameters.projectionMatrix, null);
         }
     }
 
@@ -81,46 +94,27 @@ export default class OrthographicCamera extends Camera {
     set far(v) {
         if (v != this._far) {
             this._far = v;
-            this.orthograpicUpdated = true;
-            this.projectionUpdated = true;
-        }
-    }
-
-    get unit() {
-        return this._unit;
-    }
-
-    set unit(v) {
-        if (this._unit != v) {
-            this._unit = v;
+            this._orthographicMatrix = null;
+            this.setParameter(Material.parameters.projectionMatrix, null);
         }
     }
 
     set aspectRatio(v) {
         const right = this.top * v;
-        if(this.right != right){
+        if (this.right != right) {
             this._left = -right;
             this._right = right;
-            this.orthograpicUpdated = true;
-            this.projectionUpdated = true;
+            this._orthographicMatrix = null;
+            this.setParameter(Material.parameters.projectionMatrix, null);
         }
-    }
-
-    get frustum() {
-        if (!this._frustum) {
-            this._frustum = Camera.frustum();
-            this.orthographicMatrix;
-        }
-        return this._frustum;
     }
 
     get orthographicMatrix() {
-        if (this.orthograpicUpdated) {
+        if (!this._orthographicMatrix) {
             const dx = (this.right - this.left) / (2 * this.zoom);
             const dy = (this.top - this.bottom) / (2 * this.zoom);
             const cx = (this.right + this.left) / 2;
             const cy = (this.top + this.bottom) / 2;
-
 
             let left = cx - dx;
             let right = cx + dx;
@@ -128,9 +122,8 @@ export default class OrthographicCamera extends Camera {
             let bottom = cy - dy;
 
             this._orthographicMatrix = Matrix4.orthographicMatrix(left, right, bottom, top, this.near, this.far);
-            this.orthograpicUpdated = false;
-            if(this.showFrustum){
-                this.frustum.matrix = this._orthographicMatrix.clone().invert();
+            if (this.frustum) {
+                this.frustum.transform(this._orthographicMatrix.inverse);
                 this.frustum.vertexMatrix;
             }
         }
@@ -138,17 +131,28 @@ export default class OrthographicCamera extends Camera {
     }
 
     get projectionMatrix() {
-        if (this.projectionUpdated) {
-            this._projectionMatrix = this.orthographicMatrix.clone().multiply(this.vertexMatrix.clone().invert());
-            this.projectionUpdated = false;
+        let result = this.getParameter(Material.parameters.projectionMatrix);
+        if (!result) {
+            result = this.orthographicMatrix.clone().multiply(this.vertexMatrix.inverse);
+            this.setParameter(Material.parameters.projectionMatrix, result);
         }
-        return this._projectionMatrix;
+        return result;
     }
 
-    getScene(renderTarget){
-        if(this.updateAspectRatio){
-            this.aspectRatio =  renderTarget.aspectRatio;
+    raycast(offset) {
+        if (!offset) {
+            offset = new Vector3();
         }
-        return super.getScene(renderTarget);
+        offset[2] =  (this.near + this.far) / (this.near - this.far);
+        return new Ray(
+            this.unproject(offset),
+            this.zAxis.negate());
+    }
+
+    getScene(renderTarget, materialParameters) {
+        if (!this.viewport) {
+            this.aspectRatio = renderTarget.aspectRatio;
+        }
+        return super.getScene(renderTarget, materialParameters);
     }
 }

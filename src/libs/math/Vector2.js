@@ -1,11 +1,11 @@
-import Matrix2 from'./Matrix2';
-import Matrix3 from'./Matrix3';
-import Matrix4 from'./Matrix4';
-import Vector3 from'./Vector3';
-import Vector4 from'./Vector4';
-import MathArray from './MathArray';
+import Matrix2 from './Matrix2';
+import Matrix3 from './Matrix3';
+import Matrix4 from './Matrix4';
+import Vector3 from './Vector3';
+import Vector4 from './Vector4';
+import FloatArray from './FloatArray';
 
-export default class  Vector2 extends MathArray {
+export default class Vector2 extends FloatArray {
     /** Create a new Vector2 from the coordinates xy or a vector array
      * @param {Number|Number[]} x first coordinate or vector array
      * @param {Number} y second coordinate
@@ -13,16 +13,24 @@ export default class  Vector2 extends MathArray {
     constructor(x, y) {
         super(2);
         if (typeof x !== 'undefined') {
-            if (!Number.isFinite(x)) {
+            if (x.length >= 0) {
                 this[0] = x[0];
                 this[1] = x[1];
             } else {
                 this[0] = x;
-                if (Number.isFinite(y)) {
+                if (y) {
                     this[1] = y;
                 }
             }
         }
+    }
+
+    get lenSq() {
+        return this[0] * this[0] + this[1] * this[1];
+    }
+
+    get len() {
+        return Math.sqrt(this.lenSq);
     }
 
     /** Return whether or not a Vector2 array is equals the current Vector2
@@ -30,7 +38,7 @@ export default class  Vector2 extends MathArray {
      * @return {Boolean} true if vectors are equals
     */
     equals(vector) {
-        return vector?.length == this.length && 
+        return vector?.length == this.length &&
             this[0] === vector[0] &&
             this[1] === vector[1];
     }
@@ -106,6 +114,39 @@ export default class  Vector2 extends MathArray {
         this[1] = y * dot;
 
         return this;
+    }
+
+    /** Negate the current Vector3
+     * @return the current updated Vector3
+    */
+    negate() {
+        this[0] = -this[0];
+        this[1] = -this[1];
+        return this;
+    }
+
+    /**
+     * Calculates the euclidian distance between two Vector3
+     * @param {Vector3} vector the second operand
+     * @returns {Number} distance
+     */
+    distance(vector) {
+        let x = vector[0] - this[0];
+        let y = vector[1] - this[1];
+
+        return Math.hypot(x, y);
+    }
+
+    /**
+     * Calculates the squared euclidian distance between two Vector3
+     * @param {Vector3} vector the second operand
+     * @returns {Number} squared distance
+     */
+    squaredDistance(vector) {
+        let x = vector[0] - this[0];
+        let y = vector[1] - this[1];
+
+        return x * x + y * y;
     }
 
     /** Transform the current Vector2 from a matrix array

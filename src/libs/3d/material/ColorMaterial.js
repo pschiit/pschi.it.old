@@ -20,9 +20,12 @@ export default class ColorMaterial extends Material {
                     Material.parameters.position)),
             Operation.equal(vColor, Material.parameters.color),]);
 
-        this.fragmentShader = Shader.fragmentShader(
+        this.fragmentShader = Shader.fragmentShader([
             Operation.equal(
                 Shader.parameters.output,
-                vColor));
+                vColor),
+            Material.operation.gammaCorrection],);
     }
+
+    static default = new ColorMaterial();
 }

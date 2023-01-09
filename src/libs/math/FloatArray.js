@@ -1,14 +1,50 @@
-export default class MathArray extends Float32Array {
+export default class FloatArray extends Float32Array {
     constructor(length) {
         super(length);
     }
 
     /** Return whether or not a Matrix4 array is equals the current Matrix4
-     * @param {MathArray} mathArray the matrix to compare
+     * @param {FloatArray} mathArray the matrix to compare
      * @return {Boolean} true if matrices are equals
     */
     equals(mathArray) {
         return mathArray?.every((e, i) => e == this[i]);
+    }
+
+    min(mathArray) {
+        for (let i = 0; i < this.length; i++) {
+            this[i] = Math.min(this[i], mathArray[i]);
+        }
+        return this;
+    }
+
+    max(mathArray) {
+        for (let i = 0; i < this.length; i++) {
+            this[i] = Math.max(this[i], mathArray[i]);
+        }
+        return this;
+    }
+
+    clamp(a, b) {
+        for (let i = 0; i < this.length; i++) {
+            this[i] = Math.max(a[i], Math.min(b[i], this[i]));
+        }
+
+        return this;
+    }
+
+    floor() {
+        for (let i = 0; i < this.length; i++) {
+            this[i] = Math.floor(this[i]);
+        }
+        return this;
+    }
+
+    round() {
+        for (let i = 0; i < this.length; i++) {
+            this[i] = Math.round(this[i]);
+        }
+        return this;
     }
 
     clone() {
@@ -16,42 +52,42 @@ export default class MathArray extends Float32Array {
     }
 
     concat(data) {
-        if(Number.isFinite(data)){
+        if (Number.isFinite(data)) {
             data = [data];
         }
-        const result = new MathArray(this.length + data.length);
+        const result = new FloatArray(this.length + data.length);
 
         result.set(this);
         result.set(data, this.length);
-        
+
         return result;
     }
 
-    toint8(){
+    toInt8() {
         return new Int8Array(this);
     }
 
-    toint16(){
+    toInt16() {
         return new Int16Array(this);
     }
 
-    toint32(){
+    toint32() {
         return new Int32Array(this);
     }
 
-    toUint8(){
+    toUint8() {
         return new Uint8Array(this);
     }
 
-    toUint16(){
+    toUint16() {
         return new Uint16Array(this);
     }
 
-    toUint32(){
+    toUint32() {
         return new Uint32Array(this);
     }
 
-    toUint8Clamped(){
+    toUint8Clamped() {
         return new Uint8ClampedArray(this);
     }
 
