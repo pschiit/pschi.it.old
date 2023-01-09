@@ -124,6 +124,10 @@ export default class Color extends Vector4 {
         return this.hex.toString(16);
     }
 
+    toUint8() {
+        return new Uint8Array(this.toVector3().scale(255));
+    }
+
     static fromHex(v) {
         const color = new Color();
         color.hex = v;
@@ -136,7 +140,7 @@ export default class Color extends Vector4 {
         return Color.fromHex(Math.floor(Math.random() * 16777215));
     }
     static white = () => new Color(1, 1, 1, 1);
-    static grey = () =>  new Color(0.5, 0.5, 0.5, 1);
+    static grey = () => new Color(0.5, 0.5, 0.5, 1);
     static black = () => new Color(0, 0, 0, 1);
     static red = () => new Color(1, 0, 0, 1);
     static green = () => new Color(0, 1, 0, 1);

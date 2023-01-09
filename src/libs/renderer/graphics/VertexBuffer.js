@@ -143,12 +143,10 @@ export default class VertexBuffer extends GraphicsNode {
     }
 
     get instanceArrayBuffer() {
-        return null;
         const buffers = this.instanceBuffers;
         if (buffers.length > 1) {
             if (!this._instanceArrayBuffer) {
                 this._instanceArrayBuffer = new Buffer();
-                this._instanceArrayBuffer.interleaved = true;
             }
             buffers.forEach(b => {
                 if (b.divisor && b.parent != this._instanceArrayBuffer) {

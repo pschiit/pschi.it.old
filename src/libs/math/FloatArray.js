@@ -63,11 +63,11 @@ export default class FloatArray extends Float32Array {
         return result;
     }
 
-    toint8() {
+    toInt8() {
         return new Int8Array(this);
     }
 
-    toint16() {
+    toInt16() {
         return new Int16Array(this);
     }
 

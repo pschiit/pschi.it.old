@@ -4,6 +4,8 @@ export default class VertexBufferManager {
     constructor(){
         this.buffer = new Buffer();
         this.instanceBuffer = new Buffer();
+        this.instanceBuffer.interleaved = true;
+        this.instanceBuffer.usage = Buffer.usage.stream;
         this.indexBuffer = new Buffer();
     }
 

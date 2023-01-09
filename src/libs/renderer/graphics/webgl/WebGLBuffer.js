@@ -35,7 +35,6 @@ export default class WebGLBuffer extends WebGLNode {
                     renderer.gl.bufferSubData(this.target, 0, data);
                 } else {
                     const data = buffer.data;
-                    console.log('bufferData', new Float32Array(data));
                     renderer.gl.bufferData(this.target, data, this.usage);
                     this.length = newLength;
                 }

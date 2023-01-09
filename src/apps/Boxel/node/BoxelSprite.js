@@ -91,7 +91,6 @@ export default class BoxelSprite extends Node3d {
                 positions[index] = boxel.position[0];
                 positions[index + 1] = boxel.position[1];
                 positions[index + 2] = boxel.position[2];
-
                 colors[index] = boxel.color[0];
                 colors[index + 1] = boxel.color[1];
                 colors[index + 2] = boxel.color[2];

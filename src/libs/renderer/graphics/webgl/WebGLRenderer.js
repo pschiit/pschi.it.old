@@ -324,7 +324,9 @@ export default class WebGLRenderer extends GraphicsRenderer {
             : typeArray === Uint32Array ? renderer.gl.UNSIGNED_INT
                 : typeArray === Uint16Array ? renderer.gl.UNSIGNED_SHORT
                     : typeArray === Uint8Array ? renderer.gl.UNSIGNED_BYTE
-                        : null;
+                        : typeArray === Int16Array ? renderer.gl.SHORT
+                            : typeArray === Int8Array ? renderer.gl.BYTE
+                                : null;
     }
 }
 
@@ -385,14 +387,6 @@ function render(renderer, renderTarget) {
                         WebGLBuffer.from(renderer, r.vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
                     }
                     if (divisorCount) {
-                        const buffers = r.vertexBuffer.instanceBuffers;
-                        if (buffers.length > 1) {
-                            buffers.forEach(b => {
-                                if (!cache[b.root.id]) {
-                                    WebGLBuffer.from(renderer, b, renderer.gl.ARRAY_BUFFER);
-                                }
-                            })
-                        }
                         if (r.vertexBuffer.instanceArrayBuffer?.updated) {
                             WebGLBuffer.from(renderer, r.vertexBuffer.instanceArrayBuffer, renderer.gl.ARRAY_BUFFER);
                         }
