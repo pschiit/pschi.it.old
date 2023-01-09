@@ -108,9 +108,9 @@ export default class Box {
         const localPoint = point.clone().substract(this.center);
         const size = this.size;
         let normal = null;
-        let min = 0.001;
+        let min = Infinity;
         let distance = Math.abs(size[0] - Math.abs(localPoint[0]));
-        if (distance > min) {
+        if (distance < min) {
             min = distance;
             if (Math.sign(localPoint[0]) < 0) {
                 normal = left;
@@ -119,7 +119,7 @@ export default class Box {
             }
         }
         distance = Math.abs(size[1] - Math.abs(localPoint[1]));
-        if (distance > min) {
+        if (distance < min) {
             min = distance;
             if (Math.sign(localPoint[1]) < 0) {
                 normal = bottom;
@@ -128,7 +128,7 @@ export default class Box {
             }
         }
         distance = Math.abs(size[2] - Math.abs(localPoint[2]));
-        if (distance > min) {
+        if (distance < min) {
             min = distance;
             if (Math.sign(localPoint[2]) < 0) {
                 normal = near;

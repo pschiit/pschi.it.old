@@ -24,18 +24,16 @@ export default class BoxelSprite extends Node3d {
         let intersection = ray.intersectPlane(planeXZ);
         let distance = 0;
         if (intersection) {
-            ray.intersections.push(intersection.clone());
             distance = intersection.distance(ray.origin);
-            if (distance < 0) {
-                intersection[1] -= size;
-                distance = -distance;
-            }
+            // if (distance < 0) {
+            //     intersection[1] -= size;
+            //     distance = -distance;
+            // }
         }
         for (const key in this.boxels) {
             const boxel = this.boxels[key];
             const boxelIntersection = ray.intersectBox(boxel);
             if (boxelIntersection) {
-                ray.intersections.push(boxelIntersection.clone())
                 let boxelDistance = boxelIntersection.distance(ray.origin);
                 if (boxelDistance < 0) {
                     boxelDistance = -boxelDistance;
@@ -44,9 +42,7 @@ export default class BoxelSprite extends Node3d {
                     distance = boxelDistance;
                     intersection = boxelIntersection;
                     const normal = boxel.normalFrom(boxelIntersection);
-                    console.log('normal', normal);
-                    intersection.add(normal);
-                    ray.intersections.push(intersection.clone())
+                    intersection.add(normal.scale(0.5));
                 }
             }
         }
