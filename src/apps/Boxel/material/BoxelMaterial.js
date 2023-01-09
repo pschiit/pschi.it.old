@@ -11,7 +11,7 @@ export default class BoxelMaterial extends Material {
         this.setParameter(Material.parameters.projectionMatrix);
 
         const position = Parameter.vector4('position');
-        const vPosition = Parameter.vector4('v_' + Material.parameters.position, Parameter.qualifier.out);
+        const vColor = Parameter.vector4('v_' + Material.parameters.color, Parameter.qualifier.out);
         this.vertexShader = Shader.vertexShader([
             Operation.equal(
                 Operation.declare(position),
@@ -24,12 +24,12 @@ export default class BoxelMaterial extends Material {
                     Material.parameters.projectionMatrix,
                     Material.parameters.vertexMatrix,
                     position)),
-            Operation.equal(vPosition, Material.parameters.position),]);
+            Operation.equal(vColor, BoxelMaterial.parameters.instanceColor),]);
 
         this.fragmentShader = Shader.fragmentShader([
             Operation.equal(
                 Shader.parameters.output,
-                vPosition),
+                vColor),
             Material.operation.gammaCorrection]);
     }
 

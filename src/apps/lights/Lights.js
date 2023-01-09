@@ -202,7 +202,6 @@ export default class Lights extends App {
 
         this.sun.shadow = new RenderTarget(null, 2048, 2048);
         this.spotLight.shadow = new RenderTarget(null, 2048, 2048);
-        this.spotLight.shadowCamera.frustum = new Node3d();
 
         const renderTarget = this.canvas.renderTarget;
         renderTarget.data = [this.cameraLeft, this.cameraRight];
@@ -304,7 +303,7 @@ export default class Lights extends App {
             this.cameraLeft.viewport = new Vector4(0, 0, this.width / 2, this.height);
             this.cameraRight.viewport = new Vector4(this.width / 2, 0, this.width / 2, this.height);
         }
-        //this.cameraRight.parent.rotate(0, Angle.toRadian(45), 0);
+        this.cameraRight.parent.rotate(0, Angle.toRadian(45), 0);
         if (this.cameraLeftMovement[3]) {
             this.cameraLeft.translate(0, 0, this.cameraLeftMovement[3]);
             this.cameraLeftMovement[3] = 0;

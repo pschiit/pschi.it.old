@@ -24,37 +24,60 @@ export default class Buffer extends Node {
         });
     }
 
+    get interleaved(){
+        return this.parent?.interleaved ||this._interleaved;
+    }
+
+    set interleaved(v){
+        this._interleaved = v;
+    }
+
     get type() {
         if (this.childrens.length > 0) {
-            return new ArrayBuffer(0).constructor;
+            return ArrayBuffer;
         }
         return this.data.constructor;
     }
 
     get data() {
-        let data = this._data;
-        if (this.childrens.length > 0) {
+        if (this.childrens.length > 0 && this.updated) {
             const length = this.BYTES_LENGTH;
-            data = new ArrayBuffer(length);
+            const data = new ArrayBuffer(length);
             let offset = 0;
             this.dispatchCallback(updateBuffer, false);
+            this._data = data;
 
             function updateBuffer(b) {
-                if (b.childrens.length < 1) {
-                    if (b.parent.interleaved) {
-
-                    } else {
+                if (!b.parent?.interleaved) {
+                    if (b.childrens.length < 1 && !b.parent.interleaved) {
                         const view = new b.type(data);
                         let index = offset / b.BYTES_PER_ELEMENT;
-                        b.data.forEach(v => {
-                            view[index++] = v;
-                        })
+                        for (let i = 0; i < b.data.length; i++) {
+                            view[index++] = b.data[i];
+
+                        }
+                        offset += b.BYTES_LENGTH;
+                    } else if (b.interleaved) {
+                        b.dispatchCallback((iB) => {
+                            if (iB.childrens.length < 1) {
+                                const view = new iB.type(data);
+                                const bufferOffset = iB.offset;
+                                let index = offset / iB.BYTES_PER_ELEMENT;
+                                for (let i = 0; i < iB.length; i += iB.step) {
+                                    index += bufferOffset;
+                                    for (let j = 0; j < iB.step; j++) {
+                                        view[index++] = iB.data[j];
+                                    }
+                                }
+                                console.log(view);
+                            }
+                        }, false);
                         offset += b.BYTES_LENGTH;
                     }
                 }
             };
         }
-        return data;
+        return this._data;
     }
 
     set data(v) {
@@ -128,7 +151,7 @@ export default class Buffer extends Node {
 
     get BYTES_PER_OFFSET() {
         if (this.parent instanceof Buffer) {
-            const name = this.interleaved ? 'BYTES_PER_STEP' : 'BYTES_LENGTH'
+            const name = this.interleaved ? 'BYTES_PER_STEP' : 'BYTES_LENGTH';
             return this.parent.BYTES_PER_OFFSET + this.parent.childrens
                 .slice(0, this.parent.childrens.indexOf(this))
                 .reduce((r, b) => { return r + b[name]; }, 0);

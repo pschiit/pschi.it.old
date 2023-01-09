@@ -81,8 +81,6 @@ export class GridBuffer extends VertexBuffer {
             1, 1, 0,
             1, -1, 0,];
     }
-
-    static default = new GridBuffer();
 }
 
 export class GridMaterial extends Material {

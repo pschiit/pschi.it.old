@@ -64,9 +64,6 @@ export default class Editor extends App {
             if (e.button != 0) {
                 const ray = this.camera.raycast(this.canvas.getNormalizedPointerPosition(e).toVector3());
                 const result = this.sprite.setFromRay(ray);
-                if (ray.intersections.length > 0) {
-                    world.appendChild(toNode3d(ray, this.camera.far));
-                }
             }
 
         });
@@ -134,55 +131,4 @@ export default class Editor extends App {
         this.updateCamera();
         this.canvas.render(this.camera);
     }
-}
-
-
-function toNode3d(ray, far) {
-    const position = [ray.origin[0], ray.origin[1], ray.origin[2]];
-    const color = [1, 0, 0, 1];
-    let ii = 0
-    const index = [ii++];
-    ray.intersections.forEach(i => {
-        position.push(i[0]);
-        position.push(i[1]);
-        position.push(i[2]);
-        color.push(Math.random());
-        color.push(Math.random());
-        color.push(Math.random());
-        color.push(1);
-        index.push(ii++)
-
-        position.push(i[0]);
-        position.push(i[1] - 1);
-        position.push(i[2]);
-        color.push(Math.random());
-        color.push(Math.random());
-        color.push(Math.random());
-        color.push(1);
-        index.push(ii++)
-        position.push(i[0]);
-        position.push(i[1]);
-        position.push(i[2]);
-        color.push(Math.random());
-        color.push(Math.random());
-        color.push(Math.random());
-        color.push(1);
-        index.push(ii++)
-    });
-    // const end = ray.direction.scale(far);
-    // position.push(end[0]);
-    // position.push(end[1]);
-    // position.push(end[2]);
-    // color.push(0);
-    // color.push(0);
-    // color.push(1);
-    // color.push(1);
-    // index.push(ii++)
-    const vertexBuffer = new VertexBuffer();
-    vertexBuffer.primitive = Render.primitive.lineStrip;
-    vertexBuffer.index = index;
-    vertexBuffer.position = position;
-    vertexBuffer.color = color;
-
-    return new Node3d(ColorMaterial.default, vertexBuffer);
 }

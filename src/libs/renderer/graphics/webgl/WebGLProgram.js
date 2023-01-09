@@ -1,5 +1,4 @@
 import Buffer from '../../../core/Buffer';
-import Matrix4 from '../../../math/Matrix4';
 import Material from '../Material';
 import WebGLBuffer from './WebGLBuffer';
 import WebGLNode from './WebGLNode';
@@ -114,6 +113,7 @@ function createAttribute(renderer, program, attribute) {
         if (v instanceof Buffer) {
             renderer.arrayBuffer = WebGLBuffer.from(renderer, v, renderer.gl.ARRAY_BUFFER);
             renderer.gl.enableVertexAttribArray(location);
+            console.log(attribute.name, location, v.step, WebGLRenderer.typeFrom(renderer, v.type), v.normalize, v.root.BYTES_PER_STEP, v.BYTES_PER_OFFSET);
             renderer.gl.vertexAttribPointer(location, v.step, WebGLRenderer.typeFrom(renderer, v.type), v.normalize, v.root.BYTES_PER_STEP, v.BYTES_PER_OFFSET);
             if (v.divisor) {
                 renderer.gl.vertexAttribDivisor(location, v.divisor);

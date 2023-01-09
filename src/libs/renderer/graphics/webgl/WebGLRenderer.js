@@ -385,7 +385,15 @@ function render(renderer, renderTarget) {
                         WebGLBuffer.from(renderer, r.vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
                     }
                     if (divisorCount) {
-                        if (r.vertexBuffer.instanceArrayBuffer.updated) {
+                        const buffers = r.vertexBuffer.instanceBuffers;
+                        if (buffers.length > 1) {
+                            buffers.forEach(b => {
+                                if (!cache[b.root.id]) {
+                                    WebGLBuffer.from(renderer, b, renderer.gl.ARRAY_BUFFER);
+                                }
+                            })
+                        }
+                        if (r.vertexBuffer.instanceArrayBuffer?.updated) {
                             WebGLBuffer.from(renderer, r.vertexBuffer.instanceArrayBuffer, renderer.gl.ARRAY_BUFFER);
                         }
                         renderer.gl.drawElementsInstanced(renderer.gl[r.vertexBuffer.primitive], r.vertexBuffer.count, WebGLRenderer.typeFrom(renderer, r.vertexBuffer.index.type), r.vertexBuffer.index.BYTES_PER_OFFSET, divisorCount);

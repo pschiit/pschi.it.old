@@ -25,24 +25,20 @@ export default class BoxelSprite extends Node3d {
         let distance = 0;
         if (intersection) {
             distance = intersection.distance(ray.origin);
-            // if (distance < 0) {
-            //     intersection[1] -= size;
-            //     distance = -distance;
-            // }
         }
-        for (const key in this.boxels) {
-            const boxel = this.boxels[key];
-            const boxelIntersection = ray.intersectBox(boxel);
-            if (boxelIntersection) {
-                let boxelDistance = boxelIntersection.distance(ray.origin);
-                if (boxelDistance < 0) {
-                    boxelDistance = -boxelDistance;
-                }
-                if (boxelDistance < distance) {
-                    distance = boxelDistance;
-                    intersection = boxelIntersection;
-                    const normal = boxel.normalFrom(boxelIntersection);
-                    intersection.add(normal.scale(0.5));
+        const spriteIntersection = ray.intersectBox(this.boundingBox);
+        if (spriteIntersection) {
+            for (const key in this.boxels) {
+                const boxel = this.boxels[key];
+                const boxelIntersection = ray.intersectBox(boxel);
+                if (boxelIntersection) {
+                    let boxelDistance = boxelIntersection.distance(ray.origin);
+                    if (boxelDistance < distance) {
+                        distance = boxelDistance;
+                        intersection = boxelIntersection;
+                        const normal = boxel.normalFrom(boxelIntersection);
+                        intersection.add(normal.scale(0.5));
+                    }
                 }
             }
         }
@@ -88,14 +84,20 @@ export default class BoxelSprite extends Node3d {
         if (this.updated) {
             const values = Object.values(this.boxels);
             const positions = new Float32Array(values.length * 3);
+            const colors = new Float32Array(values.length * 3);
             for (let i = 0; i < values.length; i++) {
                 const boxel = values[i];
                 const index = i * 3;
                 positions[index] = boxel.position[0];
                 positions[index + 1] = boxel.position[1];
                 positions[index + 2] = boxel.position[2];
+
+                colors[index] = boxel.color[0];
+                colors[index + 1] = boxel.color[1];
+                colors[index + 2] = boxel.color[2];
             }
             this.vertexBuffer.instancePosition = positions;
+            this.vertexBuffer.instanceColor = colors;
             this.updated = false;
         }
     }

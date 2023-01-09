@@ -58,8 +58,7 @@ export default class Camera extends Node3d {
             if (v.parent != this) {
                 this.appendChild(v);
             }
-            v.material = frustumMaterial;
-            v.vertexBuffer = frustumBuffer;
+            setFrustum(v)
             this._frustum = v;
 
         } else if (!v && this.frustum) {
@@ -92,21 +91,26 @@ export default class Camera extends Node3d {
         return position.transform(this.projectionMatrix.inverse);
     }
 
-    clearMatrix(){
+    clearMatrix() {
         super.clearMatrix();
         this.setParameter(Material.parameters.projectionMatrix, null);
     }
 
     static frustum() {
-        const frustum = new Node3d();
-        frustum.vertexBuffer = frustumBuffer;
-        frustum.material = frustumMaterial;
-
-        return frustum;
+        return setFrustum(new Node3d());
     }
 }
-
-const frustumMaterial = new ColorMaterial();
-const frustumBuffer = new BoxBuffer(2, 2, 2);
-frustumBuffer.setColor(Color.white());
-frustumBuffer.setPrimitive(Render.primitive.lines);
+function setFrustum(node) {
+    if (!frustumBuffer) {
+        frustumBuffer = new BoxBuffer(2, 2, 2);
+        frustumBuffer.setColor(Color.white());
+        frustumBuffer.setPrimitive(Render.primitive.lines);
+    }
+    if (!frustumMaterial) {
+        frustumMaterial = new ColorMaterial();
+    }
+    node.material = frustumMaterial;
+    node.vertexBuffer = frustumBuffer;
+}
+let frustumMaterial = null;
+let frustumBuffer = null;
