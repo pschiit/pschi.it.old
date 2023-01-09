@@ -1,10 +1,12 @@
 import BoxBuffer from '../../libs/3d/buffer/BoxBuffer';
 import PlaneBuffer from '../../libs/3d/buffer/PlaneBuffer';
+import VertexBufferManager from '../../libs/3d/buffer/VertexBufferManager';
 import OrthographicCamera from '../../libs/3d/camera/OrthographicCamera';
 import PerspectiveCamera from '../../libs/3d/camera/PerspectiveCamera';
 import DirectionalLight from '../../libs/3d/light/DirectionalLight';
 import PointLight from '../../libs/3d/light/PointLight';
 import SpotLight from '../../libs/3d/light/SpotLight';
+import ColorMaterial from '../../libs/3d/material/ColorMaterial';
 import LightMaterial from '../../libs/3d/material/LightMaterial';
 import PickingMaterial from '../../libs/3d/material/PickingMaterial';
 import Node3d from '../../libs/3d/Node3d';
@@ -13,11 +15,12 @@ import Buffer from '../../libs/core/Buffer';
 import Color from '../../libs/core/Color';
 import Angle from '../../libs/math/Angle';
 import Matrix4 from '../../libs/math/Matrix4';
-import Quaternion from '../../libs/math/Quaternion';
+import Vector2 from '../../libs/math/Vector2';
 import Vector3 from '../../libs/math/Vector3';
 import Vector4 from '../../libs/math/Vector4';
 import RenderTarget from '../../libs/renderer/graphics/RenderTarget';
 import Texture from '../../libs/renderer/graphics/Texture';
+import VertexBuffer from '../../libs/renderer/graphics/VertexBuffer';
 
 export default class Lights extends App {
     constructor(canvas) {
@@ -28,9 +31,8 @@ export default class Lights extends App {
 
     init() {
         const lightMaterial = new LightMaterial();
+        const bufferManager = new VertexBufferManager();
 
-        const mainBuffer = new Buffer();
-        const mainIndexBuffer = new Buffer();
 
         const cube = new BoxBuffer();
         cube.setColor(Color.white());
@@ -65,8 +67,7 @@ export default class Lights extends App {
             1, 1,
             1, 0,
         ];
-        mainBuffer.appendChild(cube.arrayBuffer);
-        mainIndexBuffer.appendChild(cube.index);
+        bufferManager.add(cube);
 
         const reverseCube = new BoxBuffer();
         reverseCube.normal.scale(-1);
@@ -102,8 +103,7 @@ export default class Lights extends App {
             1, 1,
             1, 0,
         ];
-        mainBuffer.appendChild(reverseCube.arrayBuffer);
-        mainIndexBuffer.appendChild(reverseCube.index);
+        bufferManager.add(reverseCube);
 
         const plane = new PlaneBuffer(10, 10);
         plane.setColor(Color.white());
@@ -114,8 +114,7 @@ export default class Lights extends App {
             1, 1,
             1, 0,
         ];
-        mainBuffer.appendChild(plane.arrayBuffer);
-        mainIndexBuffer.appendChild(plane.index);
+        bufferManager.add(plane);
 
         const world = new Node3d();
 
@@ -187,7 +186,7 @@ export default class Lights extends App {
         const pickingMaterial = new PickingMaterial();
         const pickingTexture = new Texture();
 
-        this.cameraLeft = new PerspectiveCamera(55, 1, 0.1, 2000);
+        this.cameraLeft = new PerspectiveCamera(70, 1, 0.1, 2000);
         this.cameraLeft.translate(7, 5, 7);
         this.cameraLeft.lookAt(new Vector3(0, 0, 0));
         this.cameraLeft.frustum = new Node3d();
@@ -196,12 +195,14 @@ export default class Lights extends App {
         this.cameraRight = new OrthographicCamera(-4, 4, -4, 8, 0.1, 100);
         this.cameraRight.translate(-7, 5, -7);
         this.cameraRight.target = new Vector3(0, 0, 0);
+        this.cameraRight.frustum = new Node3d();
         const cameraHolder = new Node3d();
         cameraHolder.appendChild(this.cameraRight);
         world.appendChild(cameraHolder);
 
         this.sun.shadow = new RenderTarget(null, 2048, 2048);
         this.spotLight.shadow = new RenderTarget(null, 2048, 2048);
+        this.spotLight.shadowCamera.frustum = new Node3d();
 
         const renderTarget = this.canvas.renderTarget;
         renderTarget.data = [this.cameraLeft, this.cameraRight];
@@ -224,6 +225,9 @@ export default class Lights extends App {
             renderTarget.colorTexture = pickingTexture;
             const x = mousePosition[0];
             const camera = x < this.cameraLeft.viewport[2] ? this.cameraLeft : this.cameraRight;
+
+            const ray = camera.raycast(normalize(mousePosition, camera.viewport).toVector3());
+            world.appendChild(toNode3d(ray, camera.far));
 
             this.canvas.render(camera);
             const color = new Color(renderTarget.output).normalize();
@@ -300,7 +304,7 @@ export default class Lights extends App {
             this.cameraLeft.viewport = new Vector4(0, 0, this.width / 2, this.height);
             this.cameraRight.viewport = new Vector4(this.width / 2, 0, this.width / 2, this.height);
         }
-        this.cameraRight.parent.rotate(0, Angle.toRadian(45), 0);
+        //this.cameraRight.parent.rotate(0, Angle.toRadian(45), 0);
         if (this.cameraLeftMovement[3]) {
             this.cameraLeft.translate(0, 0, this.cameraLeftMovement[3]);
             this.cameraLeftMovement[3] = 0;
@@ -312,4 +316,34 @@ export default class Lights extends App {
             this.cameraLeftMovement.set([0, 0, 0]);
         }
     }
+}
+function toNode3d(ray, far) {
+    const position = [ray.origin[0], ray.origin[1], ray.origin[2]];
+    const color = [1, 0, 0, 1];
+    let ii = 0
+    const index = [ii++];
+    const end = ray.direction.scale(far);
+    position.push(end[0]);
+    position.push(end[1]);
+    position.push(end[2]);
+    color.push(0);
+    color.push(0);
+    color.push(1);
+    color.push(1);
+    index.push(ii++)
+    const vertexBuffer = new VertexBuffer();
+    vertexBuffer.primitive = Node3d.primitive.lineStrip;
+    vertexBuffer.index = index;
+    vertexBuffer.position = position;
+    vertexBuffer.color = color;
+    console.log(position);
+
+    return new Node3d(ColorMaterial.default, vertexBuffer);
+}
+
+function normalize(position, viewport) {
+    return new Vector2(
+        (position[0] - viewport[0]) / viewport[2] * 2 - 1,
+        (position[1] - viewport[1]) / viewport[3] * 2 - 1
+    );
 }

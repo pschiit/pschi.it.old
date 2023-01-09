@@ -1,5 +1,7 @@
 import Node from '../core/Node';
+import Ray from '../math/Ray';
 import Vector2 from '../math/Vector2';
+import Vector3 from '../math/Vector3';
 import GraphicsNode from '../renderer/graphics/GraphicsNode';
 import RenderTarget from '../renderer/graphics/RenderTarget';
 import WebGLRenderer from '../renderer/graphics/webgl/WebGLRenderer';

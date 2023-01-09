@@ -2,6 +2,7 @@ import Render from '../../../libs/renderer/graphics/Render';
 import VertexBuffer from '../../../libs/renderer/graphics/VertexBuffer';
 import BoxelMaterial from '../material/BoxelMaterial';
 import Buffer from '../../../libs/core/Buffer';
+import Boxel from '../node/Boxel';
 
 export default class BoxelBuffer extends VertexBuffer {
     constructor(positions, colors) {
@@ -18,34 +19,34 @@ export default class BoxelBuffer extends VertexBuffer {
 
         this.position = [
             0, 0, 0,//F
-            0, 1, 0,
-            1, 1, 0,
-            1, 0, 0,
+            0, size, 0,
+            size, size, 0,
+            size, 0, 0,
 
-            1, 0, 0,//R
-            1, 1, 0,
-            1, 1, 1,
-            1, 0, 1,
+            size, 0, 0,//R
+            size, size, 0,
+            size, size, size,
+            size, 0, size,
 
-            1, 0, 1,//B
-            1, 1, 1,
-            0, 1, 1,
-            0, 0, 1,
+            size, 0, size,//B
+            size, size, size,
+            0, size, size,
+            0, 0, size,
 
-            1, 1, 1,//U
-            1, 1, 0,
-            0, 1, 0,
-            0, 1, 1,
+            size, size, size,//U
+            size, size, 0,
+            0, size, 0,
+            0, size, size,
 
-            0, 0, 1,//L
-            0, 1, 1,
-            0, 1, 0,
+            0, 0, size,//L
+            0, size, size,
+            0, size, 0,
             0, 0, 0,
 
-            0, 0, 1,//D
+            0, 0, size,//D
             0, 0, 0,
-            1, 0, 0,
-            1, 0, 1,];
+            size, 0, 0,
+            size, 0, size,];
 
         this.instancePositionLength = 3;
         this.instanceColorLength = 3;
@@ -80,3 +81,5 @@ export default class BoxelBuffer extends VertexBuffer {
         this.setParameter(BoxelMaterial.parameters.instanceColor, v, this.instanceColorLength, 1);
     }
 }
+
+const size = Boxel.size;

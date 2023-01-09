@@ -84,10 +84,6 @@ export default class Camera extends Node3d {
         return super.getScene(renderTarget, materialParameters);
     }
 
-    raycast(vector2) {
-        return null;
-    }
-
     project(position) {
         return position.transform(this.projectionMatrix);
     }

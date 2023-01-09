@@ -15,7 +15,7 @@ export default class Sphere {
     }
 
     distanceToPoint(point) {
-		return ( point.distanceTo( this.center ) - this.radius );
+		return ( point.distance( this.center ) - this.radius );
     }
 
     empty() {

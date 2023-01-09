@@ -16,16 +16,6 @@ export default class SpotLight extends Node3d {
         this.target = target;
     }
 
-    get showFrustum() {
-        return this.shadow?.data.showFrustum;
-    }
-
-    set showFrustum(v) {
-        if (this.shadow) {
-            this.shadow.data.showFrustum = v;
-        }
-    }
-
     get shadow() {
         return this._shadow;
     }

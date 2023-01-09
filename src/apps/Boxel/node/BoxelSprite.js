@@ -1,95 +1,112 @@
-import BoxBuffer from '../../../libs/3d/buffer/BoxBuffer';
 import Node3d from '../../../libs/3d/Node3d';
+import Color from '../../../libs/core/Color';
 import Box from '../../../libs/math/Box';
+import Plane from '../../../libs/math/Plane';
 import BoxelBuffer from '../buffer/BoxelBuffer';
 import BoxelMaterial from '../material/BoxelMaterial';
+import Boxel from './Boxel';
 
 export default class BoxelSprite extends Node3d {
     constructor() {
         super();
         this.vertexBuffer = new BoxelBuffer();
-        this.material = BoxelSprite.material;
+        this.material = new BoxelMaterial();
         this.boxels = {};
         this.boundingBox = new Box();
-
         this.updated = false;
-        this.boxelCount = 0;
+    }
+
+    get count() {
+        return Object.keys(this.boxels).length;
     }
 
     intersect(ray) {
-        let intersection = ray.intersectBox(this.boundingBox);
-        console.log('sprite intersection', intersection);
+        let intersection = ray.intersectPlane(planeXZ);
+        let distance = 0;
         if (intersection) {
-            const boxel = this.get(intersection.floor());
-            if (boxel) {
-                intersection = boxel?.intersect(ray);
-                if (intersection) {
-                    const plane = boxel.getPlane(intersection);
+            ray.intersections.push(intersection.clone());
+            distance = intersection.distance(ray.origin);
+            if (distance < 0) {
+                intersection[1] -= size;
+                distance = -distance;
+            }
+        }
+        for (const key in this.boxels) {
+            const boxel = this.boxels[key];
+            const boxelIntersection = ray.intersectBox(boxel);
+            if (boxelIntersection) {
+                ray.intersections.push(boxelIntersection.clone())
+                let boxelDistance = boxelIntersection.distance(ray.origin);
+                if (boxelDistance < 0) {
+                    boxelDistance = -boxelDistance;
                 }
-            };
-            //move to the next coordinate until out of the bounding box :)
+                if (boxelDistance < distance) {
+                    distance = boxelDistance;
+                    intersection = boxelIntersection;
+                    const normal = boxel.normalFrom(boxelIntersection);
+                    console.log('normal', normal);
+                    intersection.add(normal);
+                    ray.intersections.push(intersection.clone())
+                }
+            }
         }
 
         return intersection;
     }
 
-    get(x, y, z) {
-        if (x.length > 0) {
-            z = x[2];
-            y = x[1];
-            x = x[0];
-        }
-        return this.boxels[x] && this.boxels[x][y] && this.boxels[x][y][z] ? this.boxels[x][y][z] : null;
+    search(position) {
+        return this.boxels[getKey(position)];
     }
 
     set(boxel) {
-        const x = boxel.position[0];
-        const y = boxel.position[1];
-        const z = boxel.position[2];
-        if (!this.boxels[x]) {
-            this.boxels[x] = {};
+        const key = getKey(boxel.position);
+        this.boxels[key] = boxel;
+        this.boundingBox.union(boxel);
+        this.updated = true;
+
+
+        return boxel;
+    }
+
+    delete(position) {
+        const key = getKey(position);
+        const removed = this.boxels[key];
+        this.boxels[key] = null;
+        this.updated = true;
+
+        return removed;
+    }
+
+    setFromRay(ray, color = Color.random()) {
+        const position = this.intersect(ray);
+        if (position) {
+            const boxel = new Boxel(position.floor(), color);
+            this.set(boxel);
+            return boxel;
         }
-        if (!this.boxels[x][y]) {
-            this.boxels[x][y] = {};
-        }
-        if (this.boxels[x][y][z] != boxel) {
-            this.boxels[x][y][z] = boxel;
-            this.updated = true;
-            if (boxel) {
-                this.boxelCount++;
-                this.boundingBox.expandByPoint(boxel.position);
-            } else {
-                this.boxelCount--;
-            }
-        }
+        return null;
     }
 
     setScene(parameters) {
         super.setScene(parameters);
         if (this.updated) {
-            const positions = new Float32Array(this.boxelCount * 3);
-            const colors = new Float32Array(this.boxelCount * 4);
-            let iPositions = 0;
-            let iColors = 0;
-            for (const x in this.boxels) {
-                for (const y in this.boxels[x]) {
-                    for (const z in this.boxels[x][y]) {
-                        const boxel = this.boxels[x][y][z];
-                        positions[iPositions++] = boxel.position[0]
-                        positions[iPositions++] = boxel.position[1];
-                        positions[iPositions++] = boxel.position[2];
-                        colors[iColors++] = boxel.color[0];
-                        colors[iColors++] = boxel.color[1];
-                        colors[iColors++] = boxel.color[2];
-                        colors[iColors++] = boxel.color[3];
-                    }
-                }
+            const values = Object.values(this.boxels);
+            const positions = new Float32Array(values.length * 3);
+            for (let i = 0; i < values.length; i++) {
+                const boxel = values[i];
+                const index = i * 3;
+                positions[index] = boxel.position[0];
+                positions[index + 1] = boxel.position[1];
+                positions[index + 2] = boxel.position[2];
             }
             this.vertexBuffer.instancePosition = positions;
-            this.vertexBuffer.instanceColor = colors;
             this.updated = false;
         }
     }
-
-    static material = new BoxelMaterial();
 }
+
+function getKey(position) {
+    return `${position[0]}.${position[1]}.${position[2]}`;
+}
+const planeXZ = new Plane();
+const size = Boxel.size;

@@ -26,10 +26,11 @@ export default class BoxelMaterial extends Material {
                     position)),
             Operation.equal(vPosition, Material.parameters.position),]);
 
-        this.fragmentShader = Shader.fragmentShader(
+        this.fragmentShader = Shader.fragmentShader([
             Operation.equal(
                 Shader.parameters.output,
-                vPosition));
+                vPosition),
+            Material.operation.gammaCorrection]);
     }
 
     static parameters = {

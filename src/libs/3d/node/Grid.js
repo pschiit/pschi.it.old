@@ -1,12 +1,91 @@
-import Color from '../../../libs/core/Color';
-import Vector2 from '../../../libs/math/Vector2';
-import Material from '../../../libs/renderer/graphics/Material';
-import Operation from '../../../libs/renderer/graphics/shader/Operation';
-import Parameter from '../../../libs/renderer/graphics/shader/Parameter';
-import Shader from '../../../libs/renderer/graphics/shader/Shader';
-import ShaderFunction from '../../../libs/renderer/graphics/shader/ShaderFunction';
+import Color from '../../core/Color';
+import Vector2 from '../../math/Vector2';
+import Material from '../../renderer/graphics/Material';
+import Operation from '../../renderer/graphics/shader/Operation';
+import Parameter from '../../renderer/graphics/shader/Parameter';
+import Shader from '../../renderer/graphics/shader/Shader';
+import ShaderFunction from '../../renderer/graphics/shader/ShaderFunction';
+import VertexBuffer from '../../renderer/graphics/VertexBuffer';
+import PerspectiveCamera from '../camera/PerspectiveCamera';
+import Node3d from '../Node3d';
 
-export default class BoxelGridMaterial extends Material {
+export default class Grid extends Node3d {
+    constructor(camera) {
+        super();
+        this.vertexBuffer = new GridBuffer();
+        this.material = new GridMaterial();
+        this.mode = camera instanceof PerspectiveCamera ? Grid.mode.perspective
+            : Grid.mode.orthographic;
+
+    }
+
+    get color() {
+        return this.getParameter(GridMaterial.parameters.color);
+    }
+
+    set color(v) {
+        this.setParameter(GridMaterial.parameters.color, v);
+    }
+
+    get sizes() {
+        return this.getParameter(GridMaterial.parameters.sizes);
+    }
+
+    set sizes(v) {
+        this.setParameter(GridMaterial.parameters.sizes, v);
+    }
+
+    get distance() {
+        return this.getParameter(GridMaterial.parameters.distance);
+    }
+
+    set distance(v) {
+        this.setParameter(GridMaterial.parameters.distance, v);
+    }
+
+    get fading() {
+        return this.getParameter(GridMaterial.parameters.fading);
+    }
+
+    set fading(v) {
+        this.setParameter(GridMaterial.parameters.fading, v);
+    }
+
+    get mode() {
+        return this._mode;
+    }
+
+    set mode(v) {
+        if (v != this.mode) {
+            this._mode = v;
+            this.material.init(v)
+        };
+    }
+
+    static mode = {
+        orthographic: 'orthographic',
+        perspective: 'perspective'
+    }
+}
+
+export class GridBuffer extends VertexBuffer {
+    constructor() {
+        super();
+
+        this.primitive = Node3d.primitive.triangleFan;
+        this.index = [
+            0, 1, 2, 3,];
+        this.position = [
+            -1, -1, 0,
+            -1, 1, 0,
+            1, 1, 0,
+            1, -1, 0,];
+    }
+
+    static default = new GridBuffer();
+}
+
+export class GridMaterial extends Material {
     constructor() {
         super();
         this.depth = Material.depth.less;
@@ -17,11 +96,45 @@ export default class BoxelGridMaterial extends Material {
 
         this.color = Color.black();
         this.sizes = new Vector2(1, 10);
-        this.distance = 1000;
+        this.distance = 10000;
         this.axes = 'xzy';
         this.fading = 25;
+    }
 
-        const planeAxes = '.' +  this.axes.substring(0, 2);
+    get distance() {
+        return this.getParameter(GridMaterial.parameters.distance);
+    }
+
+    set distance(v) {
+        this.setParameter(GridMaterial.parameters.distance, v);
+    }
+
+    get sizes() {
+        return this.getParameter(GridMaterial.parameters.sizes);
+    }
+
+    set sizes(v) {
+        this.setParameter(GridMaterial.parameters.sizes, v);
+    }
+
+    get color() {
+        return this.getParameter(GridMaterial.parameters.color);
+    }
+
+    set color(v) {
+        this.setParameter(GridMaterial.parameters.color, v);
+    }
+
+    get fading() {
+        return this.getParameter(GridMaterial.parameters.fading);
+    }
+
+    set fading(v) {
+        this.setParameter(GridMaterial.parameters.fading, v);
+    }
+
+    init(mode) {
+        const planeAxes = '.' + this.axes.substring(0, 2);
 
         const position = Parameter.vector3('pos');
         const vPosition = Parameter.vector3('v_' + Material.parameters.position, Parameter.qualifier.out);
@@ -31,7 +144,7 @@ export default class BoxelGridMaterial extends Material {
                 Operation.declare(position),
                 Operation.multiply(
                     Operation.selection(Material.parameters.position, '.' + this.axes),
-                    BoxelGridMaterial.parameters.distance)),
+                    GridMaterial.parameters.distance)),
             Operation.addTo(
                 Operation.selection(position, planeAxes),
                 Operation.selection(Material.parameters.cameraPosition, planeAxes)),
@@ -57,6 +170,40 @@ export default class BoxelGridMaterial extends Material {
 
         const outputAlpha = Operation.selection(Shader.parameters.output, '.a');
         const planeAxesSelection = Operation.selection(vPosition, planeAxes);
+
+        const dOperation = mode == Grid.mode.perspective ?
+            Operation.equal(
+                Operation.declare(d),
+                Operation.substract(
+                    1,
+                    Operation.min(
+                        Operation.distance(
+                            Operation.selection(viewPosition, planeAxes),
+                            Operation.divide(
+                                planeAxesSelection,
+                                GridMaterial.parameters.distance
+                            ),
+                        ),
+                        1
+                    )
+                )
+            ) : //Orthographic mode
+            Operation.equal(
+                Operation.declare(d),
+                Operation.substract(
+                    1,
+                    Operation.divide(
+                        Operation.distance(
+                            planeAxesSelection,
+                            Operation.selection(
+                                Material.parameters.cameraTarget,
+                                planeAxes
+                            )
+                        ),
+                        GridMaterial.parameters.fading,
+                    )
+                )
+            );
 
 
         const size = Parameter.number('size');
@@ -110,43 +257,26 @@ export default class BoxelGridMaterial extends Material {
                     )
                 )
             ),
-            Operation.equal(
-                Operation.declare(d),
-                Operation.substract(
-                    1,
-                    Operation.divide(
-                        Operation.len(
-                            Operation.substract(
-                                planeAxesSelection,
-                                Operation.selection(
-                                    Material.parameters.cameraTarget,
-                                    planeAxes
-                                )
-                            )
-                        ),
-                        BoxelGridMaterial.parameters.fading,
-                    )
-                )
-            ),
+            dOperation,
             Operation.equal(
                 Operation.declare(g1),
                 Operation.do(
                     getGrid,
-                    Operation.selection(BoxelGridMaterial.parameters.sizes, '.x'))
+                    Operation.selection(GridMaterial.parameters.sizes, '.x'))
             ),
             Operation.equal(
                 Operation.declare(g2),
                 Operation.do(
                     getGrid,
-                    Operation.selection(BoxelGridMaterial.parameters.sizes, '.y'))
+                    Operation.selection(GridMaterial.parameters.sizes, '.y'))
             ),
             Operation.equal(
                 Shader.parameters.output,
                 Operation.toVector4(
-                    BoxelGridMaterial.parameters.color,
+                    GridMaterial.parameters.color,
                     Operation.multiply(
                         Operation.mix(g2, g1, g1),
-                        Operation.pow(d,3))),
+                        Operation.pow(d, 3))),
             ),
             Operation.equal(
                 outputAlpha,
@@ -164,38 +294,6 @@ export default class BoxelGridMaterial extends Material {
             ),
             Material.operation.gammaCorrection],
             Shader.precision.high);
-    }
-
-    get distance() {
-        return this.getParameter(BoxelGridMaterial.parameters.distance);
-    }
-
-    set distance(v) {
-        this.setParameter(BoxelGridMaterial.parameters.distance, v);
-    }
-
-    get sizes() {
-        return this.getParameter(BoxelGridMaterial.parameters.sizes);
-    }
-
-    set sizes(v) {
-        this.setParameter(BoxelGridMaterial.parameters.sizes, v);
-    }
-
-    get color() {
-        return this.getParameter(BoxelGridMaterial.parameters.color);
-    }
-
-    set color(v) {
-        this.setParameter(BoxelGridMaterial.parameters.color, v);
-    }
-
-    get fading() {
-        return this.getParameter(BoxelGridMaterial.parameters.fading);
-    }
-
-    set fading(v) {
-        this.setParameter(BoxelGridMaterial.parameters.fading, v);
     }
 
     static parameters = {

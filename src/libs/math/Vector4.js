@@ -19,33 +19,33 @@ export default class Vector4 extends FloatArray {
                 this[3] = x[3];
             } else {
                 this[0] = x;
-                if (Number.isFinite(y)) {
+                if (y) {
                     this[1] = y;
                 }
-                if (Number.isFinite(z)) {
+                if (z) {
                     this[2] = z;
                 }
-                if (Number.isFinite(w)) {
+                if (w) {
                     this[3] = w;
                 }
             }
         }
     }
 
-	get lenSq() {
-		return this[0] * this[0] + this[1] * this[1] + this[2] * this[2] + this[3] * this[3];
-	}
+    get lenSqr() {
+        return this[0] * this[0] + this[1] * this[1] + this[2] * this[2] + this[3] * this[3];
+    }
 
-	get len() {
-		return Math.sqrt( this.lenSq);
-	}
+    get len() {
+        return Math.sqrt(this.lenSqr);
+    }
 
     /** Return whether or not a Vector4 array is equals the current Vector4
      * @param {Vector4} vector the vector to compare
      * @return {Boolean} true if vectors are equals
     */
     equals(vector) {
-        return vector?.length == this.length && 
+        return vector?.length == this.length &&
             this[0] === vector[0] &&
             this[1] === vector[1] &&
             this[2] === vector[2] &&
@@ -140,21 +140,59 @@ export default class Vector4 extends FloatArray {
 
         return this;
     }
+    
+    /** Negate the current Vector3
+     * @return the current updated Vector3
+    */
+    negate() {
+        this[0] = -this[0];
+        this[1] = -this[1];
+        this[2] = -this[2];
+        this[3] = -this[3];
+        return this;
+    }
 
+    /**
+     * Calculates the euclidian distance between two Vector3
+     * @param {Vector3} vector the second operand
+     * @returns {Number} distance
+     */
+    distance(vector) {
+        let x = vector[0] - this[0];
+        let y = vector[1] - this[1];
+        let z = vector[2] - this[2];
+        let w = vector[3] - this[3];
+
+        return Math.hypot(x, y, z, w);
+    }
+
+    /**
+     * Calculates the squared euclidian distance between two Vector3
+     * @param {Vector3} vector the second operand
+     * @returns {Number} squared distance
+     */
+    squaredDistance(vector) {
+        let x = vector[0] - this[0];
+        let y = vector[1] - this[1];
+        let z = vector[2] - this[2];
+        let w = vector[3] - this[3];
+
+        return x * x + y * y + z * z + w * w;
+    }
 
     /** Transform the current Vector4 from a matrix array
      * @param {Matrix4} matrix transformation matrix
      * @return the current updated Vector4
     */
-    transform(vector) {
+    transform(matrix) {
         const x = this[0],
             y = this[1],
             z = this[2],
             w = this[3];
-        this[0] = vector[0] * x + vector[4] * y + vector[8] * z + vector[12] * w;
-        this[1] = vector[1] * x + vector[5] * y + vector[9] * z + vector[13] * w;
-        this[2] = vector[2] * x + vector[6] * y + vector[10] * z + vector[14] * w;
-        this[3] = vector[3] * x + vector[7] * y + vector[11] * z + vector[15] * w;
+        this[0] = matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12] * w;
+        this[1] = matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13] * w;
+        this[2] = matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14] * w;
+        this[3] = matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15] * w;
 
         return this;
     }

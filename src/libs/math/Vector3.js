@@ -23,10 +23,10 @@ export default class Vector3 extends FloatArray {
                 this[2] = x[2];
             } else {
                 this[0] = x;
-                if (Number.isFinite(y)) {
+                if (y) {
                     this[1] = y;
                 }
-                if (Number.isFinite(z)) {
+                if (z) {
                     this[2] = z;
                 }
             }
@@ -143,6 +143,42 @@ export default class Vector3 extends FloatArray {
         this[2] = z * dot;
 
         return this;
+    }
+    
+    /** Negate the current Vector3
+     * @return the current updated Vector3
+    */
+    negate() {
+        this[0] = -this[0];
+        this[1] = -this[1];
+        this[2] = -this[2];
+        return this;
+    }
+
+    /**
+     * Calculates the euclidian distance between two Vector3
+     * @param {Vector3} vector the second operand
+     * @returns {Number} distance
+     */
+    distance(vector) {
+        let x = vector[0] - this[0];
+        let y = vector[1] - this[1];
+        let z = vector[2] - this[2];
+
+        return Math.hypot(x, y, z);
+    }
+
+    /**
+     * Calculates the squared euclidian distance between two Vector3
+     * @param {Vector3} vector the second operand
+     * @returns {Number} squared distance
+     */
+    squaredDistance(vector) {
+        let x = vector[0] - this[0];
+        let y = vector[1] - this[1];
+        let z = vector[2] - this[2];
+
+        return x * x + y * y + z * z;
     }
 
     /** Transform the current Vector3 from a matrix array

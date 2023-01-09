@@ -1,7 +1,14 @@
+import Vector3 from './Vector3';
+
 export default class Ray {
+    /** Create a new Ray
+     * @param {Vector3} origin of Ray
+     * @param {Vector3} direction of Ray
+    */
     constructor(origin, direction) {
         this.origin = origin;
         this.direction = direction;
+        this.intersections = [];
     }
 
     move(distance) {
@@ -16,6 +23,20 @@ export default class Ray {
     target(vector3) {
         this.direction.set(vector3).substract(this.origin).normalize();
         return this;
+    }
+
+    distanceToPoint(point) {
+        return Math.sqrt(this.distanceSqToPoint(point));
+    }
+
+    distanceSqToPoint(point) {
+        const directionDistance = point.clone().substract(this.origin).dot(this.direction);
+        // point behind the ray
+        if (directionDistance < 0) {
+            return this.origin.squaredDistance(point);
+        }
+
+        return this.direction.clone().scale(directionDistance).add(this.origin).squaredDistance(point);
     }
 
     distanceToPlane(plane) {
@@ -73,24 +94,20 @@ export default class Ray {
             invdirz = 1 / this.direction[2];
 
         if (invdirx >= 0) {
-
             tmin = (box.min[0] - this.origin[0]) * invdirx;
             tmax = (box.max[0] - this.origin[0]) * invdirx;
 
         } else {
-
             tmin = (box.max[0] - this.origin[0]) * invdirx;
             tmax = (box.min[0] - this.origin[0]) * invdirx;
 
         }
 
         if (invdiry >= 0) {
-
             tymin = (box.min[1] - this.origin[1]) * invdiry;
             tymax = (box.max[1] - this.origin[1]) * invdiry;
 
         } else {
-
             tymin = (box.max[1] - this.origin[1]) * invdiry;
             tymax = (box.min[1] - this.origin[1]) * invdiry;
 

@@ -131,16 +131,31 @@ export default class VertexBuffer extends GraphicsNode {
         return this._arrayBuffer;
     }
 
-    get instanceArrayBuffer() {
-        if (!this._instanceArrayBuffer) {
-            this._instanceArrayBuffer = new Buffer();
-        }
-        this.buffers.forEach(b => {
-            if (b.divisor && b.parent != this._instanceArrayBuffer) {
-                this._instanceArrayBuffer.appendChild(b);
+    get instanceBuffers() {
+        const result = [];
+        for (const name in this.parameters) {
+            const parameter = this.getParameter(name);
+            if (parameter instanceof Buffer && parameter.divisor > 0) {
+                result.push(parameter);
             }
-        });
-        return this._instanceArrayBuffer;
+        }
+        return result;
+    }
+
+    get instanceArrayBuffer() {
+        const buffers = this.instanceBuffers;
+        if (buffers.length > 1) {
+            if (!this._instanceArrayBuffer) {
+                this._instanceArrayBuffer = new Buffer();
+            }
+            buffers.forEach(b => {
+                if (b.divisor && b.parent != this._instanceArrayBuffer) {
+                    this._instanceArrayBuffer.appendChild(b);
+                }
+            });
+            return this._instanceArrayBuffer;
+        }
+        return null;
     }
 
     setParameter(name, v, step, divisor) {

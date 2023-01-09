@@ -139,12 +139,14 @@ export default class OrthographicCamera extends Camera {
         return result;
     }
 
-    raycast(vector2) {
-        const z = (this.near + this.far) / (this.near + this.far);
-        const origin = this.unproject(vector2.toVector3(z));
-        const direction = this.vertexMatrix.zAxis;
-
-        return new Ray(origin, direction);
+    raycast(offset) {
+        if (!offset) {
+            offset = new Vector3();
+        }
+        offset[2] =  (this.near + this.far) / (this.near - this.far);
+        return new Ray(
+            this.unproject(offset),
+            this.zAxis.negate());
     }
 
     getScene(renderTarget, materialParameters) {

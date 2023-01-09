@@ -23,6 +23,10 @@ export default class Box {
         return this.isEmpty ? new Vector3(0, 0, 0) : this.max.clone().substract(this.min);
     }
 
+    get boundingSphere() {
+        return new Sphere(this.center, this.size.len * 0.5);
+    }
+
     translate(vector3) {
         this.min.add(vector3);
         this.max.add(vector3);
@@ -65,10 +69,6 @@ export default class Box {
         return this;
     }
 
-    get boundingSphere() {
-        return new Sphere(this.center, this.size.len * 0.5);
-    }
-
     setFromCenterAndSize(center, size) {
         const half = size.clone().scale(0.5);
 
@@ -79,9 +79,7 @@ export default class Box {
     }
 
     distanceToPoint(point) {
-        console.log(point, point.clone().clamp(this.min, this.max))
-        return point.clone().clamp(this.min, this.max).substract(point).len;
-
+        return point.clone().clamp(this.min, this.max).distance(point);
     }
 
     containsPoint(vector3) {
@@ -106,37 +104,39 @@ export default class Box {
 
     }
 
-    intersectsPlane(plane) {
-        // We compute the minimum and maximum dot product values. If those values
-        // are on the same side (back or front) of the plane, then there is no intersection.
-        let min, max;
-
-        if (plane.normal[0] > 0) {
-            min = plane.normal[0] * this.min[0];
-            max = plane.normal[0] * this.max[0];
-        } else {
-            min = plane.normal[0] * this.max[0];
-            max = plane.normal[0] * this.min[0];
+    normalFrom(point) {
+        const localPoint = point.clone().substract(this.center);
+        const size = this.size;
+        let normal = null;
+        let min = 0.001;
+        let distance = Math.abs(size[0] - Math.abs(localPoint[0]));
+        if (distance > min) {
+            min = distance;
+            if (Math.sign(localPoint[0]) < 0) {
+                normal = left;
+            } else {
+                normal = right;
+            }
         }
-
-        if (plane.normal[1] > 0) {
-            min += plane.normal[1] * this.min[1];
-            max += plane.normal[1] * this.max[1];
-        } else {
-            min += plane.normal[1] * this.max[1];
-            max += plane.normal[1] * this.min[1];
+        distance = Math.abs(size[1] - Math.abs(localPoint[1]));
+        if (distance > min) {
+            min = distance;
+            if (Math.sign(localPoint[1]) < 0) {
+                normal = bottom;
+            } else {
+                normal = top;
+            }
         }
-
-        if (plane.normal[2] > 0) {
-            min += plane.normal[2] * this.min[2];
-            max += plane.normal[2] * this.max[2];
-        } else {
-            min += plane.normal[2] * this.max[2];
-            max += plane.normal[2] * this.min[2];
+        distance = Math.abs(size[2] - Math.abs(localPoint[2]));
+        if (distance > min) {
+            min = distance;
+            if (Math.sign(localPoint[2]) < 0) {
+                normal = near;
+            } else {
+                normal = far;
+            }
         }
-
-        return (min <= - plane.constant && max >= - plane.constant);
-
+        return normal;
     }
 
     empty() {
@@ -150,3 +150,9 @@ export default class Box {
         return new Box(this.min, this.max);
     }
 }
+const left = new Vector3(-1, 0, 0);
+const right = new Vector3(1, 0, 0);
+const bottom = new Vector3(0, -1, 0);
+const top = new Vector3(0, 1, 0);
+const near = new Vector3(0, 0, -1);
+const far = new Vector3(0, 0, 1);

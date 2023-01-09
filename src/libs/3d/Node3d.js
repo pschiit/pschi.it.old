@@ -1,6 +1,7 @@
 import Color from '../core/Color';
 import Matrix4 from '../math/Matrix4';
 import Quaternion from '../math/Quaternion';
+import Ray from '../math/Ray';
 import Vector3 from '../math/Vector3';
 import Material from '../renderer/graphics/Material';
 import Render from '../renderer/graphics/Render';
@@ -8,8 +9,8 @@ import Render from '../renderer/graphics/Render';
 export default class Node3d extends Render {
     /** Create a new Node3d
     */
-    constructor() {
-        super();
+    constructor(material, vertexBuffer) {
+        super(material, vertexBuffer);
         const colorId = generateColorId();
         this.setParameter(Material.parameters.colorId, colorId);
         this._matrix = Matrix4.identityMatrix();
@@ -182,6 +183,16 @@ export default class Node3d extends Render {
                 node.clearMatrix();
             }
         });
+    }
+    
+    raycast(offset) {
+        const position = this.position;
+        if(offset){
+            position.add(offset);
+        }
+        return new Ray(
+            position, 
+            this.zAxis);
     }
 
     intersect(ray) {

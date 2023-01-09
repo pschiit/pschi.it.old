@@ -1,5 +1,6 @@
 import Matrix4 from '../../math/Matrix4';
 import Ray from '../../math/Ray';
+import Vector3 from '../../math/Vector3';
 import Material from '../../renderer/graphics/Material';
 import Camera from './Camera';
 
@@ -10,29 +11,29 @@ export default class PerspectiveCamera extends Camera {
         this._aspectRatio = aspectRatio;
         this._near = near;
         this._far = far;
-		this.focus = 10;
-		this.filmGauge = 35;
-		this.filmOffset = 0;
+        this.focus = 10;
+        this.filmGauge = 35;
+        this.filmOffset = 0;
     }
 
-    get focalLength(){
-		const vExtentSlope = Math.tan( Math.PI / 180 * 0.5 * this.fov );
+    get focalLength() {
+        const vExtentSlope = Math.tan(Math.PI / 180 * 0.5 * this.fov);
 
-		return 0.5 * this.filmHeigth / vExtentSlope;
+        return 0.5 * this.filmHeigth / vExtentSlope;
     }
 
-    set focalLength(v){
-		const vExtentSlope = 0.5 * this.filmHeigth / v;
+    set focalLength(v) {
+        const vExtentSlope = 0.5 * this.filmHeigth / v;
 
-		this.fov =180 / Math.PI * 2 * Math.atan( vExtentSlope );
+        this.fov = 180 / Math.PI * 2 * Math.atan(vExtentSlope);
     }
 
-    get filmWidth(){
-		return this.filmGauge * Math.min( this.aspectRatio, 1 );
+    get filmWidth() {
+        return this.filmGauge * Math.min(this.aspectRatio, 1);
     }
 
-    get filmHeigth(){
-		return this.filmGauge * Math.max( this.aspectRatio, 1 );
+    get filmHeigth() {
+        return this.filmGauge * Math.max(this.aspectRatio, 1);
     }
 
     get zoom() {
@@ -100,17 +101,23 @@ export default class PerspectiveCamera extends Camera {
 
     get projectionMatrix() {
         let result = this.getParameter(Material.parameters.projectionMatrix);
-        if(!result){
+        if (!result) {
             result = this.perspectiveMatrix.clone().multiply(this.vertexMatrix.inverse);
             this.setParameter(Material.parameters.projectionMatrix, result);
         }
         return result;
     }
 
-    raycast(vector2) {
-        const origin = this.position;
-        const direction = this.unproject(vector2.toVector3(0)).substract(origin).normalize();
-        return new Ray(origin, direction);
+    raycast(offset) {
+        console.log(offset);
+        if(!offset){
+            offset = new Vector3();
+        }else{
+            offset[2] = 0;
+        }
+        return new Ray(
+            this.position,
+            this.unproject(offset).substract(this.position).normalize());
     }
 
     getScene(renderTarget, materialParameters) {
