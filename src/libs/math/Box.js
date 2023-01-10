@@ -113,27 +113,27 @@ export default class Box {
         if (distance < min) {
             min = distance;
             if (Math.sign(localPoint[0]) < 0) {
-                normal = left;
+                normal = new Vector3(-1, 0, 0);
             } else {
-                normal = right;
+                normal =new Vector3(1, 0, 0);
             }
         }
         distance = Math.abs(size[1] - Math.abs(localPoint[1]));
         if (distance < min) {
             min = distance;
             if (Math.sign(localPoint[1]) < 0) {
-                normal = bottom;
+                normal = new Vector3(0, -1, 0);
             } else {
-                normal = top;
+                normal = new Vector3(0, 1, 0);
             }
         }
         distance = Math.abs(size[2] - Math.abs(localPoint[2]));
         if (distance < min) {
             min = distance;
             if (Math.sign(localPoint[2]) < 0) {
-                normal = near;
+                normal = new Vector3(0, 0, -1);
             } else {
-                normal = far;
+                normal = new Vector3(0, 0, 1);
             }
         }
         return normal;

@@ -41,7 +41,7 @@ export default class PerspectiveCamera extends Camera {
     }
 
     set zoom(v) {
-        if (v != this._zoom && v > 0) {
+        if (v != this._zoom && v > 1) {
             this._zoom = v;
             this._perspectiveMatrix = null;
             this.setParameter(Material.parameters.projectionMatrix, null);
@@ -92,8 +92,7 @@ export default class PerspectiveCamera extends Camera {
         if (!this._perspectiveMatrix) {
             this._perspectiveMatrix = Matrix4.perspectiveMatrix(this.fovY, this.aspectRatio, this.near, this.far, this.zoom);
             if (this.frustum) {
-                this.frustum.transform(this._perspectiveMatrix.inverse);
-                this.frustum.vertexMatrix;
+                this.frustum._matrix = this._perspectiveMatrix.inverse;
             }
         }
         return this._perspectiveMatrix;
@@ -109,7 +108,6 @@ export default class PerspectiveCamera extends Camera {
     }
 
     raycast(offset) {
-        console.log(offset);
         if(!offset){
             offset = new Vector3();
         }else{

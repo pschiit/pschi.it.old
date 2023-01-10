@@ -13,7 +13,6 @@ export default class OrthographicCamera extends Camera {
         this._top = top;
         this._near = near;
         this._far = far;
-        this.setParameter(Material.parameters.projectionMatrix, null);
     }
 
     get zoom() {
@@ -21,10 +20,9 @@ export default class OrthographicCamera extends Camera {
     }
 
     set zoom(v) {
-        if (v != this._zoom && v > 0) {
+        if (v != this._zoom && v > 1) {
             this._zoom = v;
             this._orthographicMatrix = null;
-            this.setParameter(Material.parameters.projectionMatrix, null);
         }
     }
 
@@ -36,7 +34,6 @@ export default class OrthographicCamera extends Camera {
         if (v != this._left) {
             this._left = v;
             this._orthographicMatrix = null;
-            this.setParameter(Material.parameters.projectionMatrix, null);
         }
     }
 
@@ -47,7 +44,6 @@ export default class OrthographicCamera extends Camera {
     set right(v) {
         if (v != this._right) {
             this._right = v;
-            this.setParameter(Material.parameters.projectionMatrix, null);
         }
     }
 
@@ -59,7 +55,6 @@ export default class OrthographicCamera extends Camera {
         if (v != this._bottom) {
             this._bottom = v;
             this._orthographicMatrix = null;
-            this.setParameter(Material.parameters.projectionMatrix, null);
         }
     }
 
@@ -71,7 +66,6 @@ export default class OrthographicCamera extends Camera {
         if (v != this._top) {
             this._top = v;
             this._orthographicMatrix = null;
-            this.setParameter(Material.parameters.projectionMatrix, null);
         }
     }
 
@@ -83,7 +77,6 @@ export default class OrthographicCamera extends Camera {
         if (v != this._near) {
             this._near = v;
             this._orthographicMatrix = null;
-            this.setParameter(Material.parameters.projectionMatrix, null);
         }
     }
 
@@ -95,17 +88,20 @@ export default class OrthographicCamera extends Camera {
         if (v != this._far) {
             this._far = v;
             this._orthographicMatrix = null;
-            this.setParameter(Material.parameters.projectionMatrix, null);
         }
     }
 
     set aspectRatio(v) {
         const right = this.top * v;
+        const bottom = -this.top;
+        if (this._bottom != bottom) {
+            this._bottom = bottom;
+            this._orthographicMatrix = null;
+        }
         if (this.right != right) {
             this._left = -right;
             this._right = right;
             this._orthographicMatrix = null;
-            this.setParameter(Material.parameters.projectionMatrix, null);
         }
     }
 
@@ -120,11 +116,9 @@ export default class OrthographicCamera extends Camera {
             let right = cx + dx;
             let top = cy + dy;
             let bottom = cy - dy;
-
             this._orthographicMatrix = Matrix4.orthographicMatrix(left, right, bottom, top, this.near, this.far);
             if (this.frustum) {
-                this.frustum.transform(this._orthographicMatrix.inverse);
-                this.frustum.vertexMatrix;
+                this.frustum._matrix = this._orthographicMatrix.inverse;
             }
         }
         return this._orthographicMatrix;
@@ -132,7 +126,7 @@ export default class OrthographicCamera extends Camera {
 
     get projectionMatrix() {
         let result = this.getParameter(Material.parameters.projectionMatrix);
-        if (!result) {
+        if (!result || !this._orthographicMatrix) {
             result = this.orthographicMatrix.clone().multiply(this.vertexMatrix.inverse);
             this.setParameter(Material.parameters.projectionMatrix, result);
         }
@@ -143,7 +137,7 @@ export default class OrthographicCamera extends Camera {
         if (!offset) {
             offset = new Vector3();
         }
-        offset[2] =  (this.near + this.far) / (this.near - this.far);
+        offset[2] = (this.near + this.far) / (this.near - this.far);
         return new Ray(
             this.unproject(offset),
             this.zAxis.negate());
