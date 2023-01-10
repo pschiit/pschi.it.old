@@ -59,36 +59,52 @@ export default class Editor extends App {
         const orbitStep = 1;
         const cameraMovement = new Vector2();
         const orbitMovement = new Vector2();
-        let clicked = -1;
         let zoom = 0;
 
-        canvas.addEventListener('pointerdown', e => {
-            if (e.pointerType == 'mouse') {
-                clicked = e.button;
-                canvas.setPointerCapture(e.pointerId);
-                updateMovement(e);
-            }
+        let clicked = -1;
+        let touchInput = [];
 
+        canvas.addEventListener('pointerdown', e => {
+            canvas.setPointerCapture(e.pointerId);
+            if (e.pointerType == 'touch') {
+                touchInput.push(e);
+                touchAdd(e);
+            } else if (e.pointerType == 'mouse') {
+                clicked = e.button;
+            } else if (e.pointerType == 'pen') {
+                clicked = 2;
+            }
+            updateMovement(e);
         });
         canvas.addEventListener('wheel', e => {
             zoom -= zoomStep * Math.sign(e.deltaY);
+            console.log(zoom)
         });
         canvas.addEventListener('pointerup', e => {
             canvas.releasePointerCapture(e.pointerId);
-            clicked = -1;
+            if (e.pointerType == 'mouse' || e.pointerType == 'pen') {
+                clicked = -1;
+            } else if (e.pointerType == 'touch') {
+                touchInput.splice(touchInput.indexOf(e), 1);
+                if (touchInput.length < 2) {
+                    distance = 0;
+                }
+            }
         });
         canvas.addEventListener('pointermove', updateMovement.bind(this));
 
         let draw = true;
-        let updateShadow = false;
+        let distance = 0;
         function updateMovement(e) {
-            if (clicked == 0) {
+            if (touchInput.length == 1 || clicked == 0) {
                 cameraMovement[0] -= cameraStep * e.movementX;
                 cameraMovement[1] += cameraStep * e.movementY;
             } else if (clicked == 2) {
                 addBoxel(e);
                 // orbitMovement[0] -= orbitStep * e.movementX;
                 // orbitMovement[1] += orbitStep * e.movementY;
+            } else if (touchInput.length > 1) {
+                //pinch to zoom
             }
         }
         let then = 0;
@@ -148,11 +164,18 @@ export default class Editor extends App {
                 const intersection = sprite.intersect(ray, true, true);
                 if (intersection) {
                     draw = false;
-                    updateShadow = true;
                     return sprite.set(new Boxel(intersection.floor(), Color.random()));
                 }
             }
             return null;
+        }
+
+        function touchAdd(e) {
+            setTimeout(() => {
+                if (touchInput.length == 0) {
+                    addBoxel(e);
+                }
+            }, 100);
         }
     }
 

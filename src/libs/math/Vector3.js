@@ -161,9 +161,9 @@ export default class Vector3 extends FloatArray {
      * @returns {Number} distance
      */
     distance(vector) {
-        let x = vector[0] - this[0];
-        let y = vector[1] - this[1];
-        let z = vector[2] - this[2];
+        const x = vector[0] - this[0];
+        const y = vector[1] - this[1];
+        const z = vector[2] - this[2];
 
         return Math.hypot(x, y, z);
     }
@@ -174,9 +174,9 @@ export default class Vector3 extends FloatArray {
      * @returns {Number} squared distance
      */
     squaredDistance(vector) {
-        let x = vector[0] - this[0];
-        let y = vector[1] - this[1];
-        let z = vector[2] - this[2];
+        const x = vector[0] - this[0];
+        const y = vector[1] - this[1];
+        const z = vector[2] - this[2];
 
         return x * x + y * y + z * z;
     }
