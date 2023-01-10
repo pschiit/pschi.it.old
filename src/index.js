@@ -40,9 +40,9 @@ function getApp(name) {
 }
 
 function run(time) {
-    time *= 0.001;
-    canvas.element.setAttribute('fps', Math.round(1 / (time - then)).toString());
-    then = time;
-    app.run();
+    const now = time * 0.001;
+    canvas.element.setAttribute('fps', Math.round(1 / (now - then)).toString());
+    then = now;
+    app.run(time);
     animationFrame = requestAnimationFrame(run);
 }

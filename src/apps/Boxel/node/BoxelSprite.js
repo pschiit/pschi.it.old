@@ -1,31 +1,27 @@
 import Node3d from '../../../libs/3d/Node3d';
-import Color from '../../../libs/core/Color';
 import Box from '../../../libs/math/Box';
 import Plane from '../../../libs/math/Plane';
 import BoxelBuffer from '../buffer/BoxelBuffer';
-import BoxelMaterial from '../material/BoxelMaterial';
-import Boxel from './Boxel';
+import BoxelLightMaterial from './BoxelLightMaterial';
 
 export default class BoxelSprite extends Node3d {
     constructor() {
         super();
         this.vertexBuffer = new BoxelBuffer();
-        this.material = new BoxelMaterial();
+        this.material = new BoxelLightMaterial();
         this.boxels = {};
         this.boundingBox = new Box();
         this.updated = false;
+        this.size = 256;
     }
 
     get count() {
         return Object.keys(this.boxels).length;
     }
 
-    intersect(ray) {
-        let intersection = ray.intersectPlane(planeXZ);
-        let distance = 0;
-        if (intersection) {
-            distance = intersection.distance(ray.origin);
-        }
+    intersect(ray, addBoxelNormal = false, intersectPlaneXZ = false) {
+        let intersection = intersectPlaneXZ ? ray.intersectPlane(planeXZ) : null;
+        let distance = Infinity;
         const spriteIntersection = ray.intersectBox(this.boundingBox);
         if (spriteIntersection) {
             for (const key in this.boxels) {
@@ -36,8 +32,9 @@ export default class BoxelSprite extends Node3d {
                     if (boxelDistance < distance) {
                         distance = boxelDistance;
                         intersection = boxelIntersection;
-                        const normal = boxel.normalFrom(boxelIntersection);
-                        intersection.add(normal.scale(0.5));
+                        if (addBoxelNormal) {
+                            intersection.add(boxel.normalFrom(boxelIntersection).scale(0.5));
+                        }
                     }
                 }
             }
@@ -46,35 +43,35 @@ export default class BoxelSprite extends Node3d {
         return intersection;
     }
 
-    search(position) {
-        return this.boxels[getKey(position)];
-    }
-
     set(boxel) {
         const key = getKey(boxel.position);
-        this.boxels[key] = boxel;
-        this.boundingBox.union(boxel);
-        this.updated = true;
+        if (key) {
+            this.boxels[key] = boxel;
+            this.boundingBox.union(boxel);
+            this.updated = true;
 
+            return boxel;
+        }
+        console.log('out of bound');
+        return null;
+    }
 
-        return boxel;
+    search(position) {
+        const key = getKey(position);
+        if (key) {
+            return this.boxels[key];
+        }
+        return null;
     }
 
     delete(position) {
         const key = getKey(position);
-        const removed = this.boxels[key];
-        this.boxels[key] = null;
-        this.updated = true;
+        if (key) {
+            const removed = this.boxels[key];
+            this.boxels[key] = null;
+            this.updated = true;
 
-        return removed;
-    }
-
-    setFromRay(ray, color = Color.random()) {
-        const position = this.intersect(ray);
-        if (position) {
-            const boxel = new Boxel(position.floor(), color);
-            this.set(boxel);
-            return boxel;
+            return removed;
         }
         return null;
     }
@@ -91,7 +88,7 @@ export default class BoxelSprite extends Node3d {
                 positions[index] = boxel.position[0];
                 positions[index + 1] = boxel.position[1];
                 positions[index + 2] = boxel.position[2];
-                colors.set(boxel.color.toUint8(),index);
+                colors.set(boxel.color.toVector3().scale(255).toUint8(), index);
             }
             this.vertexBuffer.instancePosition = positions;
             this.vertexBuffer.instanceColor = colors;
@@ -101,7 +98,10 @@ export default class BoxelSprite extends Node3d {
 }
 
 function getKey(position) {
-    return `${position[0]}.${position[1]}.${position[2]}`;
+    return Math.abs(position[0]) > halfSize
+        || Math.abs(position[1]) > halfSize
+        || Math.abs(position[2]) > halfSize ? null
+        : `${position[0]}.${position[1]}.${position[2]}`;
 }
 const planeXZ = new Plane();
-const size = Boxel.size;
+const halfSize = 127;

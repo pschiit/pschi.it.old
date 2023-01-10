@@ -34,7 +34,7 @@ export default class Camera extends Node3d {
     }
 
     set zoom(v) {
-        if (v != this._zoom && v > 0) {
+        if (v != this._zoom && v > 1) {
             this._zoom = v;
         }
     }

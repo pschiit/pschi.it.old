@@ -131,8 +131,8 @@ export default class Vector2 extends FloatArray {
      * @returns {Number} distance
      */
     distance(vector) {
-        let x = vector[0] - this[0];
-        let y = vector[1] - this[1];
+        const x = vector[0] - this[0];
+        const y = vector[1] - this[1];
 
         return Math.hypot(x, y);
     }
@@ -143,8 +143,8 @@ export default class Vector2 extends FloatArray {
      * @returns {Number} squared distance
      */
     squaredDistance(vector) {
-        let x = vector[0] - this[0];
-        let y = vector[1] - this[1];
+        const x = vector[0] - this[0];
+        const y = vector[1] - this[1];
 
         return x * x + y * y;
     }

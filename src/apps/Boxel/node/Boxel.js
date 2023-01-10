@@ -8,8 +8,9 @@ export default class Boxel extends Box {
      * @param {Color} color of Boxel
     */
     constructor(position = new Vector3(), color = Color.black()) {
-        super(position, position.clone().addScalar(Boxel.size));
+        super();
         this.color = color;
+        this.position = position;
     }
 
     get position() {
@@ -18,7 +19,7 @@ export default class Boxel extends Box {
 
     set position(v) {
         this.min = v;
-        this.max = v.addScalar(Boxel.size);
+        this.max = v.clone().addScalar(Boxel.size);
     }
 
     static size = 1;

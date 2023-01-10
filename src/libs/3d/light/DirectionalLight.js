@@ -1,10 +1,9 @@
-import RenderTarget from '../../renderer/graphics/RenderTarget';
+import Color from '../../core/Color';
+import Light from '../../renderer/graphics/Light';
 import Texture from '../../renderer/graphics/Texture';
 import OrthographicCamera from '../camera/OrthographicCamera';
 import LightMaterial from '../material/LightMaterial';
 import Node3d from '../Node3d';
-import Light from '../../renderer/graphics/Light';
-import Color from '../../core/Color';
 
 export default class DirectionalLight extends Node3d {
     constructor(color, position, target) {
@@ -22,7 +21,7 @@ export default class DirectionalLight extends Node3d {
         if (v != this.shadow) {
             if (v) {
                 if (!v.data) {
-                    v.data = new OrthographicCamera(-10, 10, -10, 10, 0, 100);
+                    v.data = new OrthographicCamera(-10, 10, -10, 10, 0, 1000);
                     v.data.filters.push('castShadow');
                 }
                 if (v.data.parent != this) {
