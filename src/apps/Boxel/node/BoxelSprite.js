@@ -49,9 +49,9 @@ export default class BoxelSprite extends Node3d {
             this.boxels[key] = boxel;
             this.boundingBox.union(boxel);
             this.updated = true;
-
             return boxel;
         }
+        console.log(boxel.position);
         console.log('out of bound');
         return null;
     }

@@ -3,24 +3,20 @@ import Lights from './apps/lights/Lights';
 import HtmlNode from './libs/html/HtmlNode';
 import WebGLCanvas from './libs/html/WebGLCanvas';
 
-const defaultStyle = {
-    width: '100%',
-    height: '100%',
-    margin: 0,
-    padding: 0,
-    background: 'transparent',
-    'touch-action': 'none'
-};
-HtmlNode.document.style = defaultStyle;
 const body = HtmlNode.body;
-body.style = defaultStyle;
-const canvas = new WebGLCanvas( {antialias: true});
-body.appendChild(canvas);
-canvas.fitParent();
-
-window.onresize = (e) => {
-    canvas.fitParent();
+body.style = {
+    margin: 0,
+    display: 'block',
 };
+const canvas = new WebGLCanvas();
+body.appendChild(canvas);
+canvas.style = {
+    width: '100vw',
+    height: '100vh',
+    display: 'block',
+    background: 'transparent',
+    'touch-action': 'none',
+}
 
 let app = getApp(window.location.pathname.replace('/', ''));
 let animationFrame = requestAnimationFrame(run);
@@ -34,7 +30,7 @@ function getApp(name) {
         case 'lights':
             return new Lights(canvas);
         case 'editor':
-            default:
+        default:
             return new Editor(canvas);
     }
 }

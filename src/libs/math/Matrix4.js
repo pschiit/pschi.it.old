@@ -57,9 +57,10 @@ export default class Matrix4 extends FloatArray {
     }
 
     /** Set the Matrix4 position component 
-     * @return {Vector3} position vector
+     * @param {Vector3} v position Vector3
     */
     set positionVector(v) {
+        console.log(v)
         this[12] = v[0];
         this[13] = v[1];
         this[14] = v[2];
@@ -76,7 +77,7 @@ export default class Matrix4 extends FloatArray {
     }
 
     /** Set the Matrix4 scale component 
-     * @return {Vector3} scale vector
+     * @param {Vector3} v scale Vector3
     */
     set scaleVector(v) {
         this[0] = v[0];

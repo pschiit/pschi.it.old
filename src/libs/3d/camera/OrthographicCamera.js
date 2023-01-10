@@ -94,6 +94,11 @@ export default class OrthographicCamera extends Camera {
     set aspectRatio(v) {
         const right = this.top * v;
         const bottom = -this.top;
+        const far = this.top * 10;
+        if (this._far != far) {
+            this._far = far;
+            this._orthographicMatrix = null;
+        }
         if (this._bottom != bottom) {
             this._bottom = bottom;
             this._orthographicMatrix = null;
