@@ -1,7 +1,5 @@
 import Node from '../core/Node';
-import Ray from '../math/Ray';
 import Vector2 from '../math/Vector2';
-import Vector3 from '../math/Vector3';
 import GraphicsNode from '../renderer/graphics/GraphicsNode';
 import RenderTarget from '../renderer/graphics/RenderTarget';
 import WebGLRenderer from '../renderer/graphics/webgl/WebGLRenderer';
@@ -33,18 +31,32 @@ export default class WebGLCanvas extends Canvas {
         this.element.addEventListener('contextmenu', (ev) => {
             ev.preventDefault(); // this will prevent browser contextmenu default behavior on this canvas
         });
+
+        // this.element.onclick = () => {
+        //     if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        //         && this.element.requestFullscreen) {
+        //         this.element.requestFullscreen();
+        //     }
+        // }
     }
 
     /** Return the RenderTarget of the current HtmlNode's HTMLElement
      * @return {RenderTarget} RenderTarget of the HTMLElement
     */
     get renderTarget() {
-        this._renderTarget.width = this.clientWidth;
-        this._renderTarget.height = this.clientHeight;
+        const width = this.clientWidth * this.pixelRatio;
+        const height = this.clientHeight * this.pixelRatio;
+        if (this.width !== width) {
+            this.width = width;
+        }
+        if (this.height !== height) {
+            this.height = height;
+        }
+        this._renderTarget.width = this.width;
+        this._renderTarget.height = this.height;
 
         return this._renderTarget;
     }
-
 
     /** Return the WebGLRenderer context of the current HtmlNode's HTMLElement
      * @return {WebGLRenderer} WebGLRenderer of the HTMLElement

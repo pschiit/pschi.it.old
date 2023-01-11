@@ -348,7 +348,7 @@ function render(renderer, renderTarget) {
             }
             if (!renderer.scissor?.equals(scissor)) {
                 renderer.gl.scissor(scissor[0], scissor[1], scissor[2], scissor[3]);
-                renderer.scissor = scissor;
+                renderer.scissor = scissor.clone();
             }
         } else if (renderer.scissor) {
             renderer.gl.disable(renderer.gl.SCISSOR_TEST);
@@ -356,11 +356,11 @@ function render(renderer, renderTarget) {
         }
         if (!renderer.viewport.equals(viewport)) {
             renderer.gl.viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-            renderer.viewport = viewport;
+            renderer.viewport.set(viewport);
         }
         if (!renderer.clearColor.equals(clearColor)) {
             renderer.gl.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
-            renderer.clearColor = clearColor;
+            renderer.clearColor.set(clearColor);
         }
         clear();
         const cache = {};

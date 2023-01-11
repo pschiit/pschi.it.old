@@ -93,7 +93,17 @@ export default class HtmlNode extends Node {
      * @return {Number} width / height of the HTMLElement
     */
     get aspectRatio() {
-        return this.element.clientWidth / this.element.clientHeight;
+        return this.clientWidth / this.clientHeight;
+    }
+
+    get pixelRatio(){
+        return window.devicePixelRatio;
+    }
+
+    vibrate(pattern){
+        if(navigator.vibrate){
+            navigator.vibrate(pattern);
+        }
     }
 
     /** Set the width and height of the current HtmlNode's HTMLElement

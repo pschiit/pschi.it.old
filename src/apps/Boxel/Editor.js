@@ -1,15 +1,14 @@
 import VertexBufferManager from '../../libs/3d/buffer/VertexBufferManager';
 import OrthographicCamera from '../../libs/3d/camera/OrthographicCamera';
-import PerspectiveCamera from '../../libs/3d/camera/PerspectiveCamera';
 import DirectionalLight from '../../libs/3d/light/DirectionalLight';
 import Grid from '../../libs/3d/node/Grid';
 import Node3d from '../../libs/3d/Node3d';
 import App from '../../libs/core/App';
 import Color from '../../libs/core/Color';
+import Button from '../../libs/html/Button';
+import ColorPicker from '../../libs/html/ColorPicker';
 import Vector2 from '../../libs/math/Vector2';
 import Vector3 from '../../libs/math/Vector3';
-import RenderTarget from '../../libs/renderer/graphics/RenderTarget';
-import Boxel from './node/Boxel';
 import BoxelSprite from './node/BoxelSprite';
 
 export default class Editor extends App {
@@ -21,117 +20,247 @@ export default class Editor extends App {
         const canvas = this.canvas;
         canvas.renderTarget.backgroundColor = Color.white();
 
+        //color picker
+        const colorInput = new ColorPicker();
+        canvas.parent.appendChild(colorInput);
+        colorInput.style = {
+            position: 'absolute',
+            left: '0vw',
+            top: '0vh',
+        }
+        colorInput.color = Color.white();
+        let mode = -1;
+        function updateMode(value) {
+            mode = value ?? ++mode % 3;
+            if (mode === 0) {
+                button.text = '+';
+            } else if (mode === 1) {
+                button.text = '=';
+            } else if (mode === 2) {
+                button.text = '-';
+            }
+        }
+        const button = new Button(() => { updateMode() });
+        updateMode();
+        colorInput.appendChild(button);
+
         const bufferManager = new VertexBufferManager();
 
         const world = new Node3d();
 
-        const sun = new DirectionalLight(
-            Color.white(),
-            new Vector3(10, 20, 10),
-            new Vector3(0, 0, 0));
-        world.appendChild(sun);
-
-        const orbit = new Node3d();
-        orbit.translate(0, 0, 0);
-        world.appendChild(orbit);
-
         const sprite = new BoxelSprite();
         world.appendChild(sprite);
         bufferManager.add(sprite.vertexBuffer);
-        sprite.castShadow = true;
 
-        const scale = canvas.renderTarget.maxY * 0.5;
-        const camera = new OrthographicCamera(-scale, scale, -scale, scale, 1, 2000);
-        camera.translate(scale, scale, -scale);
-        camera.zoom = scale / 6;
-        camera.target = orbit;
+        // for (let i = 0; i < 5000; i++) {
+        //     sprite.set(Vector3.random().scale(100), Color.random());
+        // }
+
+        //Camera
+        const orbit = new Node3d();
+        world.appendChild(orbit);
+        orbit.translate(0, 0, 0);
+        const camera = new OrthographicCamera();
+        camera.zoom = 128;
         orbit.appendChild(camera);
+        camera.target = orbit;
         this.camera = camera;
 
-        const grid = new Grid(camera);
-        grid.material.sizes = new Vector2(1, 10);
-        world.appendChild(grid);
-        bufferManager.add(grid.vertexBuffer);
-        grid.fading = scale / camera.zoom * 4;
+        // lights
+        const lightScale = 32;
+        const sun = new DirectionalLight(
+            Color.white(),
+            new Vector3(lightScale, lightScale, lightScale),
+            new Vector3());
+        world.appendChild(sun);
 
-        const zoomStep = 1;
+        const grid = new Grid(camera);
+        world.appendChild(grid);
+        grid.material.sizes = new Vector2(1, 10);
+        bufferManager.add(grid.vertexBuffer);
+
+        //control
+        const zoomStep = 0.1;
         const cameraStep = 1;
         const orbitStep = 1;
         const cameraMovement = new Vector2();
         const orbitMovement = new Vector2();
         let zoom = 0;
+        let rightClick = null;
+        let middleClick = null;
+        let leftClick = null;
+        let castingBoxel = null;
+        let inputs = [];
+        let distance = 0;
 
-        let clicked = -1;
-        let touchInput = [];
+        let canDraw = true;
+        function addBoxel(normalizedVector2) {
+            if (canDraw) {
+                const ray = camera.raycast(normalizedVector2.toVector3());
+                const result = mode === 2 ? sprite.raycastBoxel(ray)
+                    : sprite.raycastBoxel(ray, colorInput.color, mode === 0);
+                if (result) {
+                    canDraw = false;
+                    canvas.vibrate(50);
+                }
+            }
+            return null;
+        }
 
+        canvas.addEventListener('wheel', e => {
+            zoom -= e.deltaY * zoomStep;
+        });
         canvas.addEventListener('pointerdown', e => {
             canvas.setPointerCapture(e.pointerId);
-            if (e.pointerType == 'touch') {
-                touchInput.push(e);
-                touchAdd(e);
+            if (e.pointerType == 'touch' && inputs.length < 2) {
+                inputs.push(e);
+                if (inputs.length === 1) {
+                    setTimeout(() => {
+                        if (inputs.length == 0 || inputs[0] === e) {
+                            castingBoxel = e.pointerId;
+                            addBoxel(canvas.getNormalizedPointerPosition(e));
+                        }
+                    }, 75);
+                } else {
+                    if (castingBoxel == inputs[0].pointerId) {
+                        castingBoxel = null;
+                    }
+                }
             } else if (e.pointerType == 'mouse') {
-                clicked = e.button;
+                if (e.button === 0) {
+                    leftClick = e;
+                    castingBoxel = e.pointerId;
+                    addBoxel(canvas.getNormalizedPointerPosition(e));
+                } else if (e.button === 2) {
+                    rightClick = e;
+                } else if (e.button === 1) {
+                    middleClick = e;
+                }
             } else if (e.pointerType == 'pen') {
-                clicked = 2;
+                castingBoxel = e.pointerId;
             }
-            updateMovement(e);
-        });
-        canvas.addEventListener('wheel', e => {
-            zoom -= zoomStep * Math.sign(e.deltaY);
-            console.log(zoom)
+
         });
         canvas.addEventListener('pointerup', e => {
             canvas.releasePointerCapture(e.pointerId);
-            if (e.pointerType == 'mouse' || e.pointerType == 'pen') {
-                clicked = -1;
-            } else if (e.pointerType == 'touch') {
-                touchInput.splice(touchInput.indexOf(e), 1);
-                if (touchInput.length < 2) {
-                    distance = 0;
+            if (castingBoxel == e.pointerId) {
+                castingBoxel = null;
+            }
+            if (e.pointerType == 'mouse') {
+                if (leftClick && e.pointerId == leftClick.pointerId) {
+                    leftClick = null;
+                } else if (rightClick && e.pointerId == rightClick.pointerId) {
+                    rightClick = null;
+                } else if (middleClick && e.pointerId == middleClick.pointerId) {
+                    middleClick = null;
+                }
+            }
+            if (inputs.length > 0) {
+                const index = inputs.findIndex(i => i.pointerId == e.pointerId);
+                if (index !== -1) {
+                    inputs.splice(index, 1);
+                    if (inputs.length < 1) {
+                        distance = 0;
+                    }
                 }
             }
         });
-        canvas.addEventListener('pointermove', updateMovement.bind(this));
+        canvas.addEventListener('pointermove', (e) => {
+            if (castingBoxel == e.pointerId) {
+                addBoxel(canvas.getNormalizedPointerPosition(e));
+            } else if (e.pointerType == 'mouse') {
+                if (middleClick && e.pointerId == middleClick.pointerId) {
+                    orbitMovement[0] -= orbitStep * e.movementX;
+                    orbitMovement[1] += orbitStep * e.movementY;
+                    middleClick = e;
+                } else if (rightClick && e.pointerId == rightClick.pointerId) {
+                    cameraMovement[0] -= cameraStep * e.movementX;
+                    cameraMovement[1] += cameraStep * e.movementY;
+                    rightClick = e;
+                }
+            } else if (e.pointerType == 'touch') {
+                if (inputs.length === 1) {
+                    inputs[0] = e;
+                    const pixelRatio = canvas.pixelRatio;
+                    cameraMovement[0] -= cameraStep * pixelRatio * e.movementX;
+                    cameraMovement[1] += cameraStep * pixelRatio * e.movementY;
+                } else {
+                    const index = inputs.findIndex(i => i.pointerId == e.pointerId);
+                    if (index !== -1) {
+                        inputs[index] = e;
+                    }
+                    const newDistance = new Vector2(inputs[0].pageX, inputs[0].pageY)
+                        .distance(new Vector2(inputs[1].pageX, inputs[1].pageY));
 
-        let draw = true;
-        let distance = 0;
-        function updateMovement(e) {
-            if (touchInput.length == 1 || clicked == 0) {
-                cameraMovement[0] -= cameraStep * e.movementX;
-                cameraMovement[1] += cameraStep * e.movementY;
-            } else if (clicked == 2) {
-                addBoxel(e);
-                // orbitMovement[0] -= orbitStep * e.movementX;
-                // orbitMovement[1] += orbitStep * e.movementY;
-            } else if (touchInput.length > 1) {
-                //pinch to zoom
+                    const deltaDistance = newDistance - distance;
+                    if (distance !== 0 && Math.abs(deltaDistance) > 1) {
+                        zoom += deltaDistance * zoomStep;
+                    } else {
+                        const pixelRatio = canvas.pixelRatio;
+                        orbitMovement[0] -= orbitStep * e.movementX;
+                        orbitMovement[1] += orbitStep * e.movementY;
+                    }
+                    distance = newDistance;
+                }
             }
-        }
+        });
+        this.canvas.addEventListener('keydown', (e) => {
+            switch (e.code) {
+                case 'a':
+                case 'KeyA':
+                    updateMode(0);
+                    break;
+                case 'u':
+                case 'KeyU':
+                    updateMode(1);
+                    break;
+                case 'd':
+                case 'KeyD':
+                case 'r':
+                case 'KeyR':
+                    updateMode(2);
+                    break;
+                case 'Space':
+                    updateMode();
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        //update
         let then = 0;
+        let updateGrid = true;
+        let previousScale = 0;
         this.updateCamera = (time) => {
-            const renderTarget = canvas.renderTarget
-            const scale = renderTarget.maxY * 0.5;
             time *= 0.001
             if (time > then) {
-                draw = true;
                 then = time + 0.115;
+                canDraw = true;
             }
-            let updateGrid = false;
+
+            const renderTarget = canvas.renderTarget;
+            const scale = renderTarget.maxY * 0.5;
+
             if (camera.top != scale) {
                 camera.top = scale;
+                camera.translate(new Vector3(-previousScale, -previousScale, -previousScale)).translate(new Vector3(scale, scale, scale));
                 camera.aspectRatio = renderTarget.aspectRatio;
-                updateGrid = true;
+                previousScale = scale;
             }
             if (zoom) {
                 camera.zoom += zoom;
                 zoom = 0;
                 updateGrid = true;
             }
-            if (updateGrid) {
-                grid.fading = scale / camera.zoom * 4;
-            }
             if (camera.zoom > scale) {
                 camera.zoom = scale;
+            } else if (camera.zoom < 6) {
+                camera.zoom = 6;
+            }
+            if (updateGrid) {
+                grid.fading = scale / camera.zoom * 4;
+                updateGrid = false;
             }
             let cameraTranslation = new Vector3();
             if (cameraMovement[0]) {
@@ -156,26 +285,6 @@ export default class Editor extends App {
                 orbit.translate(orbitTranslation);
                 orbitMovement.scale(0);
             }
-        }
-
-        function addBoxel(e) {
-            if (draw) {
-                const ray = camera.raycast(canvas.getNormalizedPointerPosition(e).toVector3());
-                const intersection = sprite.intersect(ray, true, true);
-                if (intersection) {
-                    draw = false;
-                    return sprite.set(new Boxel(intersection.floor(), Color.random()));
-                }
-            }
-            return null;
-        }
-
-        function touchAdd(e) {
-            setTimeout(() => {
-                if (touchInput.length == 0) {
-                    addBoxel(e);
-                }
-            }, 100);
         }
     }
 

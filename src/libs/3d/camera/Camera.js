@@ -103,7 +103,7 @@ export default class Camera extends Node3d {
 function setFrustum(node) {
     if (!frustumBuffer) {
         frustumBuffer = new BoxBuffer(2, 2, 2);
-        frustumBuffer.setColor(Color.white());
+        frustumBuffer.setColor(Color.red());
         frustumBuffer.setPrimitive(Render.primitive.lines);
     }
     if (!frustumMaterial) {

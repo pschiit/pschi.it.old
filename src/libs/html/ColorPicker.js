@@ -1,0 +1,32 @@
+import Color from '../core/Color';
+import Div from './Div';
+import Input from './Input';
+import Label from './Label';
+
+export default class ColorPicker extends Div {
+    /** Create a new ColorPicker
+    */
+    constructor(name) {
+        super();
+        const color = new Color(0, 0, 0, 1);
+        this._color = color;
+
+        this.input = new Input('color');
+        this.input.element.addEventListener('input', (e) => {
+            color.hex = parseInt(e.target.value.substring(1), 16);
+        });
+        const label = new Label(this.input, name);
+        this.appendChild(label, this.input);
+    }
+
+    get color() {
+        return this._color;
+    }
+
+    set color(v) {
+        if (v) {
+            this.color.set(v);
+            this.input.element.value = '#' + v.toString();
+        }
+    }
+}

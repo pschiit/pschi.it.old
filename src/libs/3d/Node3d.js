@@ -13,8 +13,8 @@ export default class Node3d extends Render {
         super(material, vertexBuffer);
         const colorId = generateColorId();
         this.setParameter(Material.parameters.colorId, colorId);
-        this._matrix = Matrix4.identityMatrix();
         this._quaternion = new Quaternion();
+        this._matrix = Matrix4.identityMatrix();
 
         this.castShadow = false;
         this.visible = true;
@@ -29,8 +29,8 @@ export default class Node3d extends Render {
         let vertexMatrix = this.getParameter(Material.parameters.vertexMatrix);
         if (!vertexMatrix) {
             const parentMatrix = this.parent?.vertexMatrix;
-            vertexMatrix = parentMatrix instanceof Matrix4 ? parentMatrix.clone().multiply(this._matrix)
-                : this._matrix.clone();
+            vertexMatrix = parentMatrix instanceof Matrix4 ? parentMatrix.clone().multiply(this.matrix)
+                : this.matrix.clone();
             if (this.target) {
                 vertexMatrix.target(this.target);
             }
@@ -103,6 +103,21 @@ export default class Node3d extends Render {
         return this.vertexMatrix.quaternion;
     }
 
+    /** Return the Matrix4
+     * @return {Matrix4} node Matrix4
+    */
+    get matrix() {
+        return this._matrix;
+    }
+
+    /** Set the Matrix4 of the current Node3d
+     * @param {Matrix4} v Matrix4
+    */
+    set matrix(v) {
+        this._matrix = v;
+        this.clearVertexMatrix();
+    }
+
     /** Translate the Node3d by a Vector3 array
      * @param {Number|Vector3} x first coordinate of the  Vector3
      * @param {Number} y second coordinate of the  Vector3
@@ -110,7 +125,7 @@ export default class Node3d extends Render {
      * @return the current Node3d
     */
     translate(x = 0, y = 0, z = 0) {
-        this._matrix.translate(x instanceof Vector3 ? x : new Vector3(x, y, z));
+        this.matrix.translate(x instanceof Vector3 ? x : new Vector3(x, y, z));
         this.clearVertexMatrix();
 
         return this;
@@ -123,7 +138,7 @@ export default class Node3d extends Render {
      * @return the current Node3d
     */
     rescale(x = 0, y = 0, z = 0) {
-        this._matrix.scale(x instanceof Vector3 ? x : new Vector3(x, y, z));
+        this.matrix.scale(x instanceof Vector3 ? x : new Vector3(x, y, z));
         this.clearVertexMatrix();
 
         return this;
@@ -155,7 +170,7 @@ export default class Node3d extends Render {
      * @return the current Node3d
     */
     lookAt(x = 0, y = 0, z = 0) {
-        this._matrix.target(x instanceof Vector3 ? x : new Vector3(x, y, z));
+        this.matrix.target(x instanceof Vector3 ? x : new Vector3(x, y, z));
         this.clearVertexMatrix();
 
         return this;
@@ -166,7 +181,7 @@ export default class Node3d extends Render {
      * @return the current Node3d
     */
     transform(matrix) {
-        this._matrix.multiply(matrix);
+        this.matrix.multiply(matrix);
         this.clearVertexMatrix();
 
         return this;

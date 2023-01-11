@@ -5,7 +5,6 @@ import Operation from '../../renderer/graphics/shader/Operation';
 import Parameter from '../../renderer/graphics/shader/Parameter';
 import Shader from '../../renderer/graphics/shader/Shader';
 import ShaderFunction from '../../renderer/graphics/shader/ShaderFunction';
-import ShadowMaterial from './ShadowMaterial';
 
 export default class LightMaterial extends Material {
     constructor() {
@@ -865,5 +864,22 @@ export default class LightMaterial extends Material {
         },
     };
 
-    static shadowMaterial = new ShadowMaterial();
+    static shadowMaterial = new Material();
 }
+
+LightMaterial.shadowMaterial.culling = Material.culling.front;
+LightMaterial.shadowMaterial.setParameter(Material
+    .parameters.projectionMatrix);
+LightMaterial.shadowMaterial.vertexShader = Shader.vertexShader([
+    Operation.equal(
+        Shader.parameters.output,
+        Operation.multiply(
+            Material.parameters.projectionMatrix,
+            Material.parameters.vertexMatrix,
+            Material.parameters.position))
+]);
+LightMaterial.shadowMaterial.fragmentShader = Shader.fragmentShader([
+    Operation.equal(
+        Shader.parameters.output,
+        Operation.toVector4(0, 0, Operation.selection(Shader.parameters.fragmentCoordinate, '.z'), 1))
+]);

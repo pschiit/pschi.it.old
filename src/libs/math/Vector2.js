@@ -126,8 +126,8 @@ export default class Vector2 extends FloatArray {
     }
 
     /**
-     * Calculates the euclidian distance between two Vector3
-     * @param {Vector3} vector the second operand
+     * Calculates the euclidian distance between two Vector2
+     * @param {Vector2} vector the second operand
      * @returns {Number} distance
      */
     distance(vector) {
@@ -138,8 +138,8 @@ export default class Vector2 extends FloatArray {
     }
 
     /**
-     * Calculates the squared euclidian distance between two Vector3
-     * @param {Vector3} vector the second operand
+     * Calculates the squared euclidian distance between two Vector2
+     * @param {Vector2} vector the second operand
      * @returns {Number} squared distance
      */
     squaredDistance(vector) {

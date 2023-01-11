@@ -1,11 +1,9 @@
 import Render from '../../../libs/renderer/graphics/Render';
 import VertexBuffer from '../../../libs/renderer/graphics/VertexBuffer';
-import BoxelMaterial from '../material/BoxelMaterial';
-import Buffer from '../../../libs/core/Buffer';
 import Boxel from '../node/Boxel';
 
 export default class BoxelBuffer extends VertexBuffer {
-    constructor(positions, colors) {
+    constructor() {
         super();
 
         this.primitive = Render.primitive.triangles;
@@ -79,39 +77,6 @@ export default class BoxelBuffer extends VertexBuffer {
             0, -1, 0,
             0, -1, 0,
         ]);
-
-        this.instancePositionLength = 3;
-        this.instanceColorLength = 3;
-        this.instancePosition = positions || [];
-        this.instanceColor = colors || [];
-        this.instanceColor.normalize = true;
-        this.instancePosition.usage = Buffer.usage.stream;
-        this.instanceColor.usage = Buffer.usage.stream;
-    }
-
-    get count() {
-        return this.instancePosition?.length > 0 ? this.index.length : 0;
-    }
-
-    set count(v) {
-        this._count = v;
-    }
-
-
-    get instancePosition() {
-        return this.getParameter(BoxelMaterial.parameters.instancePosition);
-    }
-
-    set instancePosition(v) {
-        this.setParameter(BoxelMaterial.parameters.instancePosition, v, this.instancePositionLength, 1);
-    }
-
-    get instanceColor() {
-        return this.getParameter(BoxelMaterial.parameters.instanceColor);
-    }
-
-    set instanceColor(v) {
-        this.setParameter(BoxelMaterial.parameters.instanceColor, v, this.instanceColorLength, 1);
     }
 }
 
