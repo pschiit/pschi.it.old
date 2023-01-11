@@ -96,6 +96,16 @@ export default class HtmlNode extends Node {
         return this.clientWidth / this.clientHeight;
     }
 
+    get pixelRatio(){
+        return window.devicePixelRatio;
+    }
+
+    vibrate(pattern){
+        if(navigator.vibrate){
+            navigator.vibrate(pattern);
+        }
+    }
+
     /** Set the width and height of the current HtmlNode's HTMLElement
      * to the parent's HTMLElement.clientWidth/clientHeight
      * @return the current HtmlNode

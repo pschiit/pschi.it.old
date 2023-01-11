@@ -1,4 +1,4 @@
-export default class  Angle {
+export default class Angle {
     /** Convert radians to degrees
      * @param {Number} radian Angle in radians
      * @return {Number} angle in degrees
@@ -12,6 +12,9 @@ export default class  Angle {
      * @return {Number} angle in radians
     */
     static toRadian(degree) {
-        return Math.PI * (degree) / 180.0;
+        return degree * Math.PI / 180;
     }
+
+    static degreeToRadian = Math.PI / 180;
+    static radianToDegree = 180 / Math.PI;
 }

@@ -9,8 +9,12 @@ export default class DirectionalLight extends Node3d {
     constructor(color, position, target) {
         super();
         this.light = new Light(color);
-        this.translate(position);
-        this.target = target;
+        if (position) {
+            this.translate(position);
+        }
+        if (target) {
+            this.target = target;
+        }
     }
 
     get shadow() {
@@ -22,7 +26,9 @@ export default class DirectionalLight extends Node3d {
             if (v) {
                 if (!v.data) {
                     v.data = new OrthographicCamera(-10, 10, -10, 10, 0, 1000);
-                    v.data.filters.push('castShadow');
+                }
+                if (!v.data.filters.some(i => i == shadowFilter)) {
+                    v.data.filters.push(shadowFilter);
                 }
                 if (v.data.parent != this) {
                     this.appendChild(v.data);
@@ -73,3 +79,4 @@ export default class DirectionalLight extends Node3d {
         return this;
     }
 }
+const shadowFilter = 'castShadow';

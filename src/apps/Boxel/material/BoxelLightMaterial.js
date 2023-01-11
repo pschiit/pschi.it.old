@@ -1,13 +1,12 @@
-import BoxelMaterial from '../material/BoxelMaterial';
 import LightMaterial from '../../../libs/3d/material/LightMaterial';
-import Material from '../../../libs/renderer/graphics/Material';
 import Color from '../../../libs/core/Color';
-import Operation from '../../../libs/renderer/graphics/shader/Operation';
-import Shader from '../../../libs/renderer/graphics/shader/Shader';
-import Parameter from '../../../libs/renderer/graphics/shader/Parameter';
 import Vector3 from '../../../libs/math/Vector3';
+import Material from '../../../libs/renderer/graphics/Material';
+import Operation from '../../../libs/renderer/graphics/shader/Operation';
+import Parameter from '../../../libs/renderer/graphics/shader/Parameter';
+import Shader from '../../../libs/renderer/graphics/shader/Shader';
 import ShaderFunction from '../../../libs/renderer/graphics/shader/ShaderFunction';
-import ShadowMaterial from '../../../libs/3d/material/ShadowMaterial';
+import BoxelMaterial from './BoxelMaterial';
 
 export default class BoxelLightMaterial extends Material {
     constructor() {
@@ -872,5 +871,27 @@ export default class BoxelLightMaterial extends Material {
         },
     };
 
-    static shadowMaterial = new ShadowMaterial();
+    static shadowMaterial = new Material();
 }
+
+BoxelLightMaterial.shadowMaterial.setParameter(Material
+    .parameters.projectionMatrix);
+const position = Parameter.vector4('position');
+BoxelLightMaterial.shadowMaterial.vertexShader = Shader.vertexShader([
+    Operation.equal(
+        Operation.declare(position),
+        Operation.add(
+            Material.parameters.position,
+            Operation.toVector4(BoxelMaterial.parameters.instancePosition, 0))),
+    Operation.equal(
+        Shader.parameters.output,
+        Operation.multiply(
+            Material.parameters.projectionMatrix,
+            Material.parameters.vertexMatrix,
+            position))
+]);
+BoxelLightMaterial.shadowMaterial.fragmentShader = Shader.fragmentShader([
+    Operation.equal(
+        Shader.parameters.output,
+        Operation.toVector4(0, 0, Operation.selection(Shader.parameters.fragmentCoordinate, '.z'), 1))
+]);

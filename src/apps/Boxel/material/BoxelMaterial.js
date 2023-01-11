@@ -22,7 +22,6 @@ export default class BoxelMaterial extends Material {
                 Shader.parameters.output,
                 Operation.multiply(
                     Material.parameters.projectionMatrix,
-                    Material.parameters.vertexMatrix,
                     position)),
             Operation.equal(vColor, BoxelMaterial.parameters.instanceColor),]);
 

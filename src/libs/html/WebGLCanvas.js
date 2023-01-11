@@ -40,10 +40,6 @@ export default class WebGLCanvas extends Canvas {
         // }
     }
 
-    get pixelRatio(){
-        return window.devicePixelRatio;
-    }
-
     /** Return the RenderTarget of the current HtmlNode's HTMLElement
      * @return {RenderTarget} RenderTarget of the HTMLElement
     */

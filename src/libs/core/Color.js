@@ -17,9 +17,6 @@ export default class Color extends Vector4 {
     }
 
     set hex(v) {
-        v = Math.floor(v);
-        v = Math.abs(v);
-
         this.r = (v >> 16 & 255) / 255;
         this.g = (v >> 8 & 255) / 255;
         this.b = (v & 255) / 255;
