@@ -70,7 +70,7 @@ export default class Editor extends App {
         const lightScale = 32;
         const sun = new DirectionalLight(
             Color.white(),
-            new Vector3(-lightScale, lightScale, lightScale),
+            new Vector3(-lightScale, lightScale, -lightScale),
             new Vector3());
         world.appendChild(sun);
 
@@ -244,7 +244,7 @@ export default class Editor extends App {
 
             if (camera.top != scale) {
                 camera.top = scale;
-                camera.translate(new Vector3(-previousScale, -previousScale, -previousScale)).translate(new Vector3(scale, scale, scale));
+                camera.translate(new Vector3(-previousScale, -previousScale, +previousScale)).translate(new Vector3(scale, scale, -scale));
                 camera.aspectRatio = renderTarget.aspectRatio;
                 previousScale = scale;
             }

@@ -11,16 +11,15 @@ import LightMaterial from '../../libs/3d/material/LightMaterial';
 import PickingMaterial from '../../libs/3d/material/PickingMaterial';
 import Node3d from '../../libs/3d/Node3d';
 import App from '../../libs/core/App';
-import Buffer from '../../libs/core/Buffer';
 import Color from '../../libs/core/Color';
 import Angle from '../../libs/math/Angle';
 import Matrix4 from '../../libs/math/Matrix4';
 import Vector2 from '../../libs/math/Vector2';
 import Vector3 from '../../libs/math/Vector3';
 import Vector4 from '../../libs/math/Vector4';
+import VertexBuffer from '../../libs/renderer/graphics/buffer/VertexBuffer';
 import RenderTarget from '../../libs/renderer/graphics/RenderTarget';
 import Texture from '../../libs/renderer/graphics/Texture';
-import VertexBuffer from '../../libs/renderer/graphics/buffer/VertexBuffer';
 
 export default class Lights extends App {
     constructor(canvas) {
@@ -335,7 +334,6 @@ function toNode3d(ray, far) {
     vertexBuffer.index = index;
     vertexBuffer.position = position;
     vertexBuffer.color = color;
-    console.log(position);
 
     return new Node3d(ColorMaterial.default, vertexBuffer);
 }

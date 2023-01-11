@@ -1,5 +1,7 @@
 import Buffer from '../../../core/Buffer';
 import Box from '../../../math/Box';
+import FloatArray from '../../../math/FloatArray';
+import Triangle from '../../../math/Triangle';
 import GraphicsNode from '../GraphicsNode';
 import Material from '../Material';
 
@@ -155,6 +157,61 @@ export default class VertexBuffer extends GraphicsNode {
         buffer = this.normal;
         if (buffer) {
             buffer.transform(matrix.inverse.transpose());
+        }
+    }
+
+    generateNormal(type = Float32Array) {
+        const index = this.index;
+        const position = this.position;
+
+        if (position !== undefined) {
+            const result = new type(position.count * 3)
+            const triangle = new Triangle();
+            if (index) {
+                for (let i = 0; i < index.count; i += 3) {
+                    const a = position.step * index.data[i + 0];
+                    const b = position.step * index.data[i + 1];
+                    const c = position.step * index.data[i + 2];
+                    position.setFloatArray(a, triangle.a);
+                    position.setFloatArray(b, triangle.b);
+                    position.setFloatArray(c, triangle.c);
+
+                    const normal = triangle.normal;
+
+                    result.set(normal, a);
+                    result.set(normal, b);
+                    result.set(normal, c);
+                }
+            } else {
+                for (let i = 0; i < position.count; i += 3) {
+                    const a = position.step * i;
+                    const b = position.step * (i + 3);
+                    const c = position.step * (i + 6);
+                    position.setFloatArray(a, triangle.a);
+                    position.setFloatArray(b, triangle.b);
+                    position.setFloatArray(c, triangle.c);
+
+                    const normal = triangle.normal;
+
+                    result.set(normal, a);
+                    result.set(normal, b);
+                    result.set(normal, c);
+                }
+            }
+            this.normal = result;
+        }
+    }
+
+    setColor(color, type = Float32Array) {
+        const position = this.position;
+
+        if (position !== undefined) {
+            this.colorLength = color.length;
+            const result = new type(position.count * color.length);
+            for (let i = 0; i < result.length; i++) {
+                result[i] = color[i % color.length];
+            }
+            this.color = result;
         }
     }
 }

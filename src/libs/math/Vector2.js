@@ -25,12 +25,12 @@ export default class Vector2 extends FloatArray {
         }
     }
 
-    get lenSq() {
+    get lenSqrt() {
         return this[0] * this[0] + this[1] * this[1];
     }
 
     get len() {
-        return Math.sqrt(this.lenSq);
+        return Math.sqrt(this.lenSqrt);
     }
 
     /** Return whether or not a Vector2 array is equals the current Vector2
@@ -142,7 +142,7 @@ export default class Vector2 extends FloatArray {
      * @param {Vector2} vector the second operand
      * @returns {Number} squared distance
      */
-    squaredDistance(vector) {
+    distanceSqrt(vector) {
         const x = vector[0] - this[0];
         const y = vector[1] - this[1];
 

@@ -7,20 +7,14 @@ export default class PlaneBuffer extends VertexBuffer {
         super();
 
         this.setDimensions(width, height);
-        this.normal = [
-            0, 0, -1,
-            0, 0, -1,
-            0, 0, -1,
-            0, 0, -1,
-        ];
-
-        if (uv) {
-            this.uv = uv;
-        }
         if (color) {
             this.setColor(color);
         }
+        if (uv) {
+            this.uv = uv;
+        }
         this.setPrimitive(primitive);
+        this.generateNormal();
     }
 
     setDimensions(width, height) {
@@ -54,18 +48,6 @@ export default class PlaneBuffer extends VertexBuffer {
                 0, 1, 1, 2, 2, 3, 3, 0];
         } else {
             this.index = [0, 1, 2, 3];
-        }
-    }
-
-    setColor(color) {
-        if (color instanceof Color) {
-            this.color = [
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3]];
-        } else if (color) {
-            this.color = color;
         }
     }
 

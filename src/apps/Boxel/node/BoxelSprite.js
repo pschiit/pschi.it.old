@@ -10,7 +10,6 @@ export default class BoxelSprite extends Node3d {
     constructor(boxels) {
         super();
         this.vertexBuffer = new InstanceBuffer(new BoxelBuffer());
-        console.log(this.vertexBuffer);
         this.material = new BoxelLightMaterial();
         this.boxels = boxels || {};
         this.colors = [];

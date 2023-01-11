@@ -25,17 +25,17 @@ export default class Ray {
     }
 
     distanceToPoint(point) {
-        return Math.sqrt(this.distanceSqToPoint(point));
+        return Math.sqrt(this.distanceSqrtToPoint(point));
     }
 
-    distanceSqToPoint(point) {
+    distanceSqrtToPoint(point) {
         const directionDistance = point.clone().substract(this.origin).dot(this.direction);
         // point behind the ray
         if (directionDistance < 0) {
-            return this.origin.squaredDistance(point);
+            return this.origin.distanceSqrt(point);
         }
 
-        return this.direction.clone().scale(directionDistance).add(this.origin).squaredDistance(point);
+        return this.direction.clone().scale(directionDistance).add(this.origin).distanceSqrt(point);
     }
 
     distanceToPlane(plane) {
