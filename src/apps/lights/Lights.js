@@ -20,7 +20,7 @@ import Vector3 from '../../libs/math/Vector3';
 import Vector4 from '../../libs/math/Vector4';
 import RenderTarget from '../../libs/renderer/graphics/RenderTarget';
 import Texture from '../../libs/renderer/graphics/Texture';
-import VertexBuffer from '../../libs/renderer/graphics/VertexBuffer';
+import VertexBuffer from '../../libs/renderer/graphics/buffer/VertexBuffer';
 
 export default class Lights extends App {
     constructor(canvas) {

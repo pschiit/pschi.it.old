@@ -70,7 +70,7 @@ export default class Editor extends App {
         const lightScale = 32;
         const sun = new DirectionalLight(
             Color.white(),
-            new Vector3(lightScale, lightScale, lightScale),
+            new Vector3(-lightScale, lightScale, lightScale),
             new Vector3());
         world.appendChild(sun);
 

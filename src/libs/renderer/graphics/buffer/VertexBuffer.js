@@ -1,8 +1,7 @@
-import Buffer from '../../core/Buffer';
-import Box from '../../math/Box';
-import Vector3 from '../../math/Vector3';
-import GraphicsNode from './GraphicsNode';
-import Material from './Material';
+import Buffer from '../../../core/Buffer';
+import Box from '../../../math/Box';
+import GraphicsNode from '../GraphicsNode';
+import Material from '../Material';
 
 export default class VertexBuffer extends GraphicsNode {
     constructor() {
@@ -53,16 +52,6 @@ export default class VertexBuffer extends GraphicsNode {
 
     set offset(v) {
         this._offset = v;
-    }
-
-    get divisor() {
-        return this.instanceArrayBuffer?.divisor ||
-            this.buffers.find(b => b.divisor > 0)?.divisor;
-    }
-
-    get divisorCount() {
-        return this.instanceArrayBuffer?.divisorCount ||
-            this.buffers.find(b => b.divisor > 0)?.divisorCount;
     }
 
     get position() {
@@ -131,34 +120,7 @@ export default class VertexBuffer extends GraphicsNode {
         return this._arrayBuffer;
     }
 
-    get instanceBuffers() {
-        const result = [];
-        for (const name in this.parameters) {
-            const parameter = this.getParameter(name);
-            if (parameter instanceof Buffer && parameter.divisor > 0) {
-                result.push(parameter);
-            }
-        }
-        return result;
-    }
-
-    get instanceArrayBuffer() {
-        const buffers = this.instanceBuffers;
-        if (buffers.length > 1) {
-            if (!this._instanceArrayBuffer) {
-                this._instanceArrayBuffer = new Buffer();
-            }
-            buffers.forEach(b => {
-                if (b.divisor && b.parent != this._instanceArrayBuffer) {
-                    this._instanceArrayBuffer.appendChild(b);
-                }
-            });
-            return this._instanceArrayBuffer;
-        }
-        return null;
-    }
-
-    setParameter(name, v, step, divisor) {
+    setParameter(name, v, step) {
         let buffer = this.getParameter(name);
         if (v) {
             if (v instanceof Buffer && v != buffer) {
@@ -168,12 +130,14 @@ export default class VertexBuffer extends GraphicsNode {
                     v = new Float32Array(v);
                 }
                 if (!buffer) {
-                    buffer = new Buffer(v, step, divisor);
-                    buffer.name = name;
+                    buffer = new Buffer(v, step);
                     super.setParameter(name, buffer);
 
                 } else {
                     buffer.data = v;
+                }
+                if (buffer.name != name) {
+                    buffer.name = name;
                 }
             }
         } else if (buffer) {

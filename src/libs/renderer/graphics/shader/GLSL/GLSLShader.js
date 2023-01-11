@@ -45,6 +45,7 @@ export default class GLSLShader{
         return result;
 
         function addNode(shaderNode) {
+            console.log(shaderNode)
             if (Array.isArray(shaderNode)) {
                 shaderNode.forEach(addNode)
             } else if (shaderNode.qualifier && !qualifier[shaderNode.name]) {

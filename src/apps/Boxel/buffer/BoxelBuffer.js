@@ -1,5 +1,5 @@
 import Render from '../../../libs/renderer/graphics/Render';
-import VertexBuffer from '../../../libs/renderer/graphics/VertexBuffer';
+import VertexBuffer from '../../../libs/renderer/graphics/buffer/VertexBuffer';
 import Boxel from '../node/Boxel';
 
 export default class BoxelBuffer extends VertexBuffer {
@@ -78,6 +78,8 @@ export default class BoxelBuffer extends VertexBuffer {
             0, -1, 0,
         ]);
     }
+
+    static singleton = new BoxelBuffer();
 }
 
 const size = Boxel.size;

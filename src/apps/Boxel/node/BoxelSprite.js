@@ -1,14 +1,16 @@
 import Node3d from '../../../libs/3d/Node3d';
 import Box from '../../../libs/math/Box';
 import Plane from '../../../libs/math/Plane';
-import InstancedBoxelBuffer from '../buffer/InstancedBoxelBuffer';
+import BoxelBuffer from '../buffer/BoxelBuffer';
+import InstanceBuffer from '../../../libs/renderer/graphics/buffer/InstanceBuffer';
 import BoxelLightMaterial from '../material/BoxelLightMaterial';
 import Boxel from './Boxel';
 
 export default class BoxelSprite extends Node3d {
     constructor(boxels) {
         super();
-        this.vertexBuffer = new InstancedBoxelBuffer();
+        this.vertexBuffer = new InstanceBuffer(new BoxelBuffer());
+        console.log(this.vertexBuffer);
         this.material = new BoxelLightMaterial();
         this.boxels = boxels || {};
         this.colors = [];
@@ -118,7 +120,6 @@ export default class BoxelSprite extends Node3d {
                 positions[index + 2] = boxel.position[2];
                 colors.set(boxel.color.toVector3().scale(255).toUint8(), index);
             }
-            console.log(this.colors);
             this.vertexBuffer.instancePosition = positions;
             this.vertexBuffer.instanceColor = colors;
             this.updated = false;
