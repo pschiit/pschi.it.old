@@ -7,10 +7,9 @@ export default class BoxelBuffer extends VertexBuffer {
         super();
 
         this.primitive = Render.primitive.triangles;
-        this.bevel(0.05);
+        this.bevel(0.03);
 
         this.generateNormal();
-        console.log(this, this.count)
     }
 
     bevel(b) {

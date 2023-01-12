@@ -96,12 +96,12 @@ export default class HtmlNode extends Node {
         return this.clientWidth / this.clientHeight;
     }
 
-    get pixelRatio(){
+    get pixelRatio() {
         return window.devicePixelRatio;
     }
 
-    vibrate(pattern){
-        if(navigator.vibrate){
+    vibrate(pattern) {
+        if (navigator.vibrate) {
             navigator.vibrate(pattern);
         }
     }
@@ -178,11 +178,53 @@ export default class HtmlNode extends Node {
 
     setPointerCapture(pointerId) {
         this.element.setPointerCapture(pointerId);
-    };
+    }
 
     releasePointerCapture(pointerId) {
         this.element.releasePointerCapture(pointerId);
-    };
+    }
+
+    saveFile(data, fileName, fileType) {
+        return new Promise((resolve, reject) => {
+            const dataView = data instanceof ArrayBuffer ? new DataView(data) : data;
+            const blob = new Blob([dataView], { type: fileType });
+
+            if (navigator.msSaveBlob) {
+                navigator.msSaveBlob(blob, fileName);
+                return resolve();
+            } else if (/iPhone|fxios/i.test(navigator.userAgent)) {
+                // This method is much slower but createObjectURL
+                // is buggy on iOS
+                const reader = new FileReader();
+                reader.addEventListener('loadend', () => {
+                    if (reader.error) {
+                        return reject(reader.error);
+                    }
+                    if (reader.result) {
+                        const a = document.createElement('a');
+                        // @ts-ignore
+                        a.href = reader.result;
+                        a.download = fileName;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    }
+                    resolve();
+                });
+                reader.readAsDataURL(blob);
+            } else {
+                const downloadUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                URL.revokeObjectURL(downloadUrl);
+                setTimeout(resolve, 100);
+                document.body.removeChild(a);
+            }
+        });
+    }
 
     /** Return the HtmlNode singleton of the document
      * @return {HtmlNode} the document HtmlNode

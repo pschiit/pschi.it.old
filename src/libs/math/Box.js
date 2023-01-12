@@ -78,6 +78,12 @@ export default class Box {
         return this;
     }
 
+    setFromMinAndScalar(min, scalar) {
+        this.min.set(min);
+        this.max.set(min);
+        this.max.addScalar(scalar);
+    }
+
     distanceToPoint(point) {
         return point.clone().clamp(this.min, this.max).distance(point);
     }
