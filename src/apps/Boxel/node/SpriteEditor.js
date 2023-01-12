@@ -99,7 +99,7 @@ export default class SpriteEditor extends OrthographicCamera {
         const sprite = new Node3d();
         sprite.vertexBuffer = new InstanceBuffer(new BoxelBuffer());
         sprite.material = new BoxelLightMaterial();
-        world.appendChild(sprite);
+        world.app
         bufferManager.add(sprite.vertexBuffer);
 
         const spriteBox = new Box();
@@ -253,7 +253,7 @@ export default class SpriteEditor extends OrthographicCamera {
 
             return intersection;
         }
-        
+        console.log(this.root);
         this.setScene = (parameters) => {
             super.setScene(parameters);
             if (updated) {
