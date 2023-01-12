@@ -1,70 +1,29 @@
-import VertexBufferManager from '../../libs/3d/buffer/VertexBufferManager';
-import OrthographicCamera from '../../libs/3d/camera/OrthographicCamera';
-import DirectionalLight from '../../libs/3d/light/DirectionalLight';
-import Grid from '../../libs/3d/node/Grid';
-import Node3d from '../../libs/3d/Node3d';
 import App from '../../libs/core/App';
 import Color from '../../libs/core/Color';
 import Button from '../../libs/html/Button';
 import ColorPicker from '../../libs/html/ColorPicker';
 import Input from '../../libs/html/Input';
 import Vector2 from '../../libs/math/Vector2';
-import Vector3 from '../../libs/math/Vector3';
 import SpriteEditor from './node/SpriteEditor';
 
 export default class Editor extends App {
     constructor(canvas) {
         super(canvas);
-    }
-
-    init() {
-        const canvas = this.canvas;
-        canvas.renderTarget.backgroundColor = Color.white();
-
-        const bufferManager = new VertexBufferManager();
-
-        const world = new Node3d();
-
-        const sprite = new SpriteEditor();
-        world.appendChild(sprite);
-        bufferManager.add(sprite.vertexBuffer);
-
         // for (let i = 0; i < 5000; i++) {
         //     sprite.set(Vector3.random().scale(100), Color.random());
         // }
 
-        //Camera
-        const orbit = new Node3d();
-        world.appendChild(orbit);
-        orbit.translate(0, 0, 0);
-        const camera = new OrthographicCamera();
-        camera.zoom = 128;
-        orbit.appendChild(camera);
-        camera.target = orbit;
-        this.camera = camera;
-
-        // lights
-        const lightScale = 256;
-        const sun = new DirectionalLight(
-            Color.white(),
-            new Vector3(-lightScale, lightScale, -lightScale),
-            new Vector3());
-        world.appendChild(sun);
-
-        const grid = new Grid(camera);
-        world.appendChild(grid);
-        grid.material.sizes = new Vector2(1, 10);
-        bufferManager.add(grid.vertexBuffer);
+        const sprite = new SpriteEditor();
 
         //Interface
-        const colorInput = new ColorPicker();
-        canvas.parent.appendChild(colorInput);
-        colorInput.style = {
+        const ui = new ColorPicker();
+        canvas.parent.appendChild(ui);
+        ui.style = {
             position: 'absolute',
             left: '0vw',
             top: '0vh',
         }
-        colorInput.color = Color.white();
+        ui.color = Color.white();
         let mode = -1;
         function updateMode(value) {
             mode = value ?? ++mode % 3;
@@ -76,23 +35,45 @@ export default class Editor extends App {
                 modeButton.text = '-';
             }
         }
-        const modeButton = new Button(() => { updateMode() });
+        let colorPicking = false;
+        const picker = new Button(() => {
+            colorPicking = !colorPicking;
+            if(colorPicking){
+                picker.style = 
+            }
+        });
+        picker.text = '@';
+        ui.appendChild(picker);
+        const modeButton = new Button(() => {
+            updateMode();
+            canvas.vibrate(50);
+        });
         updateMode();
-        colorInput.appendChild(modeButton);
-        const previousButton = new Button(sprite.undo);
+        ui.appendChild(modeButton);
+        const previousButton = new Button(() => {
+            sprite.undo();
+            canvas.vibrate(50);
+        });
         previousButton.text = '<';
-        colorInput.appendChild(previousButton);
-        const nextButton = new Button(sprite.redo);
+        ui.appendChild(previousButton);
+        const nextButton = new Button(() => {
+            sprite.redo();
+            canvas.vibrate(50);
+        });
         nextButton.text = '>';
-        colorInput.appendChild(nextButton);
-        const clearButton = new Button(sprite.clear);
+        ui.appendChild(nextButton);
+        const clearButton = new Button(() => {
+            sprite.clear();
+            canvas.vibrate(50);
+        });
         clearButton.text = 'X';
-        colorInput.appendChild(clearButton);
+        ui.appendChild(clearButton);
         const download = new Button(() => {
-            canvas.saveFile(sprite.save(), 'sprite.jsbx', 'application/octet-stream')
+            canvas.saveFile(sprite.save(), 'sprite.jsbx', 'application/octet-stream');
+            canvas.vibrate(50);
         });
         download.text = 'download';
-        colorInput.appendChild(download);
+        ui.appendChild(download);
 
         const open = new Input('file');
         open.element.addEventListener('input', (e) => {
@@ -108,7 +89,7 @@ export default class Editor extends App {
         open.style = {
             color: 'transparent'
         }
-        colorInput.appendChild(open);
+        ui.appendChild(open);
 
         //control
         const zoomStep = 0.1;
@@ -127,50 +108,57 @@ export default class Editor extends App {
         let canDraw = true;
         function addBoxel(normalizedVector2) {
             if (canDraw) {
-                const ray = camera.raycast(normalizedVector2.toVector3());
-                const result = mode === 2 ? sprite.raycastBoxel(ray)
-                    : sprite.raycastBoxel(ray, colorInput.color, mode === 0);
+                const result = mode === 2 ?
+                    sprite.write(normalizedVector2)
+                    : sprite.write(normalizedVector2, ui.color, mode === 0);
                 if (result) {
                     canvas.vibrate(50);
                 }
                 canDraw = false;
             }
-            return null;
         }
 
         canvas.addEventListener('wheel', e => {
             zoom -= e.deltaY * zoomStep;
         });
         canvas.addEventListener('pointerdown', e => {
-            canvas.setPointerCapture(e.pointerId);
-            if (e.pointerType == 'touch' && inputs.length < 2) {
-                inputs.push(e);
-                if (inputs.length === 1) {
-                    setTimeout(() => {
-                        if (inputs.length == 0 || inputs[0] === e) {
-                            castingBoxel = e.pointerId;
-                            addBoxel(canvas.getNormalizedPointerPosition(e));
+            if (colorPicking) {
+                const result = sprite.read(canvas.getNormalizedPointerPosition(e));
+                console.log(result);
+                if(result){
+                    ui.color = result;
+                    colorPicking = false;
+                }
+            } else {
+                canvas.setPointerCapture(e.pointerId);
+                if (e.pointerType == 'touch' && inputs.length < 2) {
+                    inputs.push(e);
+                    if (inputs.length === 1) {
+                        setTimeout(() => {
+                            if (inputs.length == 0 || inputs[0] === e) {
+                                castingBoxel = e.pointerId;
+                                addBoxel(canvas.getNormalizedPointerPosition(e));
+                            }
+                        }, 75);
+                    } else {
+                        if (castingBoxel == inputs[0].pointerId) {
+                            castingBoxel = null;
                         }
-                    }, 75);
-                } else {
-                    if (castingBoxel == inputs[0].pointerId) {
-                        castingBoxel = null;
                     }
-                }
-            } else if (e.pointerType == 'mouse') {
-                if (e.button === 0) {
-                    leftClick = e;
+                } else if (e.pointerType == 'mouse') {
+                    if (e.button === 0) {
+                        leftClick = e;
+                        castingBoxel = e.pointerId;
+                        addBoxel(canvas.getNormalizedPointerPosition(e));
+                    } else if (e.button === 2) {
+                        rightClick = e;
+                    } else if (e.button === 1) {
+                        middleClick = e;
+                    }
+                } else if (e.pointerType == 'pen') {
                     castingBoxel = e.pointerId;
-                    addBoxel(canvas.getNormalizedPointerPosition(e));
-                } else if (e.button === 2) {
-                    rightClick = e;
-                } else if (e.button === 1) {
-                    middleClick = e;
                 }
-            } else if (e.pointerType == 'pen') {
-                castingBoxel = e.pointerId;
             }
-
         });
         canvas.addEventListener('pointerup', e => {
             canvas.releasePointerCapture(e.pointerId);
@@ -261,9 +249,7 @@ export default class Editor extends App {
 
         //update
         let then = 0;
-        let updateGrid = true;
-        let previousScale = 0;
-        this.updateCamera = (time) => {
+        this.run = (time) => {
             time *= 0.001
             if (time > then) {
                 then = time + 0.15;
@@ -271,59 +257,8 @@ export default class Editor extends App {
             }
 
             const renderTarget = canvas.renderTarget;
-            const scale = renderTarget.maxY * 0.5;
-
-            if (camera.top != scale) {
-                camera.top = scale;
-                camera.translate(new Vector3(-previousScale, -previousScale, +previousScale)).translate(new Vector3(scale, scale, -scale));
-                camera.aspectRatio = renderTarget.aspectRatio;
-                previousScale = scale;
-            }
-            if (zoom) {
-                camera.zoom += zoom;
-                zoom = 0;
-                updateGrid = true;
-            }
-            if (camera.zoom > scale) {
-                camera.zoom = scale;
-            } else if (camera.zoom < 6) {
-                camera.zoom = 6;
-            }
-            if (updateGrid) {
-                grid.fading = scale / camera.zoom * 4;
-                updateGrid = false;
-            }
-            let cameraTranslation = new Vector3();
-            if (cameraMovement[0]) {
-                cameraTranslation.add(camera.xAxis.scale(cameraMovement[0]));
-            }
-            if (cameraMovement[1]) {
-                cameraTranslation.add(camera.yAxis.scale(cameraMovement[1]));
-            }
-            if (cameraTranslation[0] || cameraTranslation[2]) {
-                camera.translate(cameraTranslation);
-                cameraMovement.scale(0);
-            }
-
-            let orbitTranslation = new Vector3();
-            if (orbitMovement[0]) {
-                orbitTranslation.add(camera.xAxis.scale(orbitMovement[0] / camera.zoom));
-            }
-            if (orbitMovement[1]) {
-                orbitTranslation.add(camera.yAxis.scale(orbitMovement[1] / camera.zoom));
-            }
-            if (orbitTranslation[0] || orbitTranslation[2]) {
-                orbit.translate(orbitTranslation);
-                orbitMovement.scale(0);
-            }
+            sprite.update(renderTarget, zoom, cameraMovement, orbitMovement);
+            this.canvas.render(sprite);
         }
-    }
-
-    run(time) {
-        if (!this.camera) {
-            this.init();
-        }
-        this.updateCamera(time);
-        this.canvas.render(this.camera);
     }
 }
