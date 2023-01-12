@@ -21,66 +21,6 @@ export default class Editor extends App {
         const canvas = this.canvas;
         canvas.renderTarget.backgroundColor = Color.white();
 
-        //Interface
-        const colorInput = new ColorPicker();
-        canvas.parent.appendChild(colorInput);
-        colorInput.style = {
-            position: 'absolute',
-            left: '0vw',
-            top: '0vh',
-        }
-        colorInput.color = Color.white();
-        let mode = -1;
-        function updateMode(value) {
-            mode = value ?? ++mode % 3;
-            if (mode === 0) {
-                modeButton.text = '+';
-            } else if (mode === 1) {
-                modeButton.text = '=';
-            } else if (mode === 2) {
-                modeButton.text = '-';
-            }
-        }
-        const modeButton = new Button(() => { updateMode() });
-        updateMode();
-        colorInput.appendChild(modeButton);
-        const previousButton = new Button(() => {
-            sprite.undo();
-        });
-        previousButton.text = '<';
-        colorInput.appendChild(previousButton);
-        const nextButton = new Button(() => {
-            sprite.redo()
-        });
-        nextButton.text = '>';
-        colorInput.appendChild(nextButton);
-        const clearButton = new Button(() => {
-            sprite.clear()
-        });
-        clearButton.text = 'X';
-        colorInput.appendChild(clearButton);
-        const download = new Button(() => {
-            canvas.saveFile(sprite.save(), 'sprite.jsbx', 'application/octet-stream')
-        });
-        download.text = 'download';
-        colorInput.appendChild(download);
-
-        const open = new Input('file');
-        open.element.addEventListener('input', (e) => {
-            if (open.element.files.length > 0) {
-                const file = open.element.files[0];
-                file.arrayBuffer().then((b) => {
-                    sprite.load(b);
-                    open.element.value = null;
-                });
-            }
-        });
-        open.element.innerHTML = 'open';
-        open.style = {
-            color: 'transparent'
-        }
-        colorInput.appendChild(open);
-
         const bufferManager = new VertexBufferManager();
 
         const world = new Node3d();
@@ -115,6 +55,60 @@ export default class Editor extends App {
         world.appendChild(grid);
         grid.material.sizes = new Vector2(1, 10);
         bufferManager.add(grid.vertexBuffer);
+
+        //Interface
+        const colorInput = new ColorPicker();
+        canvas.parent.appendChild(colorInput);
+        colorInput.style = {
+            position: 'absolute',
+            left: '0vw',
+            top: '0vh',
+        }
+        colorInput.color = Color.white();
+        let mode = -1;
+        function updateMode(value) {
+            mode = value ?? ++mode % 3;
+            if (mode === 0) {
+                modeButton.text = '+';
+            } else if (mode === 1) {
+                modeButton.text = '=';
+            } else if (mode === 2) {
+                modeButton.text = '-';
+            }
+        }
+        const modeButton = new Button(() => { updateMode() });
+        updateMode();
+        colorInput.appendChild(modeButton);
+        const previousButton = new Button(sprite.undo);
+        previousButton.text = '<';
+        colorInput.appendChild(previousButton);
+        const nextButton = new Button(sprite.redo);
+        nextButton.text = '>';
+        colorInput.appendChild(nextButton);
+        const clearButton = new Button(sprite.clear);
+        clearButton.text = 'X';
+        colorInput.appendChild(clearButton);
+        const download = new Button(() => {
+            canvas.saveFile(sprite.save(), 'sprite.jsbx', 'application/octet-stream')
+        });
+        download.text = 'download';
+        colorInput.appendChild(download);
+
+        const open = new Input('file');
+        open.element.addEventListener('input', (e) => {
+            if (open.element.files.length > 0) {
+                const file = open.element.files[0];
+                file.arrayBuffer().then((b) => {
+                    sprite.load(b);
+                    open.element.value = null;
+                });
+            }
+        });
+        open.element.innerHTML = 'open';
+        open.style = {
+            color: 'transparent'
+        }
+        colorInput.appendChild(open);
 
         //control
         const zoomStep = 0.1;

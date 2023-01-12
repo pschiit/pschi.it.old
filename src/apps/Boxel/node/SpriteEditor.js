@@ -2,6 +2,7 @@ import Node3d from '../../../libs/3d/Node3d';
 import Color from '../../../libs/core/Color';
 import Box from '../../../libs/math/Box';
 import Plane from '../../../libs/math/Plane';
+import Ray from '../../../libs/math/Ray';
 import Vector3 from '../../../libs/math/Vector3';
 import InstanceBuffer from '../../../libs/renderer/graphics/buffer/InstanceBuffer';
 import BoxelBuffer from '../buffer/BoxelBuffer';
@@ -50,6 +51,9 @@ export default class SpriteEditor extends Node3d {
         }
 
         this.read = (position) => {
+            if(position instanceof Ray){
+                position = intersect(this.ray);
+            }
             const key = getKey(position);
             if (key) {
                 return map.get(key)?.clone();
