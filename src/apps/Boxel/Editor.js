@@ -9,9 +9,6 @@ import SpriteEditor from './node/SpriteEditor';
 export default class Editor extends App {
     constructor(canvas) {
         super(canvas);
-        // for (let i = 0; i < 5000; i++) {
-        //     sprite.set(Vector3.random().scale(100), Color.random());
-        // }
 
         const sprite = new SpriteEditor();
 
@@ -256,6 +253,9 @@ export default class Editor extends App {
             const renderTarget = canvas.renderTarget;
             sprite.update(renderTarget, zoom, cameraMovement, orbitMovement);
             this.canvas.render(sprite);
+            zoom = 0;
+            cameraMovement.reset();
+            orbitMovement.reset();
         }
     }
 }

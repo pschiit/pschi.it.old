@@ -144,7 +144,7 @@ export default class Vector3 extends FloatArray {
 
         return this;
     }
-    
+
     /** Negate the current Vector3
      * @return the current updated Vector3
     */
@@ -269,6 +269,12 @@ export default class Vector3 extends FloatArray {
     */
     toVector4(w) {
         return new Vector4(this[0], this[1], this[2], w);
+    }
+
+    reset() {
+        this[0] = 0;
+        this[1] = 0;
+        this[2] = 0;
     }
 
     static random() {
