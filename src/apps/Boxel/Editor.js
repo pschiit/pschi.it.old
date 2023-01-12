@@ -38,9 +38,6 @@ export default class Editor extends App {
         let colorPicking = false;
         const picker = new Button(() => {
             colorPicking = !colorPicking;
-            if(colorPicking){
-                picker.style = 
-            }
         });
         picker.text = '@';
         ui.appendChild(picker);

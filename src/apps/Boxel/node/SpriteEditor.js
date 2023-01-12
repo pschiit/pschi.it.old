@@ -99,7 +99,7 @@ export default class SpriteEditor extends OrthographicCamera {
         const sprite = new Node3d();
         sprite.vertexBuffer = new InstanceBuffer(new BoxelBuffer());
         sprite.material = new BoxelLightMaterial();
-        world.app
+        world.appendChild(sprite);
         bufferManager.add(sprite.vertexBuffer);
 
         const spriteBox = new Box();
