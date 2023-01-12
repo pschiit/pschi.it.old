@@ -239,4 +239,9 @@ export default class Vector2 extends FloatArray {
     toVector4(z = 0, w = 0) {
         return new Vector4(this[0], this[1], z, w);
     }
+
+    reset() {
+        this[0] = 0;
+        this[1] = 0;
+    }
 }

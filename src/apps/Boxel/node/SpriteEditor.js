@@ -33,7 +33,7 @@ export default class SpriteEditor extends OrthographicCamera {
         let updateGrid = true;
         let previousScale = 0;
         this.update = (renderTarget, zoom, cameraMovement, orbitMovement) => {
-            if (!renderTarget.backgroundColor.equals(backgroundColor)){
+            if (!renderTarget.backgroundColor.equals(backgroundColor)) {
                 renderTarget.backgroundColor.set(backgroundColor);
             }
 
@@ -47,7 +47,6 @@ export default class SpriteEditor extends OrthographicCamera {
             }
             if (zoom) {
                 camera.zoom += zoom;
-                zoom = 0;
                 updateGrid = true;
             }
             if (camera.zoom > scale) {
@@ -68,7 +67,6 @@ export default class SpriteEditor extends OrthographicCamera {
             }
             if (cameraTranslation[0] || cameraTranslation[2]) {
                 camera.translate(cameraTranslation);
-                cameraMovement.scale(0);
             }
 
             let orbitTranslation = new Vector3();
@@ -80,7 +78,6 @@ export default class SpriteEditor extends OrthographicCamera {
             }
             if (orbitTranslation[0] || orbitTranslation[2]) {
                 orbit.translate(orbitTranslation);
-                orbitMovement.scale(0);
             }
         }
 
@@ -106,6 +103,18 @@ export default class SpriteEditor extends OrthographicCamera {
         const map = new Map();
         const colors = [];
         let updated = false;
+
+        const pos = new Vector3(0,1,0);
+        color.rgb = pos;
+        for (let x = -128; x < 128; x++) {
+            for (let z =  -128; z < 128; z++) {
+                pos[0] = x;
+                pos[1] = 0;
+                pos[2] = z;
+                set(pos, color);
+            }
+        }
+        updated = true;
 
         const previousState = [];
         this.undo = () => {
@@ -142,7 +151,7 @@ export default class SpriteEditor extends OrthographicCamera {
             if (position instanceof Vector2) {
                 const ray = camera.raycast(position.toVector3());
                 position = intersect(ray)
-                if(!position){
+                if (!position) {
                     return null;
                 }
                 position.floor();
@@ -157,8 +166,8 @@ export default class SpriteEditor extends OrthographicCamera {
         this.write = (position, color, add = false) => {
             if (position instanceof Vector2) {
                 const ray = camera.raycast(position.toVector3());
-                position = intersect(ray,add);
-                if(!position){
+                position = intersect(ray, add);
+                if (!position) {
                     return null;
                 }
                 position.floor();
@@ -175,7 +184,7 @@ export default class SpriteEditor extends OrthographicCamera {
         }
 
         this.save = () => {
-            return this.vertexBuffer.instanceArrayBuffer.data;
+            return sprite.vertexBuffer.instanceArrayBuffer.data;
         }
 
         this.load = (arrayBuffer) => {
