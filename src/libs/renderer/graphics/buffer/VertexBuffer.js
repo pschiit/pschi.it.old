@@ -1,8 +1,9 @@
-import Buffer from '../../core/Buffer';
-import Box from '../../math/Box';
-import Vector3 from '../../math/Vector3';
-import GraphicsNode from './GraphicsNode';
-import Material from './Material';
+import Buffer from '../../../core/Buffer';
+import Box from '../../../math/Box';
+import FloatArray from '../../../math/FloatArray';
+import Triangle from '../../../math/Triangle';
+import GraphicsNode from '../GraphicsNode';
+import Material from '../Material';
 
 export default class VertexBuffer extends GraphicsNode {
     constructor() {
@@ -53,16 +54,6 @@ export default class VertexBuffer extends GraphicsNode {
 
     set offset(v) {
         this._offset = v;
-    }
-
-    get divisor() {
-        return this.instanceArrayBuffer?.divisor ||
-            this.buffers.find(b => b.divisor > 0)?.divisor;
-    }
-
-    get divisorCount() {
-        return this.instanceArrayBuffer?.divisorCount ||
-            this.buffers.find(b => b.divisor > 0)?.divisorCount;
     }
 
     get position() {
@@ -131,34 +122,7 @@ export default class VertexBuffer extends GraphicsNode {
         return this._arrayBuffer;
     }
 
-    get instanceBuffers() {
-        const result = [];
-        for (const name in this.parameters) {
-            const parameter = this.getParameter(name);
-            if (parameter instanceof Buffer && parameter.divisor > 0) {
-                result.push(parameter);
-            }
-        }
-        return result;
-    }
-
-    get instanceArrayBuffer() {
-        const buffers = this.instanceBuffers;
-        if (buffers.length > 1) {
-            if (!this._instanceArrayBuffer) {
-                this._instanceArrayBuffer = new Buffer();
-            }
-            buffers.forEach(b => {
-                if (b.divisor && b.parent != this._instanceArrayBuffer) {
-                    this._instanceArrayBuffer.appendChild(b);
-                }
-            });
-            return this._instanceArrayBuffer;
-        }
-        return null;
-    }
-
-    setParameter(name, v, step, divisor) {
+    setParameter(name, v, step) {
         let buffer = this.getParameter(name);
         if (v) {
             if (v instanceof Buffer && v != buffer) {
@@ -168,12 +132,14 @@ export default class VertexBuffer extends GraphicsNode {
                     v = new Float32Array(v);
                 }
                 if (!buffer) {
-                    buffer = new Buffer(v, step, divisor);
-                    buffer.name = name;
+                    buffer = new Buffer(v, step);
                     super.setParameter(name, buffer);
 
                 } else {
                     buffer.data = v;
+                }
+                if (buffer.name != name) {
+                    buffer.name = name;
                 }
             }
         } else if (buffer) {
@@ -191,6 +157,61 @@ export default class VertexBuffer extends GraphicsNode {
         buffer = this.normal;
         if (buffer) {
             buffer.transform(matrix.inverse.transpose());
+        }
+    }
+
+    generateNormal(type = Float32Array) {
+        const index = this.index;
+        const position = this.position;
+
+        if (position !== undefined) {
+            const result = new type(position.count * 3)
+            const triangle = new Triangle();
+            if (index) {
+                for (let i = 0; i < index.count; i += 3) {
+                    const a = position.step * index.data[i + 0];
+                    const b = position.step * index.data[i + 1];
+                    const c = position.step * index.data[i + 2];
+                    position.setFloatArray(a, triangle.a);
+                    position.setFloatArray(b, triangle.b);
+                    position.setFloatArray(c, triangle.c);
+
+                    const normal = triangle.normal;
+
+                    result.set(normal, a);
+                    result.set(normal, b);
+                    result.set(normal, c);
+                }
+            } else {
+                for (let i = 0; i < position.count; i += 3) {
+                    const a = position.step * i;
+                    const b = position.step * (i + 3);
+                    const c = position.step * (i + 6);
+                    position.setFloatArray(a, triangle.a);
+                    position.setFloatArray(b, triangle.b);
+                    position.setFloatArray(c, triangle.c);
+
+                    const normal = triangle.normal;
+
+                    result.set(normal, a);
+                    result.set(normal, b);
+                    result.set(normal, c);
+                }
+            }
+            this.normal = result;
+        }
+    }
+
+    setColor(color, type = Float32Array) {
+        const position = this.position;
+
+        if (position !== undefined) {
+            this.colorLength = color.length;
+            const result = new type(position.count * color.length);
+            for (let i = 0; i < result.length; i++) {
+                result[i] = color[i % color.length];
+            }
+            this.color = result;
         }
     }
 }

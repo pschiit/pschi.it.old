@@ -258,7 +258,7 @@ export default class BoxelLightMaterial extends Material {
                 Operation.declare(position),
                 Operation.add(
                     Material.parameters.position,
-                    Operation.toVector4(BoxelMaterial.parameters.instancePosition, 0))),
+                    Operation.toVector4(Material.parameters.instancePosition, 0))),
             // Operation.equal(
             //     position,
             //     Operation.multiply(
@@ -275,7 +275,7 @@ export default class BoxelLightMaterial extends Material {
                         Material.parameters.normalMatrix,
                         Material.parameters.normal)))),
             Operation.equal(vPosition, Operation.toVector3(position)),
-            Operation.equal(vColor, BoxelMaterial.parameters.instanceColor),
+            Operation.equal(vColor, Material.parameters.instanceColor),
             Operation.equal(vUV, Material.parameters.uv),
         ]);
 

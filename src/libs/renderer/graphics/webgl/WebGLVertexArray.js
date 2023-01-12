@@ -1,9 +1,10 @@
 import Material from '../Material';
-import VertexBuffer from '../VertexBuffer';
+import VertexBuffer from '../buffer/VertexBuffer';
 import WebGLBuffer from './WebGLBuffer';
 import WebGLNode from './WebGLNode';
 import WebGLProgram from './WebGLProgram';
 import WebGLRenderer from './WebGLRenderer';
+import InstanceBuffer from '../buffer/InstanceBuffer';
 
 export default class WebGLVertexArray extends WebGLNode {
     /** Create a WebGLVertexArray from a Node for a WebGLRenderingContext
@@ -21,10 +22,9 @@ export default class WebGLVertexArray extends WebGLNode {
         if (vertexBuffer.index) {
             renderer.elementArrayBuffer = WebGLBuffer.from(renderer, vertexBuffer.index, renderer.gl.ELEMENT_ARRAY_BUFFER);
         }
-        for (const name in vertexBuffer.parameters) {
-            const buffer = vertexBuffer.getParameter(name);
-            program.updateParameter(name, buffer);
-        }
+        vertexBuffer.buffers.forEach(b => {
+            program.updateParameter(b.name, b);
+        })
         renderer.vertexArray = null;
         renderer.arrayBuffer = null;
         renderer.elementArrayBuffer = null;

@@ -7,9 +7,10 @@ import App from '../../libs/core/App';
 import Color from '../../libs/core/Color';
 import Button from '../../libs/html/Button';
 import ColorPicker from '../../libs/html/ColorPicker';
+import Input from '../../libs/html/Input';
 import Vector2 from '../../libs/math/Vector2';
 import Vector3 from '../../libs/math/Vector3';
-import BoxelSprite from './node/BoxelSprite';
+import SpriteEditor from './node/SpriteEditor';
 
 export default class Editor extends App {
     constructor(canvas) {
@@ -20,7 +21,7 @@ export default class Editor extends App {
         const canvas = this.canvas;
         canvas.renderTarget.backgroundColor = Color.white();
 
-        //color picker
+        //Interface
         const colorInput = new ColorPicker();
         canvas.parent.appendChild(colorInput);
         colorInput.style = {
@@ -33,22 +34,58 @@ export default class Editor extends App {
         function updateMode(value) {
             mode = value ?? ++mode % 3;
             if (mode === 0) {
-                button.text = '+';
+                modeButton.text = '+';
             } else if (mode === 1) {
-                button.text = '=';
+                modeButton.text = '=';
             } else if (mode === 2) {
-                button.text = '-';
+                modeButton.text = '-';
             }
         }
-        const button = new Button(() => { updateMode() });
+        const modeButton = new Button(() => { updateMode() });
         updateMode();
-        colorInput.appendChild(button);
+        colorInput.appendChild(modeButton);
+        const previousButton = new Button(() => {
+            sprite.undo();
+        });
+        previousButton.text = '<';
+        colorInput.appendChild(previousButton);
+        const nextButton = new Button(() => {
+            sprite.redo()
+        });
+        nextButton.text = '>';
+        colorInput.appendChild(nextButton);
+        const clearButton = new Button(() => {
+            sprite.clear()
+        });
+        clearButton.text = 'X';
+        colorInput.appendChild(clearButton);
+        const download = new Button(() => {
+            canvas.saveFile(sprite.save(), 'sprite.jsbx', 'application/octet-stream')
+        });
+        download.text = 'download';
+        colorInput.appendChild(download);
+
+        const open = new Input('file');
+        open.element.addEventListener('input', (e) => {
+            if (open.element.files.length > 0) {
+                const file = open.element.files[0];
+                file.arrayBuffer().then((b) => {
+                    sprite.load(b);
+                    open.element.value = null;
+                });
+            }
+        });
+        open.element.innerHTML = 'open';
+        open.style = {
+            color: 'transparent'
+        }
+        colorInput.appendChild(open);
 
         const bufferManager = new VertexBufferManager();
 
         const world = new Node3d();
 
-        const sprite = new BoxelSprite();
+        const sprite = new SpriteEditor();
         world.appendChild(sprite);
         bufferManager.add(sprite.vertexBuffer);
 
@@ -67,10 +104,10 @@ export default class Editor extends App {
         this.camera = camera;
 
         // lights
-        const lightScale = 32;
+        const lightScale = 256;
         const sun = new DirectionalLight(
             Color.white(),
-            new Vector3(lightScale, lightScale, lightScale),
+            new Vector3(-lightScale, lightScale, -lightScale),
             new Vector3());
         world.appendChild(sun);
 
@@ -100,9 +137,9 @@ export default class Editor extends App {
                 const result = mode === 2 ? sprite.raycastBoxel(ray)
                     : sprite.raycastBoxel(ray, colorInput.color, mode === 0);
                 if (result) {
-                    canDraw = false;
                     canvas.vibrate(50);
                 }
+                canDraw = false;
             }
             return null;
         }
@@ -235,7 +272,7 @@ export default class Editor extends App {
         this.updateCamera = (time) => {
             time *= 0.001
             if (time > then) {
-                then = time + 0.115;
+                then = time + 0.15;
                 canDraw = true;
             }
 
@@ -244,7 +281,7 @@ export default class Editor extends App {
 
             if (camera.top != scale) {
                 camera.top = scale;
-                camera.translate(new Vector3(-previousScale, -previousScale, -previousScale)).translate(new Vector3(scale, scale, scale));
+                camera.translate(new Vector3(-previousScale, -previousScale, +previousScale)).translate(new Vector3(scale, scale, -scale));
                 camera.aspectRatio = renderTarget.aspectRatio;
                 previousScale = scale;
             }

@@ -201,6 +201,13 @@ export default class Buffer extends Node {
         },);
     }
 
+    setFloatArray(index, floatArray) {
+        for (let i = 0; i < floatArray.length; i++) {
+            floatArray[i] = this.data[index + i];
+        }
+        return floatArray;
+    }
+
     /** Dispatches a function to the Buffer elements
      * the function will have each FloatArray element
      * @param {Function} callback the function to dispatch

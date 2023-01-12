@@ -1,44 +1,12 @@
 import Color from '../../core/Color';
 import Render from '../../renderer/graphics/Render';
-import VertexBuffer from '../../renderer/graphics/VertexBuffer';
+import VertexBuffer from '../../renderer/graphics/buffer/VertexBuffer';
 
 export default class BoxBuffer extends VertexBuffer {
     constructor(width = 1, height = 1, depth = 1, color = null, uv = null, primitive = Render.primitive.triangles) {
         super();
 
-        this.setDimensions(width, height, depth);
-        this.normal = [
-            0, 0, -1,//F
-            0, 0, -1,
-            0, 0, -1,
-            0, 0, -1,
-
-            1, 0, 0,//R
-            1, 0, 0,
-            1, 0, 0,
-            1, 0, 0,
-
-            0, 0, 1,//B
-            0, 0, 1,
-            0, 0, 1,
-            0, 0, 1,
-
-            0, 1, 0,//U
-            0, 1, 0,
-            0, 1, 0,
-            0, 1, 0,
-
-            -1, 0, 0,//L
-            -1, 0, 0,
-            -1, 0, 0,
-            -1, 0, 0,
-
-            0, -1, 0,//D
-            0, -1, 0,
-            0, -1, 0,
-            0, -1, 0,
-        ];
-
+        this.setVertices(width, height, depth);
         if (color) {
             this.setColor(color);
         }
@@ -48,9 +16,10 @@ export default class BoxBuffer extends VertexBuffer {
         }
 
         this.setPrimitive(primitive);
+        this.generateNormal();
     }
 
-    setDimensions(width, height, depth) {
+    setVertices(width, height, depth) {
         Object.defineProperty(this, 'width', {
             value: width,
             writable: false,
@@ -121,43 +90,6 @@ export default class BoxBuffer extends VertexBuffer {
                 12, 13, 13, 14, 14, 15, 15, 12,
                 16, 17, 17, 18, 18, 19, 19, 16,
                 20, 21, 21, 22, 22, 23, 23, 20];
-        }
-    }
-
-    setColor(color) {
-        if (color instanceof Color) {
-            this.color = [
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],
-                color[0], color[1], color[2], color[3],];
-        } else if (color) {
-            this.color = color;
         }
     }
 

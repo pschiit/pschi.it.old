@@ -5,7 +5,7 @@ import Operation from '../../renderer/graphics/shader/Operation';
 import Parameter from '../../renderer/graphics/shader/Parameter';
 import Shader from '../../renderer/graphics/shader/Shader';
 import ShaderFunction from '../../renderer/graphics/shader/ShaderFunction';
-import VertexBuffer from '../../renderer/graphics/VertexBuffer';
+import VertexBuffer from '../../renderer/graphics/buffer/VertexBuffer';
 import PerspectiveCamera from '../camera/PerspectiveCamera';
 import Node3d from '../Node3d';
 
