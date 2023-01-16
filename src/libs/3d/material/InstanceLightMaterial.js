@@ -1,14 +1,14 @@
-import LightMaterial from '../../../libs/3d/material/LightMaterial';
-import Color from '../../../libs/core/Color';
-import Vector3 from '../../../libs/math/Vector3';
-import Material from '../../../libs/renderer/graphics/Material';
-import Operation from '../../../libs/renderer/graphics/shader/Operation';
-import Parameter from '../../../libs/renderer/graphics/shader/Parameter';
-import Shader from '../../../libs/renderer/graphics/shader/Shader';
-import ShaderFunction from '../../../libs/renderer/graphics/shader/ShaderFunction';
-import BoxelMaterial from './BoxelMaterial';
+import LightMaterial from './LightMaterial';
+import Color from '../../core/Color';
+import Vector3 from '../../math/Vector3';
+import Material from '../../renderer/graphics/Material';
+import Operation from '../../renderer/graphics/shader/Operation';
+import Parameter from '../../renderer/graphics/shader/Parameter';
+import Shader from '../../renderer/graphics/shader/Shader';
+import ShaderFunction from '../../renderer/graphics/shader/ShaderFunction';
+import InstanceNormalMaterial from './InstanceNormalMaterial';
 
-export default class BoxelLightMaterial extends Material {
+export default class InstanceLightMaterial extends Material {
     constructor() {
         super();
         this.culling = Material.culling.back;
@@ -76,165 +76,6 @@ export default class BoxelLightMaterial extends Material {
         this.spotShadowLightsCount = 0;
     }
 
-    get directionalLightsCount() {
-        return this._directionalLightsCount;
-    }
-
-    set directionalLightsCount(v) {
-        if (this.directionalLightsCount != v) {
-            this._directionalLightsCount = v;
-            this.vertexShader = null;
-            this.fragmentShader = null;
-        }
-    }
-
-    get directionalShadowLightsCount() {
-        return this._directionalShadowLightsCount;
-    }
-
-    set directionalShadowLightsCount(v) {
-        if (this.directionalShadowLightsCount != v) {
-            this._directionalShadowLightsCount = v;
-            this.vertexShader = null;
-            this.fragmentShader = null;
-        }
-    }
-
-    get pointLightsCount() {
-        return this._pointLightsCount;
-    }
-
-    set pointLightsCount(v) {
-        if (this.pointLightsCount != v) {
-            this._pointLightsCount = v;
-            this.vertexShader = null;
-            this.fragmentShader = null;
-        }
-    }
-
-    get pointShadowLightsCount() {
-        return this._pointShadowLightsCount;
-    }
-
-    set pointShadowLightsCount(v) {
-        if (this.pointShadowLightsCount != v) {
-            this._pointShadowLightsCount = v;
-            this.vertexShader = null;
-            this.fragmentShader = null;
-        }
-    }
-
-    get spotLightsCount() {
-        return this._spotLightsCount;
-    }
-
-    set spotLightsCount(v) {
-        if (this.spotLightsCount != v) {
-            this._spotLightsCount = v;
-            this.vertexShader = null;
-            this.fragmentShader = null;
-        }
-    }
-
-    get spotShadowLightsCount() {
-        return this._spotShadowLightsCount;
-    }
-
-    set spotShadowLightsCount(v) {
-        if (this.spotShadowLightsCount != v) {
-            this._spotShadowLightsCount = v;
-            this.vertexShader = null;
-            this.fragmentShader = null;
-        }
-    }
-
-    get ambientColor() {
-        return this.getParameter(LightMaterial.parameters.ambientColor);
-    }
-
-    set ambientColor(v) {
-        this.setParameter(LightMaterial.parameters.ambientColor, v);
-    }
-
-    get diffuseColor() {
-        return this.getParameter(LightMaterial.parameters.diffuseColor);
-    }
-
-    set diffuseColor(v) {
-        this.setParameter(LightMaterial.parameters.diffuseColor, v);
-    }
-
-    get specularColor() {
-        return this.getParameter(LightMaterial.parameters.specularColor);
-    }
-
-    set specularColor(v) {
-        this.setParameter(LightMaterial.parameters.specularColor, v);
-    }
-
-    get emissiveColor() {
-        return this.getParameter(LightMaterial.parameters.emissiveColor);
-    }
-
-    set emissiveColor(v) {
-        this.setParameter(LightMaterial.parameters.emissiveColor, v);
-    }
-
-    get ambientTexture() {
-        return this.getParameter(LightMaterial.parameters.ambientTexture);
-    }
-
-    set ambientTexture(v) {
-        this.setParameter(LightMaterial.parameters.ambientTexture, v);
-    }
-
-    get diffuseTexture() {
-        return this.getParameter(LightMaterial.parameters.diffuseTexture);
-    }
-
-    set diffuseTexture(v) {
-        this.setParameter(LightMaterial.parameters.diffuseTexture, v);
-    }
-
-    get specularTexture() {
-        return this.getParameter(LightMaterial.parameters.specularTexture);
-    }
-
-    set specularTexture(v) {
-        this.setParameter(LightMaterial.parameters.specularTexture, v);
-    }
-
-    get emissiveTexture() {
-        return this.getParameter(LightMaterial.parameters.emissiveTexture);
-    }
-
-    set emissiveTexture(v) {
-        this.setParameter(LightMaterial.parameters.emissiveTexture, v);
-    }
-
-    get shininess() {
-        return this.getParameter(LightMaterial.parameters.shininess);
-    }
-
-    set shininess(v) {
-        this.setParameter(LightMaterial.parameters.shininess, v);
-    }
-
-    get texture() {
-        return this.getParameter(Material.parameters.texture);
-    }
-
-    set texture(v) {
-        this.setParameter(Material.parameters.texture, v);
-    }
-
-    get compiled() {
-        if (!this.vertexShader || !this.fragmentShader) {
-            this.createShader();
-        }
-        return super.compiled;
-    }
-
     createShader() {
         this.directionalLightsCount = this.getParameter(LightMaterial.parameters.directionalLightAmbientStrength)?.length || 0;
         this.directionalShadowLightsCount = this.getParameter(LightMaterial.parameters.directionalShadowLightAmbientStrength)?.length || 0;
@@ -259,11 +100,11 @@ export default class BoxelLightMaterial extends Material {
                 Operation.add(
                     Material.parameters.position,
                     Operation.toVector4(Material.parameters.instancePosition, 0))),
-            // Operation.equal(
-            //     position,
-            //     Operation.multiply(
-            //         Material.parameters.vertexMatrix,
-            //         position)),
+            Operation.equal(
+                position,
+                Operation.multiply(
+                    Material.parameters.vertexMatrix,
+                    position)),
             Operation.equal(
                 Shader.parameters.output,
                 Operation.multiply(Material.parameters.projectionMatrix, position)),
@@ -703,6 +544,165 @@ export default class BoxelLightMaterial extends Material {
         this.fragmentShader = Shader.fragmentShader(operations);
     }
 
+    get directionalLightsCount() {
+        return this._directionalLightsCount;
+    }
+
+    set directionalLightsCount(v) {
+        if (this.directionalLightsCount != v) {
+            this._directionalLightsCount = v;
+            this.vertexShader = null;
+            this.fragmentShader = null;
+        }
+    }
+
+    get directionalShadowLightsCount() {
+        return this._directionalShadowLightsCount;
+    }
+
+    set directionalShadowLightsCount(v) {
+        if (this.directionalShadowLightsCount != v) {
+            this._directionalShadowLightsCount = v;
+            this.vertexShader = null;
+            this.fragmentShader = null;
+        }
+    }
+
+    get pointLightsCount() {
+        return this._pointLightsCount;
+    }
+
+    set pointLightsCount(v) {
+        if (this.pointLightsCount != v) {
+            this._pointLightsCount = v;
+            this.vertexShader = null;
+            this.fragmentShader = null;
+        }
+    }
+
+    get pointShadowLightsCount() {
+        return this._pointShadowLightsCount;
+    }
+
+    set pointShadowLightsCount(v) {
+        if (this.pointShadowLightsCount != v) {
+            this._pointShadowLightsCount = v;
+            this.vertexShader = null;
+            this.fragmentShader = null;
+        }
+    }
+
+    get spotLightsCount() {
+        return this._spotLightsCount;
+    }
+
+    set spotLightsCount(v) {
+        if (this.spotLightsCount != v) {
+            this._spotLightsCount = v;
+            this.vertexShader = null;
+            this.fragmentShader = null;
+        }
+    }
+
+    get spotShadowLightsCount() {
+        return this._spotShadowLightsCount;
+    }
+
+    set spotShadowLightsCount(v) {
+        if (this.spotShadowLightsCount != v) {
+            this._spotShadowLightsCount = v;
+            this.vertexShader = null;
+            this.fragmentShader = null;
+        }
+    }
+
+    get ambientColor() {
+        return this.getParameter(LightMaterial.parameters.ambientColor);
+    }
+
+    set ambientColor(v) {
+        this.setParameter(LightMaterial.parameters.ambientColor, v);
+    }
+
+    get diffuseColor() {
+        return this.getParameter(LightMaterial.parameters.diffuseColor);
+    }
+
+    set diffuseColor(v) {
+        this.setParameter(LightMaterial.parameters.diffuseColor, v);
+    }
+
+    get specularColor() {
+        return this.getParameter(LightMaterial.parameters.specularColor);
+    }
+
+    set specularColor(v) {
+        this.setParameter(LightMaterial.parameters.specularColor, v);
+    }
+
+    get emissiveColor() {
+        return this.getParameter(LightMaterial.parameters.emissiveColor);
+    }
+
+    set emissiveColor(v) {
+        this.setParameter(LightMaterial.parameters.emissiveColor, v);
+    }
+
+    get ambientTexture() {
+        return this.getParameter(LightMaterial.parameters.ambientTexture);
+    }
+
+    set ambientTexture(v) {
+        this.setParameter(LightMaterial.parameters.ambientTexture, v);
+    }
+
+    get diffuseTexture() {
+        return this.getParameter(LightMaterial.parameters.diffuseTexture);
+    }
+
+    set diffuseTexture(v) {
+        this.setParameter(LightMaterial.parameters.diffuseTexture, v);
+    }
+
+    get specularTexture() {
+        return this.getParameter(LightMaterial.parameters.specularTexture);
+    }
+
+    set specularTexture(v) {
+        this.setParameter(LightMaterial.parameters.specularTexture, v);
+    }
+
+    get emissiveTexture() {
+        return this.getParameter(LightMaterial.parameters.emissiveTexture);
+    }
+
+    set emissiveTexture(v) {
+        this.setParameter(LightMaterial.parameters.emissiveTexture, v);
+    }
+
+    get shininess() {
+        return this.getParameter(LightMaterial.parameters.shininess);
+    }
+
+    set shininess(v) {
+        this.setParameter(LightMaterial.parameters.shininess, v);
+    }
+
+    get texture() {
+        return this.getParameter(Material.parameters.texture);
+    }
+
+    set texture(v) {
+        this.setParameter(Material.parameters.texture, v);
+    }
+
+    get compiled() {
+        if (!this.vertexShader || !this.fragmentShader) {
+            this.createShader();
+        }
+        return super.compiled;
+    }
+
     static parameters = {
         ambientColor: Parameter.vector3('materialAmbientColor', Parameter.qualifier.const),
         diffuseColor: Parameter.vector3('materialDiffuseColor', Parameter.qualifier.const),
@@ -874,15 +874,15 @@ export default class BoxelLightMaterial extends Material {
     static shadowMaterial = new Material();
 }
 
-BoxelLightMaterial.shadowMaterial.setParameter(Material
+InstanceLightMaterial.shadowMaterial.setParameter(Material
     .parameters.projectionMatrix);
 const position = Parameter.vector4('position');
-BoxelLightMaterial.shadowMaterial.vertexShader = Shader.vertexShader([
+InstanceLightMaterial.shadowMaterial.vertexShader = Shader.vertexShader([
     Operation.equal(
         Operation.declare(position),
         Operation.add(
             Material.parameters.position,
-            Operation.toVector4(BoxelMaterial.parameters.instancePosition, 0))),
+            Operation.toVector4(InstanceNormalMaterial.parameters.instancePosition, 0))),
     Operation.equal(
         Shader.parameters.output,
         Operation.multiply(
@@ -890,7 +890,7 @@ BoxelLightMaterial.shadowMaterial.vertexShader = Shader.vertexShader([
             Material.parameters.vertexMatrix,
             position))
 ]);
-BoxelLightMaterial.shadowMaterial.fragmentShader = Shader.fragmentShader([
+InstanceLightMaterial.shadowMaterial.fragmentShader = Shader.fragmentShader([
     Operation.equal(
         Shader.parameters.output,
         Operation.toVector4(0, 0, Operation.selection(Shader.parameters.fragmentCoordinate, '.z'), 1))

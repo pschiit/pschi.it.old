@@ -240,8 +240,10 @@ export default class Vector2 extends FloatArray {
         return new Vector4(this[0], this[1], z, w);
     }
 
-    reset() {
+    empty() {
         this[0] = 0;
         this[1] = 0;
+        
+        return this;
     }
 }

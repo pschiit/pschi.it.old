@@ -1,9 +1,9 @@
-import Material from '../../../libs/renderer/graphics/Material';
-import Operation from '../../../libs/renderer/graphics/shader/Operation';
-import Parameter from '../../../libs/renderer/graphics/shader/Parameter';
-import Shader from '../../../libs/renderer/graphics/shader/Shader';
+import Material from '../../renderer/graphics/Material';
+import Operation from '../../renderer/graphics/shader/Operation';
+import Parameter from '../../renderer/graphics/shader/Parameter';
+import Shader from '../../renderer/graphics/shader/Shader';
 
-export default class BoxelMaterial extends Material {
+export default class InstanceNormalMaterial extends Material {
     constructor() {
         super();
         this.culling = Material.culling.back;
@@ -25,13 +25,15 @@ export default class BoxelMaterial extends Material {
                     position)),
             Operation.equal(
                 vColor,
-                Operation.divide(Material.parameters.instancePosition, 255)),]);
+                Operation.add(
+                    Operation.multiply(Operation.toVector3(Material.parameters.normal), 0.5),
+                    0.5
+                )),]);
 
         this.fragmentShader = Shader.fragmentShader([
             Operation.equal(
                 Shader.parameters.output,
-                Operation.toVector4(vColor, 1)),
-            Material.operation.gammaCorrection]);
+                Operation.toVector4(vColor, 1))]);
     }
 
     static parameters = {

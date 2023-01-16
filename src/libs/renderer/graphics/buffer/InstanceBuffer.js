@@ -1,4 +1,6 @@
 import Buffer from '../../../core/Buffer';
+import Box from '../../../math/Box';
+import Vector3 from '../../../math/Vector3';
 import Material from '../Material';
 import VertexBuffer from './VertexBuffer';
 
@@ -86,6 +88,20 @@ export default class InstanceBuffer extends VertexBuffer {
 
     set instanceColor(v) {
         this.setInstanceParameter(Material.parameters.instanceColor, v, this.instanceColorLength, 1);
+    }
+    
+    get boundingBox() {
+        const vertexBufferBox = this.vertexBuffer.boundingBox;
+        const box = new Box();
+        if (this.instancePosition) {
+            this.instancePosition.dispatch((vector3) => {
+                vertexBufferBox.translate(vector3);
+                box.union(vertexBufferBox);
+                vertexBufferBox.translate(vector3.negate());
+            });
+        }
+
+        return box;
     }
 
     setInstanceParameter(name, v, step, divisor) {

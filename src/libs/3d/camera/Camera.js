@@ -1,8 +1,6 @@
 import Color from '../../core/Color';
-import Ray from '../../math/Ray';
 import Vector2 from '../../math/Vector2';
 import Material from '../../renderer/graphics/Material';
-import Render from '../../renderer/graphics/Render';
 import BoxBuffer from '../buffer/BoxBuffer';
 import ColorMaterial from '../material/ColorMaterial';
 import Node3d from '../Node3d';
@@ -103,8 +101,7 @@ export default class Camera extends Node3d {
 function setFrustum(node) {
     if (!frustumBuffer) {
         frustumBuffer = new BoxBuffer(2, 2, 2);
-        frustumBuffer.setColor(Color.red());
-        frustumBuffer.setPrimitive(Render.primitive.lines);
+        frustumBuffer.generateColor(Color.red());
     }
     if (!frustumMaterial) {
         frustumMaterial = new ColorMaterial();

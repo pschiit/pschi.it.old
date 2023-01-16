@@ -20,7 +20,24 @@ export default class Render extends GraphicsNode {
     }
 
     get count() {
-        return this.vertexBuffer ? this.vertexBuffer.count : this._count;
+        return this._count ? this._count : this.vertexBuffer?.count ?? 0;
+    }
+
+    set offset(v) {
+        this._offset = v;
+    }
+
+    get offset() {
+        const offset = this._offset ?? 0;
+        return this.vertexBuffer ? this.vertexBuffer.offset + offset : offset;
+    }
+
+    set divisorCount(v) {
+        this._divisorCount = v;
+    }
+
+    get divisorCount() {
+        return this._divisorCount ? this._divisorCount : this.vertexBuffer?.divisorCount ?? 0;
     }
 
     set primitive(v) {

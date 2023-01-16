@@ -52,6 +52,18 @@ export default class Vector3 extends FloatArray {
             this[2] === vector[2];
     }
 
+    /** Set a vector array to the current Vector3
+     * @param {Vector3} vector 
+     * @return the current updated Vector3
+    */
+    set(vector) {
+        this[0] = vector[0];
+        this[1] = vector[1];
+        this[2] = vector[2];
+
+        return this;
+    }
+
     /** Add a vector array to the current Vector3
      * @param {Vector3} vector right operand
      * @return the current updated Vector3
@@ -271,10 +283,12 @@ export default class Vector3 extends FloatArray {
         return new Vector4(this[0], this[1], this[2], w);
     }
 
-    reset() {
+    empty() {
         this[0] = 0;
         this[1] = 0;
         this[2] = 0;
+        
+        return this;
     }
 
     static random() {

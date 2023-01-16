@@ -30,90 +30,17 @@ export default class Lights extends App {
 
     init() {
         const lightMaterial = new LightMaterial();
-        const bufferManager = new VertexBufferManager();
 
+        const cube = new BoxBuffer(1, 1, 1, 0.1);
+        cube.generateColor(Color.white());
 
-        const cube = new BoxBuffer();
-        cube.setColor(Color.white());
-        cube.uv = [
-            0, 0, //F
-            0, 1,
-            1, 1,
-            1, 0,
-
-            0, 0,//R
-            0, 1,
-            1, 1,
-            1, 0,
-
-            0, 0,//B
-            0, 1,
-            1, 1,
-            1, 0,
-
-            0, 0,//U
-            0, 1,
-            1, 1,
-            1, 0,
-
-            0, 0,//L
-            0, 1,
-            1, 1,
-            1, 0,
-
-            0, 0,//D
-            0, 1,
-            1, 1,
-            1, 0,
-        ];
-        bufferManager.add(cube);
-
-        const reverseCube = new BoxBuffer();
+        const reverseCube = new BoxBuffer(1, 1, 1, 0.1);
         reverseCube.normal.scale(-1);
-        reverseCube.setColor(Color.white());
-        reverseCube.uv = [
-            0, 0, //F
-            0, 1,
-            1, 1,
-            1, 0,
+        reverseCube.generateColor(Color.white());
 
-            0, 0,//R
-            0, 1,
-            1, 1,
-            1, 0,
-
-            0, 0,//B
-            0, 1,
-            1, 1,
-            1, 0,
-
-            0, 0,//U
-            0, 1,
-            1, 1,
-            1, 0,
-
-            0, 0,//L
-            0, 1,
-            1, 1,
-            1, 0,
-
-            0, 0,//D
-            0, 1,
-            1, 1,
-            1, 0,
-        ];
-        bufferManager.add(reverseCube);
-
-        const plane = new PlaneBuffer(10, 10);
-        plane.setColor(Color.white());
+        const plane = new PlaneBuffer(10, 10, 0.2);
+        plane.generateColor(Color.white());
         plane.transform(Matrix4.identityMatrix().rotate(Math.PI / 2, new Vector3(1, 0, 0)));
-        plane.uv = [
-            0, 0,
-            0, 1,
-            1, 1,
-            1, 0,
-        ];
-        bufferManager.add(plane);
 
         const world = new Node3d();
 
@@ -171,7 +98,7 @@ export default class Lights extends App {
         this.spotLight = new SpotLight(
             Color.magenta(),
             Math.cos(Angle.toRadian(40)),
-            new Vector3(-3, 3, -3),
+            new Vector3(3, 3, 3),
             new Vector3(0, 0, 0));
         this.spotLight.innerRadius = Math.cos(Angle.toRadian(30));
         this.spotLight.material = lightMaterial;
@@ -188,13 +115,11 @@ export default class Lights extends App {
         this.cameraLeft = new PerspectiveCamera(70, 1, 0.1, 2000);
         this.cameraLeft.translate(7, 5, 7);
         this.cameraLeft.lookAt(new Vector3(0, 0, 0));
-        this.cameraLeft.frustum = new Node3d();
         world.appendChild(this.cameraLeft);
 
         this.cameraRight = new OrthographicCamera(-4, 4, -4, 8, 0.1, 100);
         this.cameraRight.translate(-7, 5, -7);
         this.cameraRight.target = new Vector3(0, 0, 0);
-        this.cameraRight.frustum = new Node3d();
         const cameraHolder = new Node3d();
         cameraHolder.appendChild(this.cameraRight);
         world.appendChild(cameraHolder);

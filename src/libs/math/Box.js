@@ -27,6 +27,20 @@ export default class Box {
         return new Sphere(this.center, this.size.len * 0.5);
     }
 
+    get position() {
+        return this.min;
+    }
+
+    set position(v) {
+        this.max.substract(this.min).add(v);
+        this.min.set(v);
+    }
+
+    set(box){
+        this.min.set(box.min);
+        this.max.set(box.max);
+    }
+
     translate(vector3) {
         this.min.add(vector3);
         this.max.add(vector3);
@@ -44,6 +58,10 @@ export default class Box {
     intersect(box) {
         this.min.max(box.min);
         this.max.min(box.max);
+
+        if(this.isEmpty){
+            this.empty();
+        }
 
         return this;
     }
@@ -121,7 +139,7 @@ export default class Box {
             if (Math.sign(localPoint[0]) < 0) {
                 normal = new Vector3(-1, 0, 0);
             } else {
-                normal =new Vector3(1, 0, 0);
+                normal = new Vector3(1, 0, 0);
             }
         }
         distance = Math.abs(size[1] - Math.abs(localPoint[1]));
@@ -153,7 +171,12 @@ export default class Box {
     }
 
     clone() {
-        return new Box(this.min, this.max);
+        return new Box(this.min.clone(), this.max.clone());
+    }
+
+    equals(box) {
+        return box.min.equals(this.min)
+            && box.max.equals(this.max);
     }
 }
 const left = new Vector3(-1, 0, 0);
