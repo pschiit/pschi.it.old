@@ -44,7 +44,7 @@ export default class Editor extends App {
         world.appendChild(boxObject);
 
         const editorInterface = new BoxObjectEditor(boxObject);
-        //editorInterface.fill([-64, 0, -64], [64, 0, 64], [30, 100, 30]);
+        editorInterface.drawPlane([-64, 0, -64], [64, 0, 64], [30, 100, 30]);
 
         //update
         let updateGrid = true;

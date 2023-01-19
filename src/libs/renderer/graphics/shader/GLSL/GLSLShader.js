@@ -96,10 +96,14 @@ export default class GLSLShader{
                     }
                     return `return`;
                 }
-                if (shaderNode.symbol === Operation.symbol.if) {
+                if (shaderNode.symbol === Operation.symbol.if
+                    ||shaderNode.symbol === Operation.symbol.elseIf) {
                     const condition = shaderNode.parameters[0];
                     const operations = shaderNode.parameters[1];
                     return `${shaderNode.symbol}(${toString(condition)}){\n${operations.map(toString).join(';\n')};\n}`;
+                }
+                if (shaderNode.symbol === Operation.symbol.else) {
+                    return `${shaderNode.symbol}{\n${shaderNode.parameters.map(toString).join(';\n')};\n}`;
                 }
                 if (shaderNode.symbol === Operation.symbol.for) {
                     const iterator = shaderNode.parameters[0];

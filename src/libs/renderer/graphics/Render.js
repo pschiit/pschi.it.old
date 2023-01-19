@@ -12,7 +12,7 @@ export default class Render extends GraphicsNode {
     }
 
     get renderable() {
-        return this.material && this.count;
+        return this.material != null && this.count > 0;
     }
 
     set count(v) {
