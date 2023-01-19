@@ -20,8 +20,7 @@ export default class InstanceLightMaterial extends Material {
         this.specularColor = Color.white();
         this.emissiveColor = Color.black();
 
-        [Material.parameters.texture,
-        Material.parameters.textureProjectionMatrix,
+        [
         Material.parameters.fogDistance,
         Material.parameters.cameraPosition,
         Material.parameters.projectionMatrix,
@@ -108,7 +107,6 @@ export default class InstanceLightMaterial extends Material {
             Operation.equal(
                 Shader.parameters.output,
                 Operation.multiply(Material.parameters.projectionMatrix, position)),
-            Operation.equal(vDistance, Operation.selection(Shader.parameters.output, '.w')),
             Operation.equal(
                 vNormal,
                 Operation.normalize(
@@ -117,53 +115,15 @@ export default class InstanceLightMaterial extends Material {
                         Material.parameters.normal)))),
             Operation.equal(vPosition, Operation.toVector3(position)),
             Operation.equal(vColor, Material.parameters.instanceColor),
-            Operation.equal(vUV, Material.parameters.uv),
         ]);
 
         const normal = Parameter.vector3('normal');
         const fragmentColor = Parameter.vector4('fragmentColor');
-        const fragmentRGB = Operation.selection(fragmentColor, '.rgb');
         const nCameraPosition = Parameter.vector3('nCameraPosition');
         const operations = [
             Operation.equal(Operation.declare(normal), Operation.normalize(vNormal)),
             Operation.equal(Operation.declare(nCameraPosition), Operation.normalize(Operation.substract(Material.parameters.cameraPosition, vPosition))),
             Operation.equal(Operation.declare(fragmentColor), vColor),];
-
-        if (this.texture) {
-            if (this.getParameter(Material.parameters.projectionMatrix)) {
-                const vTextureProjection = Parameter.vector4('v_textureProjection', Parameter.qualifier.out);
-                this.vertexShader.operations.push(
-                    Operation.equal(
-                        vTextureProjection,
-                        Operation.multiply(Material.parameters.textureProjectionMatrix, position)));
-
-                const projection = Parameter.vector3('textureCoordinate');
-                const x = Operation.selection(projection, '.x');
-                const y = Operation.selection(projection, '.y');
-                operations.push(
-                    Operation.equal(
-                        Operation.declare(projection),
-                        Operation.add(
-                            Operation.multiply(
-                                Operation.divide(
-                                    Operation.selection(vTextureProjection, '.xyz'),
-                                    Operation.selection(vTextureProjection, '.w')
-                                ), 0.5)
-                            , 0.5)
-                    )
-                );
-                operations.push(
-                    Operation.if(
-                        Operation.and(
-                            Operation.greaterEquals(x, 0),
-                            Operation.greaterEquals(y, 0),
-                            Operation.lessEquals(x, 1),
-                            Operation.lessEquals(y, 1)),
-                        Operation.addTo(fragmentColor, Operation.read(Material.parameters.texture, Operation.selection(projection, '.xy')))))
-            } else {
-                operations.push(Operation.addTo(fragmentColor, Operation.read(Material.parameters.texture, vUV)))
-            }
-        }
         if (hasLight) {
             const lightColor = Parameter.vector3('lightColor');
             operations.push(Operation.equal(Operation.declare(lightColor), new Vector3()))
@@ -518,26 +478,6 @@ export default class InstanceLightMaterial extends Material {
             }
 
             operations.push(Operation.multiplyTo(fragmentColor, Operation.toVector4(lightColor, 1)));
-        }
-        if (this.fog) {
-            const distance = Parameter.number('distance');
-            const fogDistance = Material.parameters.fogDistance;
-            const fogDistanceY = Operation.selection(fogDistance, '.y');
-            operations.push(Operation.equal(
-                Operation.declare(distance),
-                Operation.substract(fogDistanceY, vDistance)
-            ));
-            operations.push(Operation.equal(
-                fragmentRGB,
-                Operation.mix(
-                    Material.parameters.backgroundColor,
-                    fragmentRGB,
-                    Operation.clamp(
-                        Operation.substract(
-                            Operation.divide(distance, fogDistanceY),
-                            Operation.selection(fogDistance, '.x'))
-                        , 0, 1))
-            ));
         }
         operations.push(Operation.equal(Shader.parameters.output, fragmentColor));
         operations.push(Material.operation.gammaCorrection);

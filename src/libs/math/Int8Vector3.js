@@ -1,7 +1,7 @@
-import Vector3 from '../../../libs/math/Vector3';
-import Int8Vector3 from './Int8Vector3';
+import Vector3 from './Vector3';
+import Uint8Vector3 from './Uint8Vector3';
 
-export default class Uint8Vector3 extends Uint8Array {
+export default class Int8Vector3 extends Int8Array {
     constructor(x = 0, y = 0, z = 0) {
         super(3);
         this[0] = x;
@@ -10,13 +10,13 @@ export default class Uint8Vector3 extends Uint8Array {
     }
 
     get hex() {
-        return this[0] << 16 ^ this[1] << 8 ^ this[2];
+        return this[0] + 128 << 16 ^ this[1] + 128 << 8 ^ this[2] + 128;
     }
 
     set hex(v) {
-        this[0] = (v >> 16 & 255);
-        this[1] = (v >> 8 & 255);
-        this[2] = (v & 255);
+        this[0] = (v >> 16 & 255) - 128;
+        this[1] = (v >> 8 & 255) - 128;
+        this[2] = (v & 255) - 128;
     }
 
     /** Return whether or not a Uint8Vector3 array is equals the current Uint8Vector3
@@ -24,8 +24,8 @@ export default class Uint8Vector3 extends Uint8Array {
      * @return {Boolean} true if vectors are equals
     */
     equals(vector) {
-        if (vector instanceof Int8Vector3) {
-            vector = vector.toUint8Vector3();
+        if (vector instanceof Uint8Vector3) {
+            vector = vector.toInt8Vector3();
         }
         return vector && this[0] === vector[0] &&
             this[1] === vector[1] &&
@@ -37,6 +37,9 @@ export default class Uint8Vector3 extends Uint8Array {
      * @return the current updated Uint8Vector3
     */
     set(vector) {
+        if (vector instanceof Uint8Vector3) {
+            vector = vector.toInt8Vector3();
+        }
         this[0] = vector[0];
         this[1] = vector[1];
         this[2] = vector[2];
@@ -49,8 +52,8 @@ export default class Uint8Vector3 extends Uint8Array {
      * @return the current updated Uint8Vector3
     */
     add(vector) {
-        if (vector instanceof Int8Vector3) {
-            vector = vector.toUint8Vector3();
+        if (vector instanceof Uint8Vector3) {
+            vector = vector.toInt8Vector3();
         }
         this[0] += vector[0];
         this[1] += vector[1];
@@ -65,8 +68,8 @@ export default class Uint8Vector3 extends Uint8Array {
      * @return the current updated Uint8Vector3
     */
     substract(vector) {
-        if (vector instanceof Int8Vector3) {
-            vector = vector.toUint8Vector3();
+        if (vector instanceof Uint8Vector3) {
+            vector = vector.toInt8Vector3();
         }
         this[0] -= vector[0];
         this[1] -= vector[1];
@@ -80,8 +83,8 @@ export default class Uint8Vector3 extends Uint8Array {
      * @return the current updated Uint8Vector3
     */
     multiply(vector) {
-        if (vector instanceof Int8Vector3) {
-            vector = vector.toUint8Vector3();
+        if (vector instanceof Uint8Vector3) {
+            vector = vector.toInt8Vector3();
         }
         this[0] *= vector[0];
         this[1] *= vector[1];
@@ -124,14 +127,20 @@ export default class Uint8Vector3 extends Uint8Array {
     }
 
     clone() {
-        return new Uint8Vector3(this[0], this[1], this[2]);
+        return new Int8Vector3(this[0], this[1], this[2]);
     }
 
     toVector3() {
         return new Vector3(this[0], this[1], this[2]);
     }
 
-    toInt8Vector3() {
-        return new Int8Vector3(this[0] - 128, this[1] - 128, this[2] - 128);
+    toUint8Vector3() {
+        return new Uint8Vector3(this[0] + 128, this[1] + 128, this[2] + 128);
+    }
+
+    static fromHex(hex){
+        const result =new Int8Vector3();
+        result.hex = hex;
+        return result;
     }
 }

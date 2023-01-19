@@ -19,7 +19,7 @@ export default class Sphere {
     }
 
     empty() {
-        this.center.set([0]);
+        this.center.empty();
         this.radius = - 1;
 
         return this;
@@ -27,5 +27,12 @@ export default class Sphere {
 
     clone() {
         return new Sphere(this.center, this.radius);
+    }
+
+    fromBox(box){
+        this.center = box.center;
+        this.radius = box.size.len * 0.5
+        
+        return this;
     }
 }

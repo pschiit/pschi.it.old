@@ -1,6 +1,5 @@
 import Buffer from '../../../core/Buffer';
 import Box from '../../../math/Box';
-import Vector3 from '../../../math/Vector3';
 import Material from '../Material';
 import VertexBuffer from './VertexBuffer';
 
@@ -17,15 +16,15 @@ export default class InstanceBuffer extends VertexBuffer {
         this.instanceColor.usage = Buffer.usage.stream;
     }
 
-    get index(){
+    get index() {
         return this.vertexBuffer.index;
     }
 
-    get arrayBuffer(){
+    get arrayBuffer() {
         return this.vertexBuffer.arrayBuffer;
     }
 
-    get buffers(){
+    get buffers() {
         return super.buffers.concat(this.vertexBuffer.buffers);
     }
 
@@ -63,6 +62,8 @@ export default class InstanceBuffer extends VertexBuffer {
         if (buffers.length > 1) {
             if (!this._instanceArrayBuffer) {
                 this._instanceArrayBuffer = new Buffer();
+                this.instanceArrayBuffer.interleaved = true;
+                this.instanceArrayBuffer.usage = Buffer.usage.stream;
             }
             buffers.forEach(b => {
                 if (b.divisor && b.parent != this._instanceArrayBuffer) {
@@ -89,7 +90,7 @@ export default class InstanceBuffer extends VertexBuffer {
     set instanceColor(v) {
         this.setInstanceParameter(Material.parameters.instanceColor, v, this.instanceColorLength, 1);
     }
-    
+
     get boundingBox() {
         const vertexBufferBox = this.vertexBuffer.boundingBox;
         const box = new Box();
@@ -120,7 +121,7 @@ export default class InstanceBuffer extends VertexBuffer {
                 } else {
                     buffer.data = v;
                 }
-                if(buffer.name != name){
+                if (buffer.name != name) {
                     buffer.name = name;
                 }
             }

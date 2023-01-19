@@ -19,8 +19,8 @@ export default class VertexBufferManager {
             this.indexBuffer.appendChild(index);
         }
         const instanceBuffers = vertexBuffer.instanceArrayBuffer;
-        if (instanceBuffers && instanceBuffers.parent != this.instanceBuffer) {
-            this.instanceBuffer.appendChild(instanceBuffers);
-        }
+        // if (instanceBuffers && instanceBuffers.parent != this.instanceBuffer) {
+        //     this.instanceBuffer.appendChild(instanceBuffers);
+        // }
     }
 }

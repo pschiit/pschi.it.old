@@ -1,5 +1,4 @@
-import Uint8Vector3 from '../../apps/Boxel/box/Uint8Vector3';
-import Color from '../core/Color';
+import Uint8Vector3 from '../math/Uint8Vector3';
 import Div from './Div';
 import Input from './Input';
 import Label from './Label';

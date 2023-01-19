@@ -23,10 +23,6 @@ export default class Box {
         return this.isEmpty ? new Vector3(0, 0, 0) : this.max.clone().substract(this.min);
     }
 
-    get boundingSphere() {
-        return new Sphere(this.center, this.size.len * 0.5);
-    }
-
     get position() {
         return this.min;
     }
@@ -95,11 +91,10 @@ export default class Box {
 
         return this;
     }
-
-    setFromMinAndScalar(min, scalar) {
-        this.min.set(min);
-        this.max.set(min);
-        this.max.addScalar(scalar);
+    
+    setPosition(v) {
+        this.max.substract(this.min).add(v);
+        this.min.set(v);
     }
 
     distanceToPoint(point) {

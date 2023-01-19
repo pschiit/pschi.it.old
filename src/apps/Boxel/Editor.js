@@ -7,10 +7,11 @@ import Color from '../../libs/core/Color';
 import Button from '../../libs/html/Button';
 import ColorPicker from '../../libs/html/ColorPicker';
 import Input from '../../libs/html/Input';
+import Span from '../../libs/html/Span';
 import Vector2 from '../../libs/math/Vector2';
 import Vector3 from '../../libs/math/Vector3';
-import SpriteEditor from './box/SpriteEditor';
-import BoxWorld from './node/BoxWorld';
+import BoxObject from './node/BoxObject';
+import BoxObjectEditor from './node/BoxObjectEditor';
 
 export default class Editor extends App {
     constructor(canvas) {
@@ -38,12 +39,12 @@ export default class Editor extends App {
         world.appendChild(grid);
         grid.material.sizes = new Vector2(1, 10);
 
-        //box world
-        const spriteEditor = new SpriteEditor();
-        const boxWorld = new BoxWorld(
-            [spriteEditor.sprite]
-        );
-        world.appendChild(boxWorld);
+        //box
+        const boxObject = new BoxObject();
+        world.appendChild(boxObject);
+
+        const editorInterface = new BoxObjectEditor(boxObject);
+        //editorInterface.fill([-64, 0, -64], [64, 0, 64], [30, 100, 30]);
 
         //update
         let updateGrid = true;
@@ -60,13 +61,19 @@ export default class Editor extends App {
         }
         let mode = -1;
         function updateMode(value) {
-            mode = value ?? ++mode % 3;
+            mode = value ?? ++mode % 6;
             if (mode === 0) {
                 modeButton.text = '+';
             } else if (mode === 1) {
                 modeButton.text = '=';
             } else if (mode === 2) {
                 modeButton.text = '-';
+            } else if (mode === 3) {
+                modeButton.text = '□';
+            } else if (mode === 4) {
+                modeButton.text = '■';
+            } else if (mode === 5) {
+                modeButton.text = '◙';
             }
         }
         let colorPicking = false;
@@ -79,28 +86,45 @@ export default class Editor extends App {
             updateMode();
             canvas.vibrate(50);
         });
-        updateMode();
+        updateMode(3);
         ui.appendChild(modeButton);
         const previousButton = new Button(() => {
-            spriteEditor.undo();
+            editorInterface.undo();
             canvas.vibrate(50);
         });
         previousButton.text = '<';
         ui.appendChild(previousButton);
         const nextButton = new Button(() => {
-            spriteEditor.redo();
+            editorInterface.redo();
             canvas.vibrate(50);
         });
         nextButton.text = '>';
         ui.appendChild(nextButton);
         const clearButton = new Button(() => {
-            spriteEditor.empty();
+            editorInterface.empty();
             canvas.vibrate(50);
         });
         clearButton.text = 'X';
         ui.appendChild(clearButton);
+        const previousFrame = new Button(() => {
+            editorInterface.frame--;
+            frameIndex.element.innerHTML = editorInterface.frame;
+            canvas.vibrate(50);
+        });
+        previousFrame.text = '<=';
+        const frameIndex = new Span();
+        frameIndex.element.innerHTML = 0;
+        ui.appendChild(previousFrame);
+        const nextFrame = new Button(() => {
+            editorInterface.frame++;
+            frameIndex.element.innerHTML = editorInterface.frame;
+            canvas.vibrate(50);
+        });
+        ui.appendChild(frameIndex);
+        nextFrame.text = '=>';
+        ui.appendChild(nextFrame);
         const download = new Button(() => {
-            canvas.saveFile(spriteEditor.save(), 'sprite.jsbx', 'application/octet-stream');
+            canvas.saveFile(editorInterface.save(), 'sprite.json', 'application/json');
             canvas.vibrate(50);
         });
         download.text = 'download';
@@ -110,8 +134,9 @@ export default class Editor extends App {
         open.element.addEventListener('input', (e) => {
             if (open.element.files.length > 0) {
                 const file = open.element.files[0];
-                file.arrayBuffer().then((b) => {
-                    spriteEditor.load(b);
+                file.text().then((b) => {
+                    editorInterface.load(b);
+                    frameIndex.element.innerHTML = editorInterface.frame;
                     open.element.value = null;
                 });
             }
@@ -137,16 +162,28 @@ export default class Editor extends App {
         let distance = 0;
 
         let canDraw = true;
-        function addBoxel(e) {
+        function draw(e) {
             if (canDraw) {
                 const ray = camera.raycast(canvas.getNormalizedPointerPosition(e).toVector3());
                 const result = mode === 2 ?
-                    spriteEditor.write(ray)
-                    : spriteEditor.write(ray, ui.color, mode === 0);
+                    editorInterface.write(ray)
+                    : editorInterface.write(ray, ui.color, mode === 0);
                 if (result) {
                     canvas.vibrate(50);
                 }
                 canDraw = false;
+            }
+        }
+
+        let startPlane = null;
+        function drawPlane(e) {
+            if (startPlane) {
+                const from = editorInterface.intersect(camera.raycast(canvas.getNormalizedPointerPosition(startPlane).toVector3()), mode === 3)?.floor();
+                const to = editorInterface.intersect(camera.raycast(canvas.getNormalizedPointerPosition(e).toVector3()), mode === 3)?.floor();
+                if (from && to) {
+                    editorInterface.drawPlane(from, to, ui.color);
+                    startPlane = null;
+                }
             }
         }
 
@@ -156,7 +193,7 @@ export default class Editor extends App {
         canvas.addEventListener('pointerdown', e => {
             if (colorPicking) {
                 const ray = camera.raycast(canvas.getNormalizedPointerPosition(e).toVector3());
-                const result = spriteEditor.read(ray);
+                const result = editorInterface.read(ray);
                 if (result) {
                     ui.color = result;
                     colorPicking = false;
@@ -166,12 +203,19 @@ export default class Editor extends App {
                 if (e.pointerType == 'touch' && inputs.length < 2) {
                     inputs.push(e);
                     if (inputs.length === 1) {
-                        setTimeout(() => {
-                            if (inputs.length == 0 || inputs[0] === e) {
-                                castingBoxel = e.pointerId;
-                                addBoxel(e);
-                            }
-                        }, 75);
+                        if (mode === 3 || mode === 4) {
+                            startPlane = e;
+                        } else if (mode === 5) {
+                            const ray = camera.raycast(canvas.getNormalizedPointerPosition(e).toVector3());
+                            editorInterface.fill(ray, ui.color);
+                        } else {
+                            setTimeout(() => {
+                                if (inputs.length == 0 || inputs[0] === e) {
+                                    castingBoxel = e.pointerId;
+                                    draw(e);
+                                }
+                            }, 75);
+                        }
                     } else {
                         if (castingBoxel == inputs[0].pointerId) {
                             castingBoxel = null;
@@ -180,20 +224,37 @@ export default class Editor extends App {
                 } else if (e.pointerType == 'mouse') {
                     if (e.button === 0) {
                         leftClick = e;
-                        castingBoxel = e.pointerId;
-                        addBoxel(e);
+                        if (mode === 3 || mode === 4) {
+                            startPlane = e;
+                        } else if (mode === 5) {
+                            const ray = camera.raycast(canvas.getNormalizedPointerPosition(e).toVector3());
+                            editorInterface.fill(ray, ui.color);
+                        } else {
+                            castingBoxel = e.pointerId;
+                            draw(e);
+                        }
                     } else if (e.button === 2) {
                         rightClick = e;
                     } else if (e.button === 1) {
                         middleClick = e;
                     }
                 } else if (e.pointerType == 'pen') {
-                    castingBoxel = e.pointerId;
+                    if (mode === 3 || mode === 4) {
+                        startPlane = e;
+                    } else if (mode === 5) {
+                        const ray = camera.raycast(canvas.getNormalizedPointerPosition(e).toVector3());
+                        editorInterface.fill(ray, ui.color);
+                    } else {
+                        castingBoxel = e.pointerId;
+                    }
                 }
             }
         });
         canvas.addEventListener('pointerup', e => {
             canvas.releasePointerCapture(e.pointerId);
+            if (startPlane && startPlane.pointerId == e.pointerId) {
+                drawPlane(e)
+            }
             if (castingBoxel == e.pointerId) {
                 castingBoxel = null;
             }
@@ -218,7 +279,7 @@ export default class Editor extends App {
         });
         canvas.addEventListener('pointermove', (e) => {
             if (castingBoxel == e.pointerId) {
-                addBoxel(e);
+                draw(e);
             } else if (e.pointerType == 'mouse') {
                 if (middleClick && e.pointerId == middleClick.pointerId) {
                     orbitMovement[0] -= orbitStep * e.movementX;
@@ -235,7 +296,7 @@ export default class Editor extends App {
                     const pixelRatio = canvas.pixelRatio;
                     cameraMovement[0] -= cameraStep * pixelRatio * e.movementX;
                     cameraMovement[1] += cameraStep * pixelRatio * e.movementY;
-                } else {
+                } else if (inputs.length > 1) {
                     const index = inputs.findIndex(i => i.pointerId == e.pointerId);
                     if (index !== -1) {
                         inputs[index] = e;
@@ -247,7 +308,6 @@ export default class Editor extends App {
                     if (distance !== 0 && Math.abs(deltaDistance) > 1) {
                         zoom += deltaDistance * zoomStep;
                     } else {
-                        const pixelRatio = canvas.pixelRatio;
                         orbitMovement[0] -= orbitStep * e.movementX;
                         orbitMovement[1] += orbitStep * e.movementY;
                     }
@@ -256,20 +316,49 @@ export default class Editor extends App {
             }
         });
         this.canvas.addEventListener('keydown', (e) => {
+            if (mode === 0) {
+                modeButton.text = '+';
+            } else if (mode === 1) {
+                modeButton.text = '=';
+            } else if (mode === 2) {
+                modeButton.text = '-';
+            } else if (mode === 3) {
+                modeButton.text = '□';
+            } else if (mode === 4) {
+                modeButton.text = '■';
+            } else if (mode === 5) {
+                modeButton.text = '◙';
+            }
             switch (e.code) {
                 case 'a':
                 case 'KeyA':
                     updateMode(0);
                     break;
+                case 'p':
+                case 'KeyP':
+                    updateMode(3);
+                    break;
                 case 'u':
                 case 'KeyU':
-                    updateMode(1);
+                    if (mode === 0) {
+                        updateMode(1);
+                    } else if (mode === 1) {
+                        updateMode(0);
+                    } else if (mode === 3) {
+                        updateMode(4);
+                    } else if (mode === 4) {
+                        updateMode(3);
+                    }
                     break;
                 case 'd':
                 case 'KeyD':
                 case 'r':
                 case 'KeyR':
                     updateMode(2);
+                    break;
+                case 'f':
+                case 'KeyF':
+                    updateMode(5);
                     break;
                 case 'Space':
                     updateMode();
