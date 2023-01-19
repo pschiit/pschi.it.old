@@ -35,7 +35,9 @@ export default class BoxObjectEditor {
 
     set frame(v) {
         if (v == this.target.frameCount) {
+            const boxes = this.target.boxes;
             this.target.addFrame();
+            this.target.load(boxes);
             this.previousStates.push([]);
             this.nextStates.push([]);
         }
@@ -49,10 +51,10 @@ export default class BoxObjectEditor {
         if (spriteIntersection) {
             const direction = ray.direction.clone().scale(0.5);
             const position = this.target.position;
-            spriteIntersection.substract(position);
             do {
                 vector3.set(spriteIntersection)
                 vector3.floor();
+                console.log(vector3);
                 const hex = int8Vector3.set(vector3).hex;
                 if (this.boxes.has(hex)) {
                     if (addNormal) {
@@ -74,7 +76,7 @@ export default class BoxObjectEditor {
                 }
                 spriteIntersection.add(direction);
             } while (boundingBox.containsPoint(spriteIntersection));
-        }
+        };
 
         return intersection;
     }

@@ -123,7 +123,7 @@ export default class BoxObject extends Node3d {
 
     generateBoundingBox() {
         const positions = new Set();
-        this.frames.forEach(f => f.forEach((c,p) => positions.add(p)));
+        this.frames.forEach(f => f.forEach((c, p) => positions.add(p)));
         for (const hex of positions) {
             int8Vector3.hex = hex;
             testingBox.setPosition(int8Vector3);
@@ -202,8 +202,7 @@ export default class BoxObject extends Node3d {
      */
     loadJSON(json) {
         const frames = JSON.parse(json)
-            .map(f => new Map(Object.entries(JSON.parse(f))));
-        console.log(frames);
+            .map(f => new Map(Object.entries(JSON.parse(f)).map(e => [parseInt(e[0]), e[1]])));
         if (frames) {
             this.load(frames);
         }

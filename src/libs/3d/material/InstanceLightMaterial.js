@@ -14,7 +14,7 @@ export default class InstanceLightMaterial extends Material {
         this.culling = Material.culling.back;
         this.depth = Material.depth.less;
 
-        this.shininess = 32;
+        this.shininess = 256;
 
         [
             Material.parameters.cameraPosition,
