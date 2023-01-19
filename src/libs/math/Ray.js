@@ -153,4 +153,9 @@ export default class Ray {
     clone(origin) {
         return new Ray(origin || this.origin, this.direction);
     }
+
+    set(ray) {
+        this.origin.set(ray.origin);
+        this.direction.set(ray.direction);
+    }
 }

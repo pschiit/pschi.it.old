@@ -13,6 +13,10 @@ export default class BoxObjectEditor {
         this.nextStates = [[]];
     }
 
+    get boundingBox() {
+        return this.target.boundingBox;
+    }
+
     get previousState() {
         return this.previousStates[this.frame];
     }
@@ -40,28 +44,36 @@ export default class BoxObjectEditor {
 
     intersect(ray, addNormal = false) {
         let intersection = addNormal ? ray.intersectPlane(planeXZ) : null;
-        let distance = Infinity;
-        const spriteIntersection = ray.intersectBox(this.target.boundingBox);
+        const boundingBox = this.boundingBox;
+        const spriteIntersection = ray.intersectBox(boundingBox);
         if (spriteIntersection) {
+            const direction = ray.direction.clone().scale(0.5);
             const position = this.target.position;
-            for (const hex of this.target.positions) {
-                int8Vector3.hex = hex;
-                testingBox.setPosition(position);
-                testingBox.translate(int8Vector3);
-                const boxelIntersection = ray.intersectBox(testingBox);
-                if (boxelIntersection) {
-                    let boxelDistance = boxelIntersection.distance(ray.origin);
-                    if (boxelDistance < distance) {
-                        distance = boxelDistance;
-                        intersection = boxelIntersection;
-                        if (addNormal) {
-                            intersection.add(testingBox.normalFrom(boxelIntersection).scale(0.5));
+            spriteIntersection.substract(position);
+            do {
+                vector3.set(spriteIntersection)
+                vector3.floor();
+                const hex = int8Vector3.set(vector3).hex;
+                if (this.boxes.has(hex)) {
+                    if (addNormal) {
+                        testingBox.setPosition(position);
+                        testingBox.translate(int8Vector3);
+                        const boxelIntersection = ray.intersectBox(testingBox);
+                        if (boxelIntersection) {
+                            if (addNormal) {
+                                boxelIntersection.add(testingBox.normalFrom(boxelIntersection).scale(0.5));
+                            } else {
+                                boxelIntersection.add(testingBox.normalFrom(boxelIntersection).scale(-0.5));
+                            }
+                            return boxelIntersection;
                         } else {
-                            intersection.add(testingBox.normalFrom(boxelIntersection).scale(-0.5));
+                            alert('error ray casting');
                         }
                     }
+                    return spriteIntersection;
                 }
-            }
+                spriteIntersection.add(direction);
+            } while (boundingBox.containsPoint(spriteIntersection));
         }
 
         return intersection;
@@ -269,5 +281,6 @@ export default class BoxObjectEditor {
 const planeXZ = new Plane();
 const testingBox = new Box(new Vector3(), new Vector3(1, 1, 1));
 
+const vector3 = new Vector3();
 const int8Vector3 = new Int8Vector3();
 const uint8Vector3 = new Uint8Vector3();

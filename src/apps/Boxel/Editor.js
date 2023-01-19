@@ -86,7 +86,7 @@ export default class Editor extends App {
             updateMode();
             canvas.vibrate(50);
         });
-        updateMode(3);
+        updateMode();
         ui.appendChild(modeButton);
         const previousButton = new Button(() => {
             editorInterface.undo();
@@ -171,7 +171,7 @@ export default class Editor extends App {
                 if (result) {
                     canvas.vibrate(50);
                 }
-                canDraw = false;
+                //canDraw = false;
             }
         }
 
