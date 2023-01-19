@@ -5,7 +5,7 @@ export default class Light extends GraphicsNode {
     constructor(color) {
         super();
         this.color = color;
-        this.ambientStrength = 0.1;
+        this.ambientStrength = 0.3;
         this.intensity = 1;
     }
 

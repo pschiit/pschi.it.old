@@ -1,4 +1,4 @@
-import Color from '../core/Color';
+import Uint8Vector3 from '../math/Uint8Vector3';
 import Div from './Div';
 import Input from './Input';
 import Label from './Label';
@@ -8,7 +8,7 @@ export default class ColorPicker extends Div {
     */
     constructor(name) {
         super();
-        const color = new Color(0, 0, 0, 1);
+        const color = new Uint8Vector3(0, 0, 0);
         this._color = color;
 
         this.input = new Input('color');
@@ -26,7 +26,7 @@ export default class ColorPicker extends Div {
     set color(v) {
         if (v) {
             this.color.set(v);
-            this.input.element.value = '#' + v.toString();
+            this.input.element.value = '#' + this.color.hex.toString(16);
         }
     }
 }

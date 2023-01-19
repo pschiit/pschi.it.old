@@ -208,6 +208,10 @@ export default class Buffer extends Node {
         return floatArray;
     }
 
+    empty(){
+        this.data = new this.type.constructor(0);
+    }
+
     /** Dispatches a function to the Buffer elements
      * the function will have each FloatArray element
      * @param {Function} callback the function to dispatch

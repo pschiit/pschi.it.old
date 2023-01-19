@@ -2,12 +2,12 @@ import GraphicsNode from './GraphicsNode';
 import RenderTarget from './RenderTarget';
 
 export default class Texture extends GraphicsNode {
-    constructor(data) {
+    constructor(data, width = null, height = null) {
         super();
         this.data = data;
         this.updated = true;
-        this.width = null;
-        this.height = null;
+        this.width = width;
+        this.height = height;
         this.border = 0;
         this.level = 0;
         this.format = RenderTarget.format.rgba;

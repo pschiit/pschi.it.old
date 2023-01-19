@@ -41,7 +41,7 @@ export default class VertexBuffer extends GraphicsNode {
     }
 
     get count() {
-        return this.index ? this.index.length : this._count;
+        return this._count ? this._count : this.index?.length ?? 0;
     }
 
     set count(v) {
@@ -49,7 +49,8 @@ export default class VertexBuffer extends GraphicsNode {
     }
 
     get offset() {
-        return this.index ? this.index.offset : this._offset;
+        const offset = this._offset ?? 0;
+        return this.index ? this.index.offset + offset : offset;
     }
 
     set offset(v) {
@@ -202,7 +203,7 @@ export default class VertexBuffer extends GraphicsNode {
         }
     }
 
-    setColor(color, type = Float32Array) {
+    generateColor(color, type = Float32Array) {
         const position = this.position;
 
         if (position !== undefined) {

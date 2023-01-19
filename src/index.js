@@ -1,4 +1,5 @@
 import Editor from './apps/Boxel/Editor';
+import Test from './apps/Boxel/Test';
 import Lights from './apps/lights/Lights';
 import HtmlNode from './libs/html/HtmlNode';
 import WebGLCanvas from './libs/html/WebGLCanvas';
@@ -27,6 +28,8 @@ function getApp(name) {
         app.stop();
     }
     switch (name) {
+        case 'test':
+            return new Test(canvas);
         case 'lights':
             return new Lights(canvas);
         case 'editor':

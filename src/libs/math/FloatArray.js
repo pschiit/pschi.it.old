@@ -47,6 +47,13 @@ export default class FloatArray extends Float32Array {
         return this;
     }
 
+    empty() {
+        for (let i = 0; i < this.length; i++) {
+            this[i] = 0;
+        }
+        return this;
+    }
+
     clone() {
         return new this.constructor(this);
     }

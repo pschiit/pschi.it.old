@@ -25,7 +25,7 @@ export default class Operation extends ShaderNode {
         substract: ' - ',
         multiply: ' * ',
         divide: ' / ',
-        
+
         and: ' && ',
         or: ' || ',
 
@@ -296,7 +296,21 @@ export default class Operation extends ShaderNode {
         return new Operation(Operation.symbol.if, [condition, operations]);
     }
 
-    static declare(parameter){
+    static elseIf(condition, operations) {
+        if (!Array.isArray(operations)) {
+            operations = [operations];
+        }
+        return new Operation(Operation.symbol.elseIf, [condition, operations]);
+    }
+
+    static else(operations) {
+        if (!Array.isArray(operations)) {
+            operations = [operations];
+        }
+        return new Operation(Operation.symbol.else, operations);
+    }
+
+    static declare(parameter) {
         return new Operation(Operation.symbol.declare, [parameter]);
     }
 

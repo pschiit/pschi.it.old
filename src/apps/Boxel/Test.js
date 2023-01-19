@@ -12,8 +12,11 @@ import Vector2 from '../../libs/math/Vector2';
 import Vector3 from '../../libs/math/Vector3';
 import BoxObject from './node/BoxObject';
 import BoxObjectEditor from './node/BoxObjectEditor';
+import womanJSON from './woman.json';
+import landJSON from './land.json';
+import Angle from '../../libs/math/Angle';
 
-export default class Editor extends App {
+export default class Test extends App {
     constructor(canvas) {
         super(canvas);
         canvas.renderTarget.backgroundColor = Color.white();
@@ -43,7 +46,14 @@ export default class Editor extends App {
         const boxObject = new BoxObject();
         world.appendChild(boxObject);
 
-        const editorInterface = new BoxObjectEditor(boxObject);
+        //const editorInterface = new BoxObjectEditor(boxObject);
+        //editorInterface.drawPlane([-64, 0, -64], [64, 0, 64], [30, 100, 30]);
+
+        const land = new BoxObject().loadJSON(landJSON);
+        world.appendChild(land);
+        const woman = new BoxObject().loadJSON(womanJSON);
+        world.appendChild(woman);
+        woman.translate(0, 1, 0);
 
         //update
         let updateGrid = true;
@@ -152,6 +162,7 @@ export default class Editor extends App {
         const orbitStep = 1;
         const cameraMovement = new Vector2();
         const orbitMovement = new Vector2();
+        const womanMovement = new Vector2();
         let zoom = 0;
         let rightClick = null;
         let middleClick = null;
@@ -316,38 +327,17 @@ export default class Editor extends App {
         });
         this.canvas.addEventListener('keydown', (e) => {
             switch (e.code) {
-                case 'a':
-                case 'KeyA':
-                    updateMode(0);
+                case 'ArrowLeft':
+                    womanMovement[0] = 1;
                     break;
-                case 'p':
-                case 'KeyP':
-                    updateMode(3);
+                case 'ArrowRight':
+                    womanMovement[0] = -1;
                     break;
-                case 'u':
-                case 'KeyU':
-                    if (mode === 0) {
-                        updateMode(1);
-                    } else if (mode === 1) {
-                        updateMode(0);
-                    } else if (mode === 3) {
-                        updateMode(4);
-                    } else if (mode === 4) {
-                        updateMode(3);
-                    }
+                case 'ArrowUp':
+                    womanMovement[1] = 1;
                     break;
-                case 'd':
-                case 'KeyD':
-                case 'r':
-                case 'KeyR':
-                    updateMode(2);
-                    break;
-                case 'f':
-                case 'KeyF':
-                    updateMode(5);
-                    break;
-                case 'Space':
-                    updateMode();
+                case 'ArrowDown':
+                    womanMovement[1] = -1;
                     break;
                 default:
                     break;
@@ -359,8 +349,17 @@ export default class Editor extends App {
         this.run = (time) => {
             time *= 0.001
             if (time > then) {
-                then = time + 0.05;
+                then = time + 0.1;
                 canDraw = true;
+                if (womanMovement[0]) {
+                    woman.rotate(0, womanMovement[0] * 90, 0);
+                    womanMovement[0] = 0;
+                }
+                if (womanMovement[1]) {
+                    woman.translate(woman.zAxis.scale(womanMovement[1]));
+                    womanMovement[1] = 0;
+                    woman.frame = (woman.frame + 1) % 3;
+                }
             }
 
             const renderTarget = canvas.renderTarget;

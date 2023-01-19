@@ -1,7 +1,7 @@
 import Buffer from '../../core/Buffer';
 
 export default class VertexBufferManager {
-    constructor(){
+    constructor() {
         this.buffer = new Buffer();
         this.instanceBuffer = new Buffer();
         this.instanceBuffer.interleaved = true;
@@ -9,18 +9,18 @@ export default class VertexBufferManager {
         this.indexBuffer = new Buffer();
     }
 
-    add(vertexBuffer){
+    add(vertexBuffer) {
         const buffers = vertexBuffer.arrayBuffer;
-        if(buffers){
+        if (buffers && buffers.parent != this.buffer) {
             this.buffer.appendChild(buffers);
         }
         const index = vertexBuffer.index;
-        if(index){
+        if (index && index.parent != this.indexBuffer) {
             this.indexBuffer.appendChild(index);
         }
         const instanceBuffers = vertexBuffer.instanceArrayBuffer;
-        if(instanceBuffers){
-            this.instanceBuffer.appendChild(instanceBuffers);
-        }
+        // if (instanceBuffers && instanceBuffers.parent != this.instanceBuffer) {
+        //     this.instanceBuffer.appendChild(instanceBuffers);
+        // }
     }
 }

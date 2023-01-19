@@ -34,7 +34,7 @@ module.exports = {
                 use: ['style-loader', 'css-loader'],
             },
             {
-                test: /\.glsl$/,
+                test: /\.json$/i,
                 include: path.resolve(__dirname, DEFAULT_PATH),
                 type: 'asset/source',
             },
