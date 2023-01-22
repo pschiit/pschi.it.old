@@ -33,13 +33,13 @@ export default class Material extends GraphicsNode {
         backgroundColor: Parameter.vector3('backgroundColor', Parameter.qualifier.const),
         gammaCorrection: Parameter.number('gammaCorrection', Parameter.qualifier.const),
 
-        position: Parameter.vector4('vertexPosition', Parameter.qualifier.let),
-        normal: Parameter.vector4('vertexNormal', Parameter.qualifier.let),
-        color: Parameter.vector4('vertexColor', Parameter.qualifier.let),
-        uv: Parameter.vector2('vertexUV', Parameter.qualifier.let),
+        position: Parameter.vector4('vertexPosition', Parameter.qualifier.in),
+        normal: Parameter.vector4('vertexNormal', Parameter.qualifier.in),
+        color: Parameter.vector4('vertexColor', Parameter.qualifier.in),
+        uv: Parameter.vector2('vertexUV', Parameter.qualifier.in),
         
-        instancePosition: Parameter.vector3('instancePosition', Parameter.qualifier.let),
-        instanceColor: Parameter.vector4('instanceColor', Parameter.qualifier.let),
+        instancePosition: Parameter.vector3('instancePosition', Parameter.qualifier.in),
+        instanceColor: Parameter.vector4('instanceColor', Parameter.qualifier.in),
 
         vertexMatrix: Parameter.matrix4('vertexMatrix', Parameter.qualifier.const),
         normalMatrix: Parameter.matrix4('normalMatrix', Parameter.qualifier.const),

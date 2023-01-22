@@ -10,6 +10,7 @@ import Input from '../../libs/html/Input';
 import Span from '../../libs/html/Span';
 import Vector2 from '../../libs/math/Vector2';
 import Vector3 from '../../libs/math/Vector3';
+import RenderTarget from '../../libs/renderer/graphics/RenderTarget';
 import BoxObject from './node/BoxObject';
 import BoxObjectEditor from './node/BoxObjectEditor';
 
@@ -30,14 +31,15 @@ export default class Editor extends App {
         camera.target = orbit;
         // light
         const sun = new DirectionalLight(
-            Color.white(),
+            new Color(0.878, 0.810, 0.798, 1),
             new Vector3(256, 256, -256),
             new Vector3());
+        sun.light.ambientStrength = 0.8;
         world.appendChild(sun);
+        sun.shadow = new RenderTarget(null, 1024, 1024);
         //grid
         const grid = new Grid(camera);
         world.appendChild(grid);
-        grid.material.sizes = new Vector2(1, 10);
 
         //box
         const boxObject = new BoxObject();
@@ -369,7 +371,7 @@ export default class Editor extends App {
 
             if (camera.top != scale) {
                 camera.top = scale;
-                camera.translate(new Vector3(-previousScale, -previousScale, +previousScale)).translate(new Vector3(scale, scale, -scale));
+                camera.translate(new Vector3(-previousScale, -previousScale, -previousScale)).translate(new Vector3(scale, scale, scale));
                 previousScale = scale;
             }
             if (zoom) {

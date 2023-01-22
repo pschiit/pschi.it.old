@@ -1,4 +1,3 @@
-import Sphere from './Sphere';
 import Vector3 from './Vector3';
 
 export default class Box {
@@ -23,18 +22,11 @@ export default class Box {
         return this.isEmpty ? new Vector3(0, 0, 0) : this.max.clone().substract(this.min);
     }
 
-    get position() {
-        return this.min;
-    }
-
-    set position(v) {
-        this.max.substract(this.min).add(v);
-        this.min.set(v);
-    }
-
-    set(box){
+    set(box) {
         this.min.set(box.min);
         this.max.set(box.max);
+
+        return this;
     }
 
     translate(vector3) {
@@ -55,7 +47,7 @@ export default class Box {
         this.min.max(box.min);
         this.max.min(box.max);
 
-        if(this.isEmpty){
+        if (this.isEmpty) {
             this.empty();
         }
 
@@ -90,11 +82,6 @@ export default class Box {
         this.max = center.clone().add(half);
 
         return this;
-    }
-    
-    setPosition(v) {
-        this.max.substract(this.min).add(v);
-        this.min.set(v);
     }
 
     distanceToPoint(point) {
@@ -174,9 +161,5 @@ export default class Box {
             && box.max.equals(this.max);
     }
 }
-const left = new Vector3(-1, 0, 0);
-const right = new Vector3(1, 0, 0);
-const bottom = new Vector3(0, -1, 0);
-const top = new Vector3(0, 1, 0);
-const near = new Vector3(0, 0, -1);
-const far = new Vector3(0, 0, 1);
+const a = new Vector3();
+const b = new Vector3();

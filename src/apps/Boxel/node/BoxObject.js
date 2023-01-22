@@ -3,7 +3,6 @@ import InstanceLightMaterial from '../../../libs/3d/material/InstanceLightMateri
 import Node3d from '../../../libs/3d/Node3d';
 import Box from '../../../libs/math/Box';
 import Int8Vector3 from '../../../libs/math/Int8Vector3';
-import Matrix4 from '../../../libs/math/Matrix4';
 import Uint8Vector3 from '../../../libs/math/Uint8Vector3';
 import Vector3 from '../../../libs/math/Vector3';
 import InstanceBuffer from '../../../libs/renderer/graphics/buffer/InstanceBuffer';
@@ -11,8 +10,9 @@ import InstanceBuffer from '../../../libs/renderer/graphics/buffer/InstanceBuffe
 export default class BoxObject extends Node3d {
     constructor() {
         super(material, new InstanceBuffer(buffer));
-
         this._boundingBox = new Box();
+
+        this.shadowMap = new Set();
 
         this.frames = [];
         this._frame = -1;
@@ -97,8 +97,9 @@ export default class BoxObject extends Node3d {
         if (color > 0) {
             const existing = this.read(position);
             if (!existing) {
-                int8Vector3.hex = position;
-                testingBox.setPosition(int8Vector3);
+                positionVector.hex = position;
+                testingBox.min.set(positionVector);
+                testingBox.max.set(testingBox.min).addScalar(1);
                 this.boundingBox.union(testingBox);
                 this.boxes.set(position, color);
                 this.updated = true;
@@ -125,8 +126,9 @@ export default class BoxObject extends Node3d {
         const positions = new Set();
         this.frames.forEach(f => f.forEach((c, p) => positions.add(p)));
         for (const hex of positions) {
-            int8Vector3.hex = hex;
-            testingBox.setPosition(int8Vector3);
+            positionVector.hex = hex;
+            testingBox.min.set(positionVector);
+            testingBox.max.set(testingBox.min).addScalar(1);
             this._boundingBox.union(testingBox);
         }
         return this;
@@ -137,8 +139,8 @@ export default class BoxObject extends Node3d {
         const colors = [];
         const boxes = this.boxes;
         for (const [position, color] of boxes) {
-            int8Vector3.hex = position;
-            uint8Vector3.hex = color;
+            positionVector.hex = position;
+            colorVector.hex = color;
             const frontObstruct = boxes.has(position + 1);
             const backObstruct = boxes.has(position - 1);
             const leftObstruct = boxes.has(position + 65536);
@@ -151,8 +153,8 @@ export default class BoxObject extends Node3d {
                 || !rightObstruct
                 || !bottomObstruct
                 || !topObstruct) {
-                positions.push(int8Vector3[0], int8Vector3[1], int8Vector3[2]);
-                colors.push(uint8Vector3[0], uint8Vector3[1], uint8Vector3[2]);
+                positions.push(positionVector[0], positionVector[1], positionVector[2]);
+                colors.push(colorVector[0], colorVector[1], colorVector[2]);
             }
         }
         this.vertexBuffer.instancePosition = new Int8Array(positions);
@@ -225,10 +227,9 @@ export default class BoxObject extends Node3d {
         }
     }
 }
-const buffer = new BoxBuffer(1, 1, 1, 0.05);
+const buffer = new BoxBuffer(1, 1, 1, 0.06);
 const material = new InstanceLightMaterial();
-buffer.position.transform(Matrix4.identityMatrix().translate(new Vector3(0.5, 0.5, 0.5)));
 
-const int8Vector3 = new Int8Vector3();
-const uint8Vector3 = new Uint8Vector3();
+const positionVector = new Int8Vector3();
+const colorVector = new Uint8Vector3();
 const testingBox = new Box(new Vector3(), new Vector3(1, 1, 1));

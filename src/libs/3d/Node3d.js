@@ -18,7 +18,6 @@ export default class Node3d extends Render {
 
         this.castShadow = false;
         this.visible = true;
-
     }
 
     get colorId() {
@@ -215,7 +214,7 @@ export default class Node3d extends Render {
     }
 
     setScene(parameters) {
-        if (!this.normalMatrix) {
+        if (this.renderable && !this.normalMatrix) {
             this.setParameter(Material.parameters.normalMatrix, this.vertexMatrix.inverse.transpose());
         }
     }

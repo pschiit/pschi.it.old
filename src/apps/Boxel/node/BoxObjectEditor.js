@@ -46,20 +46,21 @@ export default class BoxObjectEditor {
 
     intersect(ray, addNormal = false) {
         let intersection = addNormal ? ray.intersectPlane(planeXZ) : null;
-        const boundingBox = this.boundingBox;
+        const position = this.target.position;
+        boundingBox.set(this.boundingBox);
+        boundingBox.translate(position);
         const spriteIntersection = ray.intersectBox(boundingBox);
         if (spriteIntersection) {
             const direction = ray.direction.clone().scale(0.5);
-            const position = this.target.position;
             do {
                 vector3.set(spriteIntersection)
                 vector3.floor();
-                console.log(vector3);
-                const hex = int8Vector3.set(vector3).hex;
+                const hex = positionVector3.set(vector3).hex;
                 if (this.boxes.has(hex)) {
                     if (addNormal) {
-                        testingBox.setPosition(position);
-                        testingBox.translate(int8Vector3);
+                        testingBox.min.set(position);
+                        testingBox.max.set(testingBox.min).addScalar(1);
+                        testingBox.translate(positionVector3);
                         const boxelIntersection = ray.intersectBox(testingBox);
                         if (boxelIntersection) {
                             if (addNormal) {
@@ -87,8 +88,8 @@ export default class BoxObjectEditor {
         }
         if (position) {
             if (!Number.isFinite(position)) {
-                int8Vector3.set(position);
-                position = int8Vector3.hex;
+                positionVector3.set(position);
+                position = positionVector3.hex;
             }
             const result = this.target.read(position);
             if (result) {
@@ -105,12 +106,12 @@ export default class BoxObjectEditor {
         }
         if (position) {
             if (!Number.isFinite(position)) {
-                int8Vector3.set(position);
-                position = int8Vector3.hex;
+                positionVector3.set(position);
+                position = positionVector3.hex;
             }
             if (color != null && !Number.isFinite(color)) {
-                uint8Vector3.set(color);
-                color = uint8Vector3.hex;
+                colorVector3.set(color);
+                color = colorVector3.hex;
             }
             const previousColor = this.target.read(position);
             const action = {
@@ -150,15 +151,15 @@ export default class BoxObjectEditor {
             from[2] = to[2];
             to[2] = cache;
         }
-        const colorHex = uint8Vector3.set(color).hex;
+        const colorHex = colorVector3.set(color).hex;
         const undoIndex = this.previousState.length;
         for (let x = from[0]; x <= to[0]; x++) {
             for (let y = from[1]; y <= to[1]; y++) {
                 for (let z = from[2]; z <= to[2]; z++) {
-                    int8Vector3[0] = x;
-                    int8Vector3[1] = y;
-                    int8Vector3[2] = z;
-                    this.write(int8Vector3.hex, colorHex);
+                    positionVector3[0] = x;
+                    positionVector3[1] = y;
+                    positionVector3[2] = z;
+                    this.write(positionVector3.hex, colorHex);
                 }
             }
         }
@@ -186,12 +187,12 @@ export default class BoxObjectEditor {
         }
         if (position) {
             if (!Number.isFinite(position)) {
-                int8Vector3.set(position);
-                position = int8Vector3.hex;
+                positionVector3.set(position);
+                position = positionVector3.hex;
             }
             if (color != null && !Number.isFinite(color)) {
-                uint8Vector3.set(color);
-                color = uint8Vector3.hex;
+                colorVector3.set(color);
+                color = colorVector3.hex;
             }
             const colorToReplace = this.target.read(position);
             if (colorToReplace >= 0 && colorToReplace != color) {
@@ -281,8 +282,10 @@ export default class BoxObjectEditor {
     }
 }
 const planeXZ = new Plane();
+const boundingBox = new Box();
 const testingBox = new Box(new Vector3(), new Vector3(1, 1, 1));
 
 const vector3 = new Vector3();
-const int8Vector3 = new Int8Vector3();
-const uint8Vector3 = new Uint8Vector3();
+const int8Vector = new Int8Vector3();
+const positionVector3 = new Int8Vector3();
+const colorVector3 = new Uint8Vector3();

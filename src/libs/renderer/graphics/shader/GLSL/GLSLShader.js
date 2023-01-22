@@ -34,6 +34,7 @@ export default class GLSLShader{
         });
         if (shader.precision) {
             declarations.unshift(`precision ${shader.precision}p float;`);
+            //declarations.unshift('#version 300 es');
         }
         if (extensions) {
             declarations = extensions.concat(declarations);
@@ -162,7 +163,7 @@ export default class GLSLShader{
 
         function qualifierOf(type) {
             return type == Parameter.qualifier.const ? 'uniform'
-                : type == Parameter.qualifier.let ? 'attribute'
+                : type == Parameter.qualifier.in ? 'attribute'
                     : type == Parameter.qualifier.out ? 'varying'
                         : null;
         }

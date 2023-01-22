@@ -25,7 +25,7 @@ export default class DirectionalLight extends Node3d {
         if (v != this.shadow) {
             if (v) {
                 if (!v.data) {
-                    v.data = new OrthographicCamera(-10, 10, -10, 10, 0, 1000);
+                    v.data = new OrthographicCamera(-10, 10, -10, 10, 0, 100);
                 }
                 if (!v.data.filters.some(i => i == shadowFilter)) {
                     v.data.filters.push(shadowFilter);
@@ -39,6 +39,8 @@ export default class DirectionalLight extends Node3d {
                 if (!v.colorTexture) {
                     v.colorTexture = new Texture();
                     v.colorTexture.minification = Texture.filter.linear;
+                    v.colorTexture.wrapS = Texture.wrapping.clamp;
+                    v.colorTexture.wrapT = Texture.wrapping.clamp;
                 }
                 v.backgroundColor = Color.transparent();
                 this._shadow = v;
