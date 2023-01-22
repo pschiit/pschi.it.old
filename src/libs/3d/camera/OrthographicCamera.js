@@ -13,6 +13,8 @@ export default class OrthographicCamera extends Camera {
         this._top = top;
         this._near = near;
         this._far = far;
+
+        this.updateAspectRatio = true;
     }
 
     get zoom() {
@@ -149,7 +151,7 @@ export default class OrthographicCamera extends Camera {
     }
 
     getScene(renderTarget, materialParameters) {
-        if (!this.viewport) {
+        if (!this.viewport && this.updateAspectRatio) {
             this.aspectRatio = renderTarget.aspectRatio;
         }
         return super.getScene(renderTarget, materialParameters);

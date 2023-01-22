@@ -86,6 +86,7 @@ export class GridBuffer extends VertexBuffer {
 export class GridMaterial extends Material {
     constructor() {
         super();
+        this.culling = Material.culling.back;
         this.depth = Material.depth.less;
 
         this.setParameter(Material.parameters.cameraPosition);

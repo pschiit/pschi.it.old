@@ -1,12 +1,10 @@
-import LightMaterial from './LightMaterial';
-import Color from '../../core/Color';
-import Vector3 from '../../math/Vector3';
+import Vector4 from '../../math/Vector4';
 import Material from '../../renderer/graphics/Material';
 import Operation from '../../renderer/graphics/shader/Operation';
 import Parameter from '../../renderer/graphics/shader/Parameter';
 import Shader from '../../renderer/graphics/shader/Shader';
-import ShaderFunction from '../../renderer/graphics/shader/ShaderFunction';
 import InstanceNormalMaterial from './InstanceNormalMaterial';
+import LightMaterial from './LightMaterial';
 
 export default class InstanceLightMaterial extends Material {
     constructor() {
@@ -14,15 +12,17 @@ export default class InstanceLightMaterial extends Material {
         this.culling = Material.culling.back;
         this.depth = Material.depth.less;
 
-        this.shininess = 256;
+        this.shininess = 2;
 
         [
             Material.parameters.cameraPosition,
             Material.parameters.projectionMatrix,
             Material.parameters.backgroundColor,
-            LightMaterial.parameters.directionalLightColor,
-            LightMaterial.parameters.directionalLightAmbientStrength,
-            LightMaterial.parameters.directionalLightDirection].forEach(p => this.setParameter(p));
+            LightMaterial.parameters.directionalShadowLightColor,
+            LightMaterial.parameters.directionalShadowLightDirection,
+            LightMaterial.parameters.directionalShadowLightAmbientStrength,
+            LightMaterial.parameters.directionalShadowLightShadowMap,
+            LightMaterial.parameters.directionalShadowLightShadowMatrix,].forEach(p => this.setParameter(p));
 
         this.fog = false;
 
@@ -34,6 +34,8 @@ export default class InstanceLightMaterial extends Material {
         const vColor = Parameter.vector4('v_' + Material.parameters.color, Parameter.qualifier.out);
         const vPosition = Parameter.vector3('v_' + Material.parameters.position, Parameter.qualifier.out);
         const vNormal = Parameter.vector3('v_' + Material.parameters.normal, Parameter.qualifier.out);
+
+        const vPositionFromDirectionalShadowLight = Parameter.vector4('v_positionFromDirectionalShadowLight', Parameter.qualifier.out);
 
         this.vertexShader = Shader.vertexShader([
             Operation.equal(
@@ -57,6 +59,9 @@ export default class InstanceLightMaterial extends Material {
                         Material.parameters.normal)))),
             Operation.equal(vPosition, Operation.toVector3(position)),
             Operation.equal(vColor, Material.parameters.instanceColor),
+            Operation.equal(
+                vPositionFromDirectionalShadowLight,
+                Operation.multiply(LightMaterial.parameters.directionalShadowLightShadowMatrix, position))
         ]);
 
         const normal = Parameter.vector3('normal');
@@ -65,6 +70,13 @@ export default class InstanceLightMaterial extends Material {
         const nDotL = Parameter.number('nDotL');
         const spec = Parameter.number('spec');
         const lightColor = Parameter.vector3('lightColor');
+
+        const projection = Parameter.vector3('projection');
+        const rgbaDepth = Parameter.vector4('rgbaDepth');
+        const depth = Operation.dot(
+            rgbaDepth,
+            new Vector4(1, 1 / 256, 1 / (256 * 256), 1 / (256 * 256 * 256)));//'vec4(1.0, 1.0/ 256.0, 1.0/(256.0 * 256.0),1.0/(256.0 * 256.0 * 256.0))');
+
         this.fragmentShader = Shader.fragmentShader([
             Operation.equal(Operation.declare(normal), Operation.normalize(vNormal)),
             Operation.equal(Operation.declare(nCameraPosition), Operation.normalize(Operation.substract(Material.parameters.cameraPosition, vPosition))),
@@ -72,7 +84,7 @@ export default class InstanceLightMaterial extends Material {
             Operation.equal(
                 Operation.declare(nDotL),
                 Operation.max(
-                    Operation.dot(LightMaterial.parameters.directionalLightDirection, normal),
+                    Operation.dot(LightMaterial.parameters.directionalShadowLightDirection, normal),
                     0
                 )
             ),
@@ -82,28 +94,59 @@ export default class InstanceLightMaterial extends Material {
                     fragmentColor,
                     Operation.toVector4(
                         Operation.multiply(
-                            LightMaterial.parameters.directionalLightColor,
-                            LightMaterial.parameters.directionalLightAmbientStrength), 1))),
+                            LightMaterial.parameters.directionalShadowLightColor,
+                            LightMaterial.parameters.directionalShadowLightAmbientStrength), 1))),
             Operation.else([
                 Operation.equal(
-                    Operation.declare(spec),//blinn-phong
-                    Operation.pow(Operation.max(Operation.dot(normal, Operation.normalize(Operation.add(LightMaterial.parameters.directionalLightDirection, nCameraPosition))), 0), LightMaterial.parameters.shininess)
-                ),
-                // Operation.equal(
-                //     Operation.declare(spec),//phong
-                //     Operation.pow(Operation.max(Operation.dot(cameraPosition, Operation.substract(Operation.multiply(2, Operation.dot(normal, lightDirection), normal), lightDirection)), 0), PhongMaterial.parameters.shininess)
-                // ),
-                Operation.equal(
-                    Operation.declare(lightColor), Operation.add(
+                    Operation.declare(projection),
+                    Operation.add(
                         Operation.multiply(
-                            LightMaterial.parameters.directionalLightColor,
-                            LightMaterial.parameters.directionalLightAmbientStrength),
-                        Operation.multiply(LightMaterial.parameters.directionalLightColor, nDotL),
-                        Operation.multiply(spec, LightMaterial.parameters.directionalLightColor))
+                            Operation.divide(
+                                Operation.selection(vPositionFromDirectionalShadowLight, '.xyz'),
+                                Operation.selection(vPositionFromDirectionalShadowLight, '.w')),
+                            0.5),
+                        0.5)
                 ),
-                Operation.multiplyTo(
-                    fragmentColor,
-                    Operation.toVector4(lightColor, 1)),
+                Operation.equal(
+                    Operation.declare(rgbaDepth),
+                    Operation.read(LightMaterial.parameters.directionalShadowLightShadowMap, Operation.selection(projection, '.xy')),
+                ),
+                Operation.if(
+                    Operation.and(
+                        Operation.notEquals(rgbaDepth, new Vector4()),
+                        Operation.greater(
+                            Operation.selection(projection, '.z'),
+                            Operation.add(depth, 0.007),
+                        )),
+                    Operation.multiplyTo(
+                        fragmentColor,
+                        Operation.toVector4(
+                            Operation.multiply(
+                                LightMaterial.parameters.directionalShadowLightColor,
+                                LightMaterial.parameters.directionalShadowLightAmbientStrength,
+                                0.5), 1))
+                ),
+                Operation.else([
+                    Operation.equal(
+                        Operation.declare(spec),//blinn-phong
+                        Operation.pow(Operation.max(Operation.dot(normal, Operation.normalize(Operation.add(LightMaterial.parameters.directionalShadowLightDirection, nCameraPosition))), 0), LightMaterial.parameters.shininess)
+                    ),
+                    // Operation.equal(
+                    //     Operation.declare(spec),//phong
+                    //     Operation.pow(Operation.max(Operation.dot(cameraPosition, Operation.substract(Operation.multiply(2, Operation.dot(normal, lightDirection), normal), lightDirection)), 0), PhongMaterial.parameters.shininess)
+                    // ),
+                    Operation.equal(
+                        Operation.declare(lightColor), Operation.add(
+                            Operation.multiply(
+                                LightMaterial.parameters.directionalShadowLightColor,
+                                LightMaterial.parameters.directionalShadowLightAmbientStrength),
+                            Operation.multiply(LightMaterial.parameters.directionalShadowLightColor, nDotL),
+                            Operation.multiply(spec, LightMaterial.parameters.directionalShadowLightColor))
+                    ),
+                    Operation.multiplyTo(
+                        fragmentColor,
+                        Operation.toVector4(lightColor, 1)),
+                ]),
             ]),
             Operation.equal(Shader.parameters.output, fragmentColor),
             Material.operation.gammaCorrection]);
@@ -188,19 +231,20 @@ export default class InstanceLightMaterial extends Material {
         spotShadowLightInnerRadius: Parameter.number('spotShadowLightInnerRadius', Parameter.qualifier.const),
         spotShadowLightIntensity: Parameter.number('spotShadowLightIntensity', Parameter.qualifier.const),
     };
-
-    static shadowMaterial = new Material();
 }
 
-InstanceLightMaterial.shadowMaterial.setParameter(Material
-    .parameters.projectionMatrix);
+const shadowMaterial = new Material();
+shadowMaterial.culling = Material.culling.front;
+shadowMaterial.depth = Material.depth.less;
+    shadowMaterial.setParameter(Material
+        .parameters.projectionMatrix);
 const position = Parameter.vector4('position');
-InstanceLightMaterial.shadowMaterial.vertexShader = Shader.vertexShader([
+shadowMaterial.vertexShader = Shader.vertexShader([
     Operation.equal(
         Operation.declare(position),
         Operation.add(
             Material.parameters.position,
-            Operation.toVector4(InstanceNormalMaterial.parameters.instancePosition, 0))),
+            Operation.toVector4(Material.parameters.instancePosition, 0))),
     Operation.equal(
         Shader.parameters.output,
         Operation.multiply(
@@ -208,8 +252,24 @@ InstanceLightMaterial.shadowMaterial.vertexShader = Shader.vertexShader([
             Material.parameters.vertexMatrix,
             position))
 ]);
-InstanceLightMaterial.shadowMaterial.fragmentShader = Shader.fragmentShader([
+const depth = Parameter.vector4('depth');
+shadowMaterial.fragmentShader = Shader.fragmentShader([
+    Operation.equal(
+        Operation.declare(depth),
+        Operation.fract(
+            Operation.multiply(
+                Operation.selection(Shader.parameters.fragmentCoordinate, '.z'),
+                new Vector4(1, 256, 256 * 256, 256 * 256 * 256))
+        )
+    ),
+    Operation.substractTo(
+        depth,
+        Operation.multiply(
+            Operation.selection(depth, '.gbaa'),
+            new Vector4(1 / 256, 1 / 256, 1 / 256, 0)
+        )),
     Operation.equal(
         Shader.parameters.output,
-        Operation.toVector4(0, 0, Operation.selection(Shader.parameters.fragmentCoordinate, '.z'), 1))
+        depth)
 ]);
+InstanceLightMaterial.shadowMaterial = shadowMaterial;
